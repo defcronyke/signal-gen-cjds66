@@ -2,6 +2,7 @@ extern crate serial;
 
 use std::io;
 use std::time::{Duration};
+use crate::protocol::*;
 
 use serial::prelude::*;
 
@@ -17,7 +18,7 @@ pub fn open(arg: &std::ffi::OsString) -> io::Result<Box<dyn SerialPort>> {
         Ok(())
     })?;
 
-    port.set_timeout(Duration::from_millis(3000))?;
+    port.set_timeout(Duration::from_millis(SERIAL_TIMEOUT_MS))?;
 
     Ok(port)
 }

@@ -21,7 +21,7 @@ pub fn get_machine_model(port: &mut Box<dyn SerialPort>) -> io::Result<()> {
     println!("Response:");
     println!("{}", str::from_utf8(&outbuf).unwrap());
 
-    thread::sleep(Duration::from_millis(50));
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
 
     Ok(())
 }
@@ -38,7 +38,7 @@ pub fn get_machine_number(port: &mut Box<dyn SerialPort>) -> io::Result<()> {
     println!("Response:");
     println!("{}", str::from_utf8(&outbuf).unwrap());
 
-    thread::sleep(Duration::from_millis(50));
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
 
     Ok(())
 }
