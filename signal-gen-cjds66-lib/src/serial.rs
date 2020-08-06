@@ -6,8 +6,8 @@ use crate::protocol::*;
 
 use serial::prelude::*;
 
-pub fn open(arg: &std::ffi::OsString) -> io::Result<Box<dyn SerialPort>> {
-    let mut port = Box::new(serial::open(&arg).unwrap());
+pub fn open(arg: &str) -> io::Result<Box<dyn SerialPort>> {
+    let mut port = Box::new(serial::open(&arg)?);
 
     port.reconfigure(&|settings| {
         settings.set_baud_rate(serial::Baud115200)?;
