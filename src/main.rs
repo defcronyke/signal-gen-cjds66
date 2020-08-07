@@ -24,9 +24,9 @@ fn real_main() -> i32 {
             Arg::with_name("devices")
                 .short("d")
                 .long("device")
+                .help("The device(s) to communicate with.")
                 .takes_value(true)
                 .value_name("PATH")
-                .help("The device(s) to communicate with.")
                 .multiple(true)
         )
         .arg(
@@ -40,6 +40,14 @@ fn real_main() -> i32 {
                 .short("s")
                 .long("serial")
                 .help("Get the device's serial number.")
+        )
+        .arg(
+            Arg::with_name("set channel output")
+                .short("o")
+                .long("set-channel-output")
+                .help("Set the output state to on or off for channels 1 and 2. Ex. -o 1 0")
+                .takes_value(true)
+                .value_name("CH1 ON, CH2 ON")
         );
 
     println!("");
@@ -60,17 +68,50 @@ fn real_main() -> i32 {
 
     println!("\n\nDevice(s) selected: {:?}\n", devices);
 
+    // Iterate over each device and perform commands on each.
     for device in &devices {
         println!("\n\nOpening communication link with device: {}\n", device);
 
+        // Open the device.
         match open(device) {
+
+            // If device was opened successfully.
             Ok(mut port) => {
+
+                // If model number is requested.
                 if matches.is_present("model") {
                     read_machine_model(&mut port).unwrap();
                 }
 
+                // If serial number is requested.
                 if matches.is_present("serial") {
                     read_machine_number(&mut port).unwrap();
+                }
+                
+                // If set channel output is requested.
+                if matches.is_present("set channel output") {
+                    let sco = matches.value_of("set channel output").unwrap_or_default();
+                    match sco {
+                        "1,1" | "11" | "on,on" | "1" | "on" => {
+                            set_channel_output(&mut port, true, true).unwrap();
+                        },
+                        
+                        "0,0" | "00" | "off,off" | "0" | "off" => {
+                            set_channel_output(&mut port, false, false).unwrap();
+                        },
+
+                        "1,0" | "10" | "on,off" => {
+                            set_channel_output(&mut port, true, false).unwrap();
+                        },
+
+                        "0,1" | "01" | "off,on" => {
+                            set_channel_output(&mut port, false, true).unwrap();
+                        },
+
+                        _ => {
+                            println!("\nError: unsupported value passed to \"set-channel-output\" argument: {}\n", sco);
+                        },
+                    }
                 }
             },
 
