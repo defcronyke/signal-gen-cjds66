@@ -85,6 +85,34 @@ pub fn set_channel_output(port: &mut Box<dyn SerialPort>, ch1: bool, ch2: bool) 
     Ok(res.to_string())
 }
 
+pub fn match_set_channel_output_arg(mut port: &mut Box<dyn SerialPort>, sco: &str) -> io::Result<String> {
+    let res: io::Result<String>;
+    
+    match sco {
+        "1,1" | "11" | "on,on" | "1" | "on" => {
+            res = set_channel_output(&mut port, true, true);
+        },
+        
+        "0,0" | "00" | "off,off" | "0" | "off" => {
+            res = set_channel_output(&mut port, false, false);
+        },
+
+        "1,0" | "10" | "on,off" => {
+            res = set_channel_output(&mut port, true, false);
+        },
+
+        "0,1" | "01" | "off,on" => {
+            res = set_channel_output(&mut port, false, true);
+        },
+
+        _ => {
+            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"-o\" argument: {}", sco)));
+        },
+    }
+
+    res
+}
+
 pub fn set_waveform_preset(port: &mut Box<dyn SerialPort>, chan: u64, preset: u64) -> io::Result<String> {
     let command: String;
     let chan_out: &str;
@@ -150,7 +178,7 @@ pub fn set_waveform_preset(port: &mut Box<dyn SerialPort>, chan: u64, preset: u6
 // 14: multi-tone || multitone || m-t || mt || m-tone || mtone
 // 15: sinc || sc
 // 16: lorenz || loren || lor || lz
-pub fn match_waveform_preset_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, preset: &str) -> io::Result<String> {
+pub fn match_set_waveform_preset_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, preset: &str) -> io::Result<String> {
     let res: io::Result<String>;
     
     match preset.parse::<u64>() {

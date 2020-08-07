@@ -90,10 +90,8 @@ fn real_main() -> i32 {
 
         // Open the device.
         match open(device) {
-
             // If device was opened successfully.
             Ok(mut port) => {
-
                 // If model number is requested.
                 if matches.is_present("model") {
                     read_machine_model(&mut port).unwrap();
@@ -107,7 +105,8 @@ fn real_main() -> i32 {
                 // If set waveform for channel1 is requested.
                 if matches.is_present("set waveform channel1") {
                     let preset = matches.value_of("set waveform channel1").unwrap_or_default();
-                    match match_waveform_preset_arg(&mut port, 1, preset) {
+                    
+                    match match_set_waveform_preset_arg(&mut port, 1, preset) {
                         Ok(_res) => {},
                         Err(e) => {
                             println!("\nError: {}\n", e);
@@ -118,7 +117,8 @@ fn real_main() -> i32 {
                 // If set waveform for channel2 is requested.
                 if matches.is_present("set waveform channel2") {
                     let preset = matches.value_of("set waveform channel2").unwrap_or_default();
-                    match match_waveform_preset_arg(&mut port, 2, preset) {
+                    
+                    match match_set_waveform_preset_arg(&mut port, 2, preset) {
                         Ok(_res) => {},
                         Err(e) => {
                             println!("\nError: {}\n", e);
@@ -129,25 +129,11 @@ fn real_main() -> i32 {
                 // If set channel output is requested.
                 if matches.is_present("set channel output") {
                     let sco = matches.value_of("set channel output").unwrap_or_default();
-                    match sco {
-                        "1,1" | "11" | "on,on" | "1" | "on" => {
-                            set_channel_output(&mut port, true, true).unwrap();
-                        },
-                        
-                        "0,0" | "00" | "off,off" | "0" | "off" => {
-                            set_channel_output(&mut port, false, false).unwrap();
-                        },
-
-                        "1,0" | "10" | "on,off" => {
-                            set_channel_output(&mut port, true, false).unwrap();
-                        },
-
-                        "0,1" | "01" | "off,on" => {
-                            set_channel_output(&mut port, false, true).unwrap();
-                        },
-
-                        _ => {
-                            println!("\nError: unsupported value passed to \"-o\" argument: {}\n", sco);
+                    
+                    match match_set_channel_output_arg(&mut port, sco) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
                         },
                     }
                 }
