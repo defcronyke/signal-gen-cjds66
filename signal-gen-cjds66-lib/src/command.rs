@@ -4,13 +4,15 @@ use std::io;
 use std::io::{Error, ErrorKind};
 use std::thread;
 use std::time::{Duration};
+// use crate::protocol;
+// #[macro_use]
 use crate::protocol::*;
 
 use std::io::prelude::*;
 use serial::prelude::*;
 use std::str;
 
-pub fn read_machine_model(port: &mut Box<dyn SerialPort>) -> io::Result<()> {
+pub fn read_machine_model(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
     println!("\nRequesting machine model number:\n{}", READ_MACHINE_MODEL);
 
     let inbuf: Vec<u8> = READ_MACHINE_MODEL.as_bytes().to_vec();
@@ -19,15 +21,17 @@ pub fn read_machine_model(port: &mut Box<dyn SerialPort>) -> io::Result<()> {
     port.write(&inbuf[..])?;
     port.read(&mut outbuf[..])?;
 
+    let res = str::from_utf8(&outbuf).unwrap();
+
     println!("Response:");
-    println!("{}", str::from_utf8(&outbuf).unwrap());
+    println!("{}", res);
 
     thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
 
-    Ok(())
+    Ok(res.to_string())
 }
 
-pub fn read_machine_number(port: &mut Box<dyn SerialPort>) -> io::Result<()> {
+pub fn read_machine_number(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
     println!("\nRequesting machine serial number:\n{}", READ_MACHINE_NUMBER);
 
     let inbuf: Vec<u8> = READ_MACHINE_NUMBER.as_bytes().to_vec();
@@ -36,12 +40,14 @@ pub fn read_machine_number(port: &mut Box<dyn SerialPort>) -> io::Result<()> {
     port.write(&inbuf[..])?;
     port.read(&mut outbuf[..])?;
 
+    let res = str::from_utf8(&outbuf).unwrap();
+
     println!("Response:");
-    println!("{}", str::from_utf8(&outbuf).unwrap());
+    println!("{}", res);
 
     thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
 
-    Ok(())
+    Ok(res.to_string())
 }
 
 pub fn set_channel_output(port: &mut Box<dyn SerialPort>, ch1: bool, ch2: bool) -> io::Result<String> {
@@ -77,4 +83,165 @@ pub fn set_channel_output(port: &mut Box<dyn SerialPort>, ch1: bool, ch2: bool) 
     thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
 
     Ok(res.to_string())
+}
+
+pub fn set_waveform_preset(port: &mut Box<dyn SerialPort>, chan: u64, preset: u64) -> io::Result<String> {
+    let command: String;
+    let chan_out: &str;
+
+    if chan == 1 {
+        chan_out = WRITE_WAVEFORM_PRESET_COMMAND_CH1;
+    } else if chan == 2 {
+        chan_out = WRITE_WAVEFORM_PRESET_COMMAND_CH2;
+    } else {
+        return Err(Error::new(ErrorKind::Other, "Unsupported channel number. Must be 1 or 2."));
+    }
+
+    if preset > 16 {
+        return Err(Error::new(ErrorKind::Other, "Unsupported waveform preset number. Must be 0-16."));
+    }
+
+    command = format!("{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        COMMAND_WRITE,
+        chan_out,
+        COMMAND_SEPARATOR,
+        preset,
+        COMMAND_END,
+    );
+    
+    println!("\nSetting waveform preset: ch{}={}:\n{}", chan, preset, command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_WAVEFORM_PRESET_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+// NOTE: See here for valid waveform preset names you 
+// can use with -w and -x args if you'd rather use 
+// names instead of numbers.
+//
+// Waveform names that are accepted:
+// 0:  sine || sin
+// 1:  square || sq
+// 2:  pulse || pul
+// 3:  triangle || tri
+// 4:  partialsine || partial-sine || parsine || par-sine || parsin || par-sin || psine || p-sine || psin || p-sin
+// 5:  cmos || cm
+// 6:  dc
+// 7:  halfwave || half-wave || hw || h-w
+// 8:  fullwave || full-wave || fw || f-w
+// 9:  pos-ladder || posladder || pos-lad || poslad || positive-ladder || positiveladder || pl
+// 10: neg-ladder || negladder || neg-lad || neglad || negative-ladder || negativeladder || nl
+// 11: noise || nois || noi || no || n
+// 12: exp-rise || exprise || e-r || er || e-rise || erise || e-ris || eris
+// 13: exp-decay || expdecay || e-d || ed || e-decay || edecay || e-dec || edec
+// 14: multi-tone || multitone || m-t || mt || m-tone || mtone
+// 15: sinc || sc
+// 16: lorenz || loren || lor || lz
+pub fn match_waveform_preset_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, preset: &str) -> io::Result<String> {
+    let res: io::Result<String>;
+    
+    match preset.parse::<u64>() {
+        Ok(preset) => {
+            match preset {
+                0..=16 => {
+                    res = set_waveform_preset(&mut port, chan, preset);
+                },
+
+                _ => {
+                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set waveform\" argument (must be 0-16): {}", preset)));
+                },
+            }
+        },
+
+        Err(_e) => {
+            match preset {
+                "sine" | "sin" => {
+                    res = set_waveform_preset(&mut port, chan, 0);
+                },
+
+                "square" | "sq" => {
+                    res = set_waveform_preset(&mut port, chan, 1);
+                },
+
+                "pulse" | "pul" => {
+                    res = set_waveform_preset(&mut port, chan, 2);
+                },
+
+                "triangle" | "tri" => {
+                    res = set_waveform_preset(&mut port, chan, 3);
+                },
+
+                "partialsine" | "partial-sine" | "parsine" | "par-sine" | "parsin" | "par-sin" | "psine" | "p-sine" | "psin" | "p-sin" => {
+                    res = set_waveform_preset(&mut port, chan, 4);
+                },
+
+                "cmos" | "cm" => {
+                    res = set_waveform_preset(&mut port, chan, 5);
+                },
+
+                "dc" => {
+                    res = set_waveform_preset(&mut port, chan, 6);
+                },
+
+                "halfwave" | "half-wave" | "hw" | "h-w" => {
+                    res = set_waveform_preset(&mut port, chan, 7);
+                },
+
+                "fullwave" | "full-wave" | "fw" | "f-w" => {
+                    res = set_waveform_preset(&mut port, chan, 8);
+                },
+
+                "pos-ladder" | "posladder" | "pos-lad" | "poslad" | "positive-ladder" | "positiveladder" | "pl" => {
+                    res = set_waveform_preset(&mut port, chan, 9);
+                },
+
+                "neg-ladder" | "negladder" | "neg-lad" | "neglad" | "negative-ladder" | "negativeladder" | "nl" => {
+                    res = set_waveform_preset(&mut port, chan, 10);
+                },
+
+                "noise" | "nois" | "noi" | "no" | "n" => {
+                    res = set_waveform_preset(&mut port, chan, 11);
+                },
+
+                "exp-rise" | "exprise" | "e-r" | "er" | "e-rise" | "erise" | "e-ris" | "eris" => {
+                    res = set_waveform_preset(&mut port, chan, 12);
+                },
+
+                "exp-decay" | "expdecay" | "e-d" | "ed" | "e-decay" | "edecay" | "e-dec" | "edec" => {
+                    res = set_waveform_preset(&mut port, chan, 13);
+                },
+
+                "multi-tone" | "multitone" | "m-t" | "mt" | "m-tone" | "mtone" => {
+                    res = set_waveform_preset(&mut port, chan, 14);
+                },
+
+                "sinc" | "sc" => {
+                    res = set_waveform_preset(&mut port, chan, 15);
+                },
+
+                "lorenz" | "loren" | "lor" | "lz" => {
+                    res = set_waveform_preset(&mut port, chan, 16);
+                },
+
+                _ => {
+                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set waveform\" argument (must be 0-16): {}", preset)));
+                },
+            }
+        },
+    }
+
+    res
 }

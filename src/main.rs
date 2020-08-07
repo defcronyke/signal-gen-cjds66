@@ -48,6 +48,22 @@ fn real_main() -> i32 {
                 .help("Set the output state to on or off for channels 1 and 2.\nFor example, ch1 on, ch 2 off: -o 1,0\n")
                 .takes_value(true)
                 .value_name("CH1_ON,CH2_ON")
+        )
+        .arg(
+            Arg::with_name("set waveform channel1")
+                .short("w")
+                .long("w1")
+                .help("Set the waveform preset for channel 1. The value must be a number 0-16.\nFor example, sine wave: -w 0\n")
+                .takes_value(true)
+                .value_name("PRESET")
+        )
+        .arg(
+            Arg::with_name("set waveform channel2")
+                .short("x")
+                .long("w2")
+                .help("Set the waveform preset for channel 2. The value must be a number 0-16.\nFor example, sine wave: -x 0\n")
+                .takes_value(true)
+                .value_name("PRESET")
         );
 
     println!("");
@@ -109,7 +125,29 @@ fn real_main() -> i32 {
                         },
 
                         _ => {
-                            println!("\nError: unsupported value passed to \"set-channel-output\" argument: {}\n", sco);
+                            println!("\nError: unsupported value passed to \"-o\" argument: {}\n", sco);
+                        },
+                    }
+                }
+
+                // If set waveform for channel1 is requested.
+                if matches.is_present("set waveform channel1") {
+                    let preset = matches.value_of("set waveform channel1").unwrap_or_default();
+                    match match_waveform_preset_arg(&mut port, 1, preset) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set waveform for channel2 is requested.
+                if matches.is_present("set waveform channel2") {
+                    let preset = matches.value_of("set waveform channel2").unwrap_or_default();
+                    match match_waveform_preset_arg(&mut port, 2, preset) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
                         },
                     }
                 }
