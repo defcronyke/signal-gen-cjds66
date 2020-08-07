@@ -103,7 +103,29 @@ fn real_main() -> i32 {
                 if matches.is_present("serial") {
                     read_machine_number(&mut port).unwrap();
                 }
-                
+
+                // If set waveform for channel1 is requested.
+                if matches.is_present("set waveform channel1") {
+                    let preset = matches.value_of("set waveform channel1").unwrap_or_default();
+                    match match_waveform_preset_arg(&mut port, 1, preset) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set waveform for channel2 is requested.
+                if matches.is_present("set waveform channel2") {
+                    let preset = matches.value_of("set waveform channel2").unwrap_or_default();
+                    match match_waveform_preset_arg(&mut port, 2, preset) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
                 // If set channel output is requested.
                 if matches.is_present("set channel output") {
                     let sco = matches.value_of("set channel output").unwrap_or_default();
@@ -126,28 +148,6 @@ fn real_main() -> i32 {
 
                         _ => {
                             println!("\nError: unsupported value passed to \"-o\" argument: {}\n", sco);
-                        },
-                    }
-                }
-
-                // If set waveform for channel1 is requested.
-                if matches.is_present("set waveform channel1") {
-                    let preset = matches.value_of("set waveform channel1").unwrap_or_default();
-                    match match_waveform_preset_arg(&mut port, 1, preset) {
-                        Ok(_res) => {},
-                        Err(e) => {
-                            println!("\nError: {}\n", e);
-                        },
-                    }
-                }
-
-                // If set waveform for channel2 is requested.
-                if matches.is_present("set waveform channel2") {
-                    let preset = matches.value_of("set waveform channel2").unwrap_or_default();
-                    match match_waveform_preset_arg(&mut port, 2, preset) {
-                        Ok(_res) => {},
-                        Err(e) => {
-                            println!("\nError: {}\n", e);
                         },
                     }
                 }
