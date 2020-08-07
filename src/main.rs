@@ -1,4 +1,4 @@
-extern crate signal_gen_cjds66_lib; // For compatibility with Rust pre-2018 versions.
+extern crate signal_gen_cjds66_lib;
 extern crate clap;
 
 use signal_gen_cjds66_lib::serial::open;
@@ -45,9 +45,9 @@ fn real_main() -> i32 {
             Arg::with_name("set channel output")
                 .short("o")
                 .long("set-channel-output")
-                .help("Set the output state to on or off for channels 1 and 2. Ex. -o 1 0")
+                .help("Set the output state to on or off for channels 1 and 2.\nFor example, ch1 on, ch 2 off: -o 1,0\n")
                 .takes_value(true)
-                .value_name("CH1 ON, CH2 ON")
+                .value_name("CH1_ON,CH2_ON")
         );
 
     println!("");
