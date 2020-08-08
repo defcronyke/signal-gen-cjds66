@@ -340,3 +340,72 @@ pub fn match_set_waveform_arbitrary_arg(mut port: &mut Box<dyn SerialPort>, chan
 
     res
 }
+
+pub fn set_frequency_microhertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> io::Result<String> {
+    let command: String;
+    let chan_out: &str;
+
+    if chan == 1 {
+        chan_out = WRITE_FREQUENCY_COMMAND_CH1;
+    } else if chan == 2 {
+        chan_out = WRITE_FREQUENCY_COMMAND_CH2;
+    } else {
+        return Err(Error::new(ErrorKind::Other, "Unsupported channel number. Must be 1 or 2."));
+    }
+
+    if amount < 1.0 || amount > 8000000000.00 {
+        return Err(Error::new(ErrorKind::Other, "Unsupported amount of uHz. Must be 0.01-80000000.0."));
+    }
+
+    command = format!("{}{}{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        COMMAND_WRITE,
+        chan_out,
+        COMMAND_SEPARATOR,
+        amount,
+        COMMAND_ARG_SEPARATOR,
+        WRITE_FREQUENCY_COMMAND_UNIT_MICROHERTZ,
+        COMMAND_END,
+    );
+    
+    println!("\nSetting frequency in uHz: ch{}={}:\n{}", chan, amount, command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_FREQUENCY_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+pub fn match_set_frequency_microherz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> io::Result<String> {
+    let res: io::Result<String>;
+    
+    match amount.parse::<f64>() {
+        Ok(amount) => {
+            match amount {
+                _y if amount >= 0.01 && amount <= 80000000.00 => {
+                    res = set_frequency_microhertz(&mut port, chan, amount * 100.0);
+                },
+
+                _ => {
+                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency uHz\" argument (must be 0.01-80000000.0): {}", amount)));
+                },
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency uHz\" argument (must be 0.01-80000000.0): {}: {}", amount, e)));
+        },
+    }
+
+    res
+}

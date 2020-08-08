@@ -80,6 +80,22 @@ fn real_main() -> i32 {
                 .help("Set the arbitrary waveform preset for channel 2. The value must be a number 1-60.\nFor example: -b 1\n")
                 .takes_value(true)
                 .value_name("CH2 ARB PRESET")
+        )
+        .arg(
+            Arg::with_name("set frequency in uHz channel1")
+                .short("u")
+                .long("u1")
+                .help("Set the waveform frequency for channel 1 in uHz. The value must be a number 0.01-80000000.0.\nFor example: -u 0.01\n")
+                .takes_value(true)
+                .value_name("CH1 FREQ uHz")
+        )
+        .arg(
+            Arg::with_name("set frequency in uHz channel2")
+                .short("v")
+                .long("u2")
+                .help("Set the waveform frequency for channel 2 in uHz. The value must be a number 0.01-80000000.0.\nFor example: -v 0.01\n")
+                .takes_value(true)
+                .value_name("CH2 FREQ uHz")
         );
 
     println!("");
@@ -159,6 +175,30 @@ fn real_main() -> i32 {
                     let preset = matches.value_of("set arbitrary waveform channel2").unwrap_or_default();
                     
                     match match_set_waveform_arbitrary_arg(&mut port, 2, preset) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set frequency for channel1 is requested.
+                if matches.is_present("set frequency in uHz channel1") {
+                    let amount = matches.value_of("set frequency in uHz channel1").unwrap_or_default();
+                    
+                    match match_set_frequency_microherz_arg(&mut port, 1, amount) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set frequency for channel2 is requested.
+                if matches.is_present("set frequency in uHz channel2") {
+                    let amount = matches.value_of("set frequency in uHz channel2").unwrap_or_default();
+                    
+                    match match_set_frequency_microherz_arg(&mut port, 2, amount) {
                         Ok(_res) => {},
                         Err(e) => {
                             println!("\nError: {}\n", e);
