@@ -273,3 +273,70 @@ pub fn match_set_waveform_preset_arg(mut port: &mut Box<dyn SerialPort>, chan: u
 
     res
 }
+
+pub fn set_waveform_arbitrary(port: &mut Box<dyn SerialPort>, chan: u64, preset: u64) -> io::Result<String> {
+    let command: String;
+    let chan_out: &str;
+
+    if chan == 1 {
+        chan_out = WRITE_WAVEFORM_PRESET_COMMAND_CH1;
+    } else if chan == 2 {
+        chan_out = WRITE_WAVEFORM_PRESET_COMMAND_CH2;
+    } else {
+        return Err(Error::new(ErrorKind::Other, "Unsupported channel number. Must be 1 or 2."));
+    }
+
+    if preset < 1 || preset > 60 {
+        return Err(Error::new(ErrorKind::Other, "Unsupported waveform preset number. Must be 1-60."));
+    }
+
+    command = format!("{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        COMMAND_WRITE,
+        chan_out,
+        COMMAND_SEPARATOR,
+        preset + 100,
+        COMMAND_END,
+    );
+    
+    println!("\nSetting waveform preset: ch{}={}:\n{}", chan, preset, command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_WAVEFORM_PRESET_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+pub fn match_set_waveform_arbitrary_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, preset: &str) -> io::Result<String> {
+    let res: io::Result<String>;
+    
+    match preset.parse::<u64>() {
+        Ok(preset) => {
+            match preset {
+                1..=60 => {
+                    res = set_waveform_arbitrary(&mut port, chan, preset);
+                },
+
+                _ => {
+                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set arbitrary waveform\" argument (must be 1-60): {}", preset)));
+                },
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set arbitrary waveform\" argument (must be 1-60): {}: {}", preset, e)));
+        },
+    }
+
+    res
+}

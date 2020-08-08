@@ -165,6 +165,13 @@ pub const WRITE_CHANNEL_OUTPUT_CH1_OFF_CH2_ON: &str = WRITE_CHANNEL_OUTPUT_CH1_O
 // -----
 
 
+// -----
+// Set waveform preset for each channel.
+// Ex:
+//   ch1 preset0 (sine wave) = ":w21=00.\r\n"
+//   ch2 preset1 (square wave) = ":w22=01.\r\n"
+//   ch1 preset101 (arbitrary wave preset1) = ":w21=101.\r\n"
+//   ch2 preset102 (arbitrary wave preset2) = ":w22=102.\r\n"
 macro_rules! WRITE_WAVEFORM_PRESET_COMMAND_PREFIX {() => {"2"}}
 pub const WRITE_WAVEFORM_PRESET_COMMAND_PREFIX: &'static str = WRITE_WAVEFORM_PRESET_COMMAND_PREFIX!();
 
@@ -182,3 +189,4 @@ pub const WRITE_WAVEFORM_PRESET_COMMAND_CH2: &'static str = WRITE_WAVEFORM_PRESE
 
 macro_rules! WRITE_WAVEFORM_PRESET_RES_LEN {() => {6}}
 pub const WRITE_WAVEFORM_PRESET_RES_LEN: u8 = WRITE_WAVEFORM_PRESET_RES_LEN!();
+// -----

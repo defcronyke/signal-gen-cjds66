@@ -55,7 +55,7 @@ fn real_main() -> i32 {
                 .long("w1")
                 .help("Set the waveform preset for channel 1. The value must be a number 0-16.\nFor example, sine wave: -w 0\n")
                 .takes_value(true)
-                .value_name("PRESET")
+                .value_name("CH1 PRESET")
         )
         .arg(
             Arg::with_name("set waveform channel2")
@@ -63,7 +63,23 @@ fn real_main() -> i32 {
                 .long("w2")
                 .help("Set the waveform preset for channel 2. The value must be a number 0-16.\nFor example, sine wave: -x 0\n")
                 .takes_value(true)
-                .value_name("PRESET")
+                .value_name("CH2 PRESET")
+        )
+        .arg(
+            Arg::with_name("set arbitrary waveform channel1")
+                .short("a")
+                .long("a1")
+                .help("Set the arbitrary waveform preset for channel 1. The value must be a number 1-60.\nFor example: -a 1\n")
+                .takes_value(true)
+                .value_name("CH1 ARB PRESET")
+        )
+        .arg(
+            Arg::with_name("set arbitrary waveform channel2")
+                .short("b")
+                .long("a2")
+                .help("Set the arbitrary waveform preset for channel 2. The value must be a number 1-60.\nFor example: -b 1\n")
+                .takes_value(true)
+                .value_name("CH2 ARB PRESET")
         );
 
     println!("");
@@ -119,6 +135,30 @@ fn real_main() -> i32 {
                     let preset = matches.value_of("set waveform channel2").unwrap_or_default();
                     
                     match match_set_waveform_preset_arg(&mut port, 2, preset) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set arbitrary waveform for channel1 is requested.
+                if matches.is_present("set arbitrary waveform channel1") {
+                    let preset = matches.value_of("set arbitrary waveform channel1").unwrap_or_default();
+                    
+                    match match_set_waveform_arbitrary_arg(&mut port, 1, preset) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set arbitrary waveform for channel2 is requested.
+                if matches.is_present("set arbitrary waveform channel2") {
+                    let preset = matches.value_of("set arbitrary waveform channel2").unwrap_or_default();
+                    
+                    match match_set_waveform_arbitrary_arg(&mut port, 2, preset) {
                         Ok(_res) => {},
                         Err(e) => {
                             println!("\nError: {}\n", e);
