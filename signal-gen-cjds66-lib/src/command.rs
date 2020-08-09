@@ -624,7 +624,8 @@ pub fn match_set_frequency_kilohertz_arg(mut port: &mut Box<dyn SerialPort>, cha
         Ok(amount) => {
             match amount {
                 _y if amount >= 0.00001 && amount <= 60000.0 => {
-                    let amount_rounded = (amount * 100000.0 * 100000.0).round() / 100000.0;
+                    let amount_rounded = ((amount * 100000.0 * 100000.0).round() / 100000.0).round();
+                    
                     res = set_frequency_kilohertz(&mut port, chan, amount_rounded);
                 },
 
@@ -636,6 +637,83 @@ pub fn match_set_frequency_kilohertz_arg(mut port: &mut Box<dyn SerialPort>, cha
 
         Err(e) => {
             res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency kHz\" argument (must be 0.00001-60000.0): {}: {}", amount, e)));
+        },
+    }
+
+    res
+}
+
+pub fn set_frequency_megahertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> io::Result<String> {
+    let command: String;
+    let chan_out: &str;
+
+    if chan == 1 {
+        chan_out = WRITE_FREQUENCY_COMMAND_CH1;
+    } else if chan == 2 {
+        chan_out = WRITE_FREQUENCY_COMMAND_CH2;
+    } else {
+        return Err(Error::new(ErrorKind::Other, "Unsupported channel number. Must be 1 or 2."));
+    }
+
+    if amount < 1.0 || amount > 6000000000.0 {
+        return Err(Error::new(ErrorKind::Other, "Unsupported amount of MHz. Must be 0.00000001-60.0."));
+    }
+
+    command = format!("{}{}{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        COMMAND_WRITE,
+        chan_out,
+        COMMAND_SEPARATOR,
+        amount,
+        COMMAND_ARG_SEPARATOR,
+        WRITE_FREQUENCY_COMMAND_UNIT_MEGAHERTZ,
+        COMMAND_END,
+    );
+    
+    println!("\nSetting frequency in MHz: ch{}={}:\n{}", chan, amount, command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_FREQUENCY_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+pub fn match_set_frequency_megahertz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> io::Result<String> {
+    let amount_parts: Vec<&str> = amount.split(".").collect();
+    
+    if amount_parts.len() > 1 && amount_parts[1].len() > 8 {
+        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency MHz\" argument (must be 0.00000001-60.0): {}: too many decimal places (8 max)", amount)));
+    }
+    
+    let res: io::Result<String>;
+    
+    match amount.parse::<f64>() {
+        Ok(amount) => {
+            match amount {
+                _y if amount >= 0.00000001 && amount <= 60.0 => {
+                    let amount_rounded = ((amount * 100000000.0 * 10000000.0).round() / 10000000.0).round();
+                    
+                    res = set_frequency_megahertz(&mut port, chan, amount_rounded);
+                },
+
+                _ => {
+                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency MHz\" argument (must be 0.00000001-60.0): {}", amount)));
+                },
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency MHz\" argument (must be 0.00000001-60.0): {}: {}", amount, e)));
         },
     }
 

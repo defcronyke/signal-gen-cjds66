@@ -133,7 +133,7 @@ fn real_main() -> i32 {
             Arg::with_name("set frequency in kHz channel1")
                 .short("k")
                 .long("k1")
-                .help("Set the waveform frequency for channel 1 in kHz. The value must be a number 0.00001-60000.0.\nFor example: -k 0.01\n")
+                .help("Set the waveform frequency for channel 1 in kHz. The value must be a number 0.00001-60000.0.\nFor example: -k 0.00001\n")
                 .takes_value(true)
                 .value_name("CH1 FREQ kHz")
         )
@@ -141,9 +141,25 @@ fn real_main() -> i32 {
             Arg::with_name("set frequency in kHz channel2")
                 .short("l")
                 .long("k2")
-                .help("Set the waveform frequency for channel 2 in kHz. The value must be a number 0.00001-60000.0.\nFor example: -l 0.01\n")
+                .help("Set the waveform frequency for channel 2 in kHz. The value must be a number 0.00001-60000.0.\nFor example: -l 0.00001\n")
                 .takes_value(true)
                 .value_name("CH2 FREQ kHz")
+        )
+        .arg(
+            Arg::with_name("set frequency in MHz channel1")
+                .short("y")
+                .long("y1")
+                .help("Set the waveform frequency for channel 1 in MHz. The value must be a number 0.00000001-60.0.\nFor example: -y 0.00000001\n")
+                .takes_value(true)
+                .value_name("CH1 FREQ MHz")
+        )
+        .arg(
+            Arg::with_name("set frequency in MHz channel2")
+                .short("z")
+                .long("y2")
+                .help("Set the waveform frequency for channel 2 in MHz. The value must be a number 0.00000001-60.0.\nFor example: -z 0.00000001\n")
+                .takes_value(true)
+                .value_name("CH2 FREQ MHz")
         );
 
     println!("");
@@ -319,6 +335,30 @@ fn real_main() -> i32 {
                     let amount = matches.value_of("set frequency in kHz channel2").unwrap_or_default();
                     
                     match match_set_frequency_kilohertz_arg(&mut port, 2, amount) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set frequency for channel1 in kHz is requested.
+                if matches.is_present("set frequency in MHz channel1") {
+                    let amount = matches.value_of("set frequency in MHz channel1").unwrap_or_default();
+                    
+                    match match_set_frequency_megahertz_arg(&mut port, 1, amount) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set frequency for channel2 in kHz is requested.
+                if matches.is_present("set frequency in MHz channel2") {
+                    let amount = matches.value_of("set frequency in MHz channel2").unwrap_or_default();
+                    
+                    match match_set_frequency_megahertz_arg(&mut port, 2, amount) {
                         Ok(_res) => {},
                         Err(e) => {
                             println!("\nError: {}\n", e);
