@@ -195,8 +195,8 @@ pub const WRITE_WAVEFORM_PRESET_RES_LEN: u8 = WRITE_WAVEFORM_PRESET_RES_LEN!();
 // -----
 // Set waveform frequency for each channel.
 // Ex:
-//   ch1  = ":w21=00.\r\n"
-//   ch2 preset1 (square wave) = ":w22=01.\r\n"
+//   ch1 = ":w23=0.01,0.\r\n"
+//   ch2 = ":w24=0.01,0.\r\n"
 macro_rules! WRITE_FREQUENCY_COMMAND_PREFIX {() => {"2"}}
 pub const WRITE_FREQUENCY_COMMAND_PREFIX: &'static str = WRITE_FREQUENCY_COMMAND_PREFIX!();
 
@@ -229,3 +229,29 @@ pub const WRITE_FREQUENCY_COMMAND_UNIT_MEGAHERTZ: &'static str = WRITE_FREQUENCY
 
 macro_rules! WRITE_FREQUENCY_RES_LEN {() => {6}}
 pub const WRITE_FREQUENCY_RES_LEN: u8 = WRITE_FREQUENCY_RES_LEN!();
+// -----
+
+
+// -----
+// Set the signal amplitude.
+// Ex:
+//   ch1 (0.01v) = ":w25=1.\r\n"
+//   ch2 (0.01v) = ":w26=1.\r\n"
+macro_rules! WRITE_AMPLITUDE_COMMAND_PREFIX {() => {"2"}}
+pub const WRITE_AMPLITUDE_COMMAND_PREFIX: &'static str = WRITE_AMPLITUDE_COMMAND_PREFIX!();
+
+macro_rules! WRITE_AMPLITUDE_COMMAND_CH1 {() => {concat!(
+    WRITE_AMPLITUDE_COMMAND_PREFIX!(),
+    "5",
+)}}
+pub const WRITE_AMPLITUDE_COMMAND_CH1: &'static str = WRITE_AMPLITUDE_COMMAND_CH1!();
+
+macro_rules! WRITE_AMPLITUDE_COMMAND_CH2 {() => {concat!(
+    WRITE_AMPLITUDE_COMMAND_PREFIX!(),
+    "6",
+)}}
+pub const WRITE_AMPLITUDE_COMMAND_CH2: &'static str = WRITE_AMPLITUDE_COMMAND_CH2!();
+
+macro_rules! WRITE_AMPLITUDE_RES_LEN {() => {6}}
+pub const WRITE_AMPLITUDE_RES_LEN: u8 = WRITE_AMPLITUDE_RES_LEN!();
+// -----

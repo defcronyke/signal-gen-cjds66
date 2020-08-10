@@ -44,7 +44,7 @@ fn real_main() -> i32 {
         .arg(
             Arg::with_name("set channel output")
                 .short("o")
-                .long("set-channel-output")
+                .long("output")
                 .help("Set the output state to on or off for channels 1 and 2.\nFor example, ch1 on, ch 2 off: -o 1,0\n")
                 .takes_value(true)
                 .value_name("CH1_ON,CH2_ON")
@@ -52,7 +52,7 @@ fn real_main() -> i32 {
         .arg(
             Arg::with_name("set waveform channel1")
                 .short("w")
-                .long("w1")
+                .long("wave-preset-ch1")
                 .help("Set the waveform preset for channel 1. The value must be a number 0-16.\nFor example, sine wave: -w 0\n")
                 .takes_value(true)
                 .value_name("CH1 PRESET")
@@ -60,7 +60,7 @@ fn real_main() -> i32 {
         .arg(
             Arg::with_name("set waveform channel2")
                 .short("x")
-                .long("w2")
+                .long("wave-preset-ch2")
                 .help("Set the waveform preset for channel 2. The value must be a number 0-16.\nFor example, sine wave: -x 0\n")
                 .takes_value(true)
                 .value_name("CH2 PRESET")
@@ -68,7 +68,7 @@ fn real_main() -> i32 {
         .arg(
             Arg::with_name("set arbitrary waveform channel1")
                 .short("a")
-                .long("a1")
+                .long("wave-arb-ch1")
                 .help("Set the arbitrary waveform preset for channel 1. The value must be a number 1-60.\nFor example: -a 1\n")
                 .takes_value(true)
                 .value_name("CH1 ARB PRESET")
@@ -76,7 +76,7 @@ fn real_main() -> i32 {
         .arg(
             Arg::with_name("set arbitrary waveform channel2")
                 .short("b")
-                .long("a2")
+                .long("wave-arb-ch2")
                 .help("Set the arbitrary waveform preset for channel 2. The value must be a number 1-60.\nFor example: -b 1\n")
                 .takes_value(true)
                 .value_name("CH2 ARB PRESET")
@@ -84,7 +84,7 @@ fn real_main() -> i32 {
         .arg(
             Arg::with_name("set frequency in uHz channel1")
                 .short("u")
-                .long("u1")
+                .long("freq-micro-ch1")
                 .help("Set the waveform frequency for channel 1 in uHz. The value must be a number 0.01-80000000.0.\nFor example: -u 0.01\n")
                 .takes_value(true)
                 .value_name("CH1 FREQ uHz")
@@ -92,7 +92,7 @@ fn real_main() -> i32 {
         .arg(
             Arg::with_name("set frequency in uHz channel2")
                 .short("v")
-                .long("u2")
+                .long("freq-micro-ch2")
                 .help("Set the waveform frequency for channel 2 in uHz. The value must be a number 0.01-80000000.0.\nFor example: -v 0.01\n")
                 .takes_value(true)
                 .value_name("CH2 FREQ uHz")
@@ -100,7 +100,7 @@ fn real_main() -> i32 {
         .arg(
             Arg::with_name("set frequency in mHz channel1")
                 .short("i")
-                .long("i1")
+                .long("freq-milli-ch1")
                 .help("Set the waveform frequency for channel 1 in mHz. The value must be a number 0.01-80000000.0.\nFor example: -i 0.01\n")
                 .takes_value(true)
                 .value_name("CH1 FREQ mHz")
@@ -108,7 +108,7 @@ fn real_main() -> i32 {
         .arg(
             Arg::with_name("set frequency in mHz channel2")
                 .short("j")
-                .long("i2")
+                .long("freq-milli-ch2")
                 .help("Set the waveform frequency for channel 2 in mHz. The value must be a number 0.01-80000000.0.\nFor example: -j 0.01\n")
                 .takes_value(true)
                 .value_name("CH2 FREQ mHz")
@@ -116,7 +116,7 @@ fn real_main() -> i32 {
         .arg(
             Arg::with_name("set frequency in Hz channel1")
                 .short("e")
-                .long("e1")
+                .long("freq-hertz-ch1")
                 .help("Set the waveform frequency for channel 1 in Hz. The value must be a number 0.01-60000000.0.\nFor example: -e 0.01\n")
                 .takes_value(true)
                 .value_name("CH1 FREQ Hz")
@@ -124,7 +124,7 @@ fn real_main() -> i32 {
         .arg(
             Arg::with_name("set frequency in Hz channel2")
                 .short("f")
-                .long("e2")
+                .long("freq-hertz-ch2")
                 .help("Set the waveform frequency for channel 2 in Hz. The value must be a number 0.01-60000000.0.\nFor example: -f 0.01\n")
                 .takes_value(true)
                 .value_name("CH2 FREQ Hz")
@@ -132,7 +132,7 @@ fn real_main() -> i32 {
         .arg(
             Arg::with_name("set frequency in kHz channel1")
                 .short("k")
-                .long("k1")
+                .long("freq-kilo-ch1")
                 .help("Set the waveform frequency for channel 1 in kHz. The value must be a number 0.00001-60000.0.\nFor example: -k 0.00001\n")
                 .takes_value(true)
                 .value_name("CH1 FREQ kHz")
@@ -140,7 +140,7 @@ fn real_main() -> i32 {
         .arg(
             Arg::with_name("set frequency in kHz channel2")
                 .short("l")
-                .long("k2")
+                .long("freq-kilo-ch2")
                 .help("Set the waveform frequency for channel 2 in kHz. The value must be a number 0.00001-60000.0.\nFor example: -l 0.00001\n")
                 .takes_value(true)
                 .value_name("CH2 FREQ kHz")
@@ -148,7 +148,7 @@ fn real_main() -> i32 {
         .arg(
             Arg::with_name("set frequency in MHz channel1")
                 .short("y")
-                .long("y1")
+                .long("freq-mega-ch1")
                 .help("Set the waveform frequency for channel 1 in MHz. The value must be a number 0.00000001-60.0.\nFor example: -y 0.00000001\n")
                 .takes_value(true)
                 .value_name("CH1 FREQ MHz")
@@ -156,10 +156,26 @@ fn real_main() -> i32 {
         .arg(
             Arg::with_name("set frequency in MHz channel2")
                 .short("z")
-                .long("y2")
+                .long("freq-mega-ch2")
                 .help("Set the waveform frequency for channel 2 in MHz. The value must be a number 0.00000001-60.0.\nFor example: -z 0.00000001\n")
                 .takes_value(true)
                 .value_name("CH2 FREQ MHz")
+        )
+        .arg(
+            Arg::with_name("set amplitude in volts channel1")
+                .short("p")
+                .long("ampli-ch1")
+                .help("Set the signal amplitude for channel 1 in volts. The value must be a number 0.000-20.0.\nFor example: -p 0.001\n")
+                .takes_value(true)
+                .value_name("CH1 AMPLI V")
+        )
+        .arg(
+            Arg::with_name("set amplitude in volts channel2")
+                .short("q")
+                .long("ampli-ch2")
+                .help("Set the signal amplitude for channel 2 in volts. The value must be a number 0.000-20.0.\nFor example: -q 0.001\n")
+                .takes_value(true)
+                .value_name("CH2 AMPLI V")
         );
 
     println!("");
@@ -342,7 +358,7 @@ fn real_main() -> i32 {
                     }
                 }
 
-                // If set frequency for channel1 in kHz is requested.
+                // If set frequency for channel1 in MHz is requested.
                 if matches.is_present("set frequency in MHz channel1") {
                     let amount = matches.value_of("set frequency in MHz channel1").unwrap_or_default();
                     
@@ -354,11 +370,35 @@ fn real_main() -> i32 {
                     }
                 }
 
-                // If set frequency for channel2 in kHz is requested.
+                // If set frequency for channel2 in MHz is requested.
                 if matches.is_present("set frequency in MHz channel2") {
                     let amount = matches.value_of("set frequency in MHz channel2").unwrap_or_default();
                     
                     match match_set_frequency_megahertz_arg(&mut port, 2, amount) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set amplitude for channel1 in volts is requested.
+                if matches.is_present("set amplitude in volts channel1") {
+                    let amount = matches.value_of("set amplitude in volts channel1").unwrap_or_default();
+                    
+                    match match_set_amplitude_arg(&mut port, 1, amount) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set frequency for channel2 in MHz is requested.
+                if matches.is_present("set amplitude in volts channel2") {
+                    let amount = matches.value_of("set amplitude in volts channel2").unwrap_or_default();
+                    
+                    match match_set_amplitude_arg(&mut port, 2, amount) {
                         Ok(_res) => {},
                         Err(e) => {
                             println!("\nError: {}\n", e);
