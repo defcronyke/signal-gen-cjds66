@@ -213,6 +213,14 @@ fn real_main() -> i32 {
                 .takes_value(true)
                 .value_name("CH2 VOLT OFFSET")
                 .allow_hyphen_values(true)
+        )
+        .arg(
+            Arg::with_name("set phase")
+                .short("r")
+                .long("phase")
+                .help("Set the phase in degrees. The value must be a number 0.0-360.0, and 360.0 wraps around to 0.0. For example: -g 180.7\n")
+                .takes_value(true)
+                .value_name("PHASE DEG")
         );
 
     println!("");
@@ -494,6 +502,19 @@ fn real_main() -> i32 {
                     let amount = matches.value_of("set voltage offset channel2").unwrap_or_default();
                     
                     match match_set_voltage_offset_arg(&mut port, 2, amount) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+
+                // If set phase in degrees is requested.
+                if matches.is_present("set phase") {
+                    let amount = matches.value_of("set phase").unwrap_or_default();
+                    
+                    match match_set_phase_arg(&mut port, amount) {
                         Ok(_res) => {},
                         Err(e) => {
                             println!("\nError: {}\n", e);

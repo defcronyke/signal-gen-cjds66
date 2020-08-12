@@ -305,10 +305,10 @@ pub const WRITE_DUTY_CYCLE_RES_LEN: u8 = WRITE_DUTY_CYCLE_RES_LEN!();
 
 
 // -----
-// Set the offset in volts.
+// Set the voltage offset in volts.
 // Ex:
-//   ch1 (40.1%) = ":w29=401.\r\n"
-//   ch2 (40.1%) = ":w30=401.\r\n"
+//   ch1 (-1.23%) = ":w27=877.\r\n"
+//   ch2 (-1.23%) = ":w28=877.\r\n"
 macro_rules! WRITE_VOLTAGE_OFFSET_COMMAND_PREFIX {() => {"2"}}
 pub const WRITE_VOLTAGE_OFFSET_COMMAND_PREFIX: &'static str = WRITE_VOLTAGE_OFFSET_COMMAND_PREFIX!();
 
@@ -326,4 +326,16 @@ pub const WRITE_VOLTAGE_OFFSET_COMMAND_CH2: &'static str = WRITE_VOLTAGE_OFFSET_
 
 macro_rules! WRITE_VOLTAGE_OFFSET_RES_LEN {() => {6}}
 pub const WRITE_VOLTAGE_OFFSET_RES_LEN: u8 = WRITE_VOLTAGE_OFFSET_RES_LEN!();
+// -----
+
+
+// -----
+// Set the phase in degrees.
+// Ex:
+//   180.7% = ":w31=1807.\r\n"
+macro_rules! WRITE_PHASE_COMMAND {() => {"31"}}
+pub const WRITE_PHASE_COMMAND: &'static str = WRITE_PHASE_COMMAND!();
+
+macro_rules! WRITE_PHASE_RES_LEN {() => {6}}
+pub const WRITE_PHASE_RES_LEN: u8 = WRITE_PHASE_RES_LEN!();
 // -----
