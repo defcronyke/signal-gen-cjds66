@@ -302,3 +302,28 @@ pub const WRITE_DUTY_CYCLE_COMMAND_CH2: &'static str = WRITE_DUTY_CYCLE_COMMAND_
 macro_rules! WRITE_DUTY_CYCLE_RES_LEN {() => {6}}
 pub const WRITE_DUTY_CYCLE_RES_LEN: u8 = WRITE_DUTY_CYCLE_RES_LEN!();
 // -----
+
+
+// -----
+// Set the offset in volts.
+// Ex:
+//   ch1 (40.1%) = ":w29=401.\r\n"
+//   ch2 (40.1%) = ":w30=401.\r\n"
+macro_rules! WRITE_VOLTAGE_OFFSET_COMMAND_PREFIX {() => {"2"}}
+pub const WRITE_VOLTAGE_OFFSET_COMMAND_PREFIX: &'static str = WRITE_VOLTAGE_OFFSET_COMMAND_PREFIX!();
+
+macro_rules! WRITE_VOLTAGE_OFFSET_COMMAND_CH1 {() => {concat!(
+    WRITE_VOLTAGE_OFFSET_COMMAND_PREFIX!(),
+    "7",
+)}}
+pub const WRITE_VOLTAGE_OFFSET_COMMAND_CH1: &'static str = WRITE_VOLTAGE_OFFSET_COMMAND_CH1!();
+
+macro_rules! WRITE_VOLTAGE_OFFSET_COMMAND_CH2 {() => {concat!(
+    WRITE_VOLTAGE_OFFSET_COMMAND_PREFIX!(),
+    "8",
+)}}
+pub const WRITE_VOLTAGE_OFFSET_COMMAND_CH2: &'static str = WRITE_VOLTAGE_OFFSET_COMMAND_CH2!();
+
+macro_rules! WRITE_VOLTAGE_OFFSET_RES_LEN {() => {6}}
+pub const WRITE_VOLTAGE_OFFSET_RES_LEN: u8 = WRITE_VOLTAGE_OFFSET_RES_LEN!();
+// -----

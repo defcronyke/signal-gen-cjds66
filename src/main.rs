@@ -195,6 +195,24 @@ fn real_main() -> i32 {
                 .help("Set the duty cycle for channel 2 in percent. The value must be a number 0.0-99.9. For example: -c 40.1\n")
                 .takes_value(true)
                 .value_name("CH2 DUTY CYCLE")
+        )
+        .arg(
+            Arg::with_name("set voltage offset channel1")
+                .short("g")
+                .long("offset-ch1")
+                .help("Set the voltage offset for channel 1 in volts. The value must be a number -9.99-9.99. For example: -g -1.23\n")
+                .takes_value(true)
+                .value_name("CH1 VOLT OFFSET")
+                .allow_hyphen_values(true)
+        )
+        .arg(
+            Arg::with_name("set voltage offset channel2")
+                .short("n")
+                .long("offset-ch2")
+                .help("Set the voltage offset for channel 2 in volts. The value must be a number -9.99-9.99. For example: -n -1.23\n")
+                .takes_value(true)
+                .value_name("CH2 VOLT OFFSET")
+                .allow_hyphen_values(true)
         );
 
     println!("");
@@ -451,6 +469,31 @@ fn real_main() -> i32 {
                     let amount = matches.value_of("set duty cycle channel2").unwrap_or_default();
                     
                     match match_set_duty_cycle_arg(&mut port, 2, amount) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+
+                // If set voltage offset for channel1 in volts is requested.
+                if matches.is_present("set voltage offset channel1") {
+                    let amount = matches.value_of("set voltage offset channel1").unwrap_or_default();
+                    
+                    match match_set_voltage_offset_arg(&mut port, 1, amount) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set voltage offset for channel2 in volts is requested.
+                if matches.is_present("set voltage offset channel2") {
+                    let amount = matches.value_of("set voltage offset channel2").unwrap_or_default();
+                    
+                    match match_set_voltage_offset_arg(&mut port, 2, amount) {
                         Ok(_res) => {},
                         Err(e) => {
                             println!("\nError: {}\n", e);

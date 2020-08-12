@@ -823,7 +823,7 @@ pub fn set_duty_cycle(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) ->
     println!("\nSetting duty cycle percent: ch{}={}:\n{}", chan, amount, command);
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
-    let mut outbuf: Vec<u8> = (0..WRITE_AMPLITUDE_RES_LEN).collect();
+    let mut outbuf: Vec<u8> = (0..WRITE_DUTY_CYCLE_RES_LEN).collect();
 
     port.write(&inbuf[..])?;
     port.read(&mut outbuf[..])?;
@@ -864,6 +864,87 @@ pub fn match_set_duty_cycle_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, a
 
         Err(e) => {
             res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set duty cycle\" argument (must be 0.0-99.9): {}: {}", amount, e)));
+        },
+    }
+
+    res
+}
+
+pub fn set_voltage_offset(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> io::Result<String> {
+    let command: String;
+    let chan_out: &str;
+
+    if chan == 1 {
+        chan_out = WRITE_VOLTAGE_OFFSET_COMMAND_CH1;
+    } else if chan == 2 {
+        chan_out = WRITE_VOLTAGE_OFFSET_COMMAND_CH2;
+    } else {
+        return Err(Error::new(ErrorKind::Other, "Unsupported channel number. Must be 1 or 2."));
+    }
+
+    if amount < 1.0 || amount > 1999.0 {
+        return Err(Error::new(ErrorKind::Other, "Unsupported voltage offset. Must be -9.99-9.99."));
+    }
+
+    command = format!("{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        COMMAND_WRITE,
+        chan_out,
+        COMMAND_SEPARATOR,
+        amount,
+        COMMAND_END,
+    );
+    
+    println!("\nSetting voltage offset: ch{}={}:\n{}", chan, amount, command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_VOLTAGE_OFFSET_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+pub fn match_set_voltage_offset_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> io::Result<String> {
+    let amount_parts: Vec<&str> = amount.split(".").collect();
+    
+    if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
+        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set voltage offset\" argument (must be -9.99-9.99): {}: too many decimal places (2 max)", amount)));
+    }
+    
+    let res: io::Result<String>;
+    
+    match amount.parse::<f64>() {
+        Ok(amount) => {
+            match amount {
+                _y if amount >= -9.99 && amount <= 9.99 => {
+                    let mut amount_rounded = amount;
+
+                    if amount_rounded >= 0.0 {
+                        amount_rounded = (((amount * 100.0 + 1000.0) * 100.0).round() / 100.0).round();
+                    } else {
+                        amount_rounded = (((1000.0 + amount * 100.0) * 100.0).round() / 100.0).round();
+                    }
+                    
+                    res = set_voltage_offset(&mut port, chan, amount_rounded);
+                },
+
+                _ => {
+                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set voltage offset\" argument (must be -9.99-9.99): {}", amount)));
+                },
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set voltage offset\" argument (must be -9.99-9.99): {}: {}", amount, e)));
         },
     }
 
