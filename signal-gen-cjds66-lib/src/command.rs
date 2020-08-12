@@ -794,3 +794,78 @@ pub fn match_set_amplitude_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, am
 
     res
 }
+
+pub fn set_duty_cycle(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> io::Result<String> {
+    let command: String;
+    let chan_out: &str;
+
+    if chan == 1 {
+        chan_out = WRITE_DUTY_CYCLE_COMMAND_CH1;
+    } else if chan == 2 {
+        chan_out = WRITE_DUTY_CYCLE_COMMAND_CH2;
+    } else {
+        return Err(Error::new(ErrorKind::Other, "Unsupported channel number. Must be 1 or 2."));
+    }
+
+    if amount < 0.0 || amount > 999.0 {
+        return Err(Error::new(ErrorKind::Other, "Unsupported duty cycle. Must be 0.0-99.9."));
+    }
+
+    command = format!("{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        COMMAND_WRITE,
+        chan_out,
+        COMMAND_SEPARATOR,
+        amount,
+        COMMAND_END,
+    );
+    
+    println!("\nSetting duty cycle percent: ch{}={}:\n{}", chan, amount, command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_AMPLITUDE_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+pub fn match_set_duty_cycle_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> io::Result<String> {
+    let amount_parts: Vec<&str> = amount.split(".").collect();
+    
+    if amount_parts.len() > 1 && amount_parts[1].len() > 1 {
+        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set duty cycle\" argument (must be 0.0-99.9): {}: too many decimal places (1 max)", amount)));
+    }
+    
+    let res: io::Result<String>;
+    
+    match amount.parse::<f64>() {
+        Ok(amount) => {
+            match amount {
+                _y if amount >= 0.0 && amount <= 99.9 => {
+                    let amount_rounded = ((amount * 10.0 * 10.0).round() / 10.0).round();
+                    
+                    res = set_duty_cycle(&mut port, chan, amount_rounded);
+                },
+
+                _ => {
+                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set duty cycle\" argument (must be 0.0-99.9): {}", amount)));
+                },
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set duty cycle\" argument (must be 0.0-99.9): {}: {}", amount, e)));
+        },
+    }
+
+    res
+}
