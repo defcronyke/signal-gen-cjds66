@@ -381,11 +381,11 @@ bitflags! {
 impl fmt::Display for TrackingArg {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{},{},{},{},{}", 
-            ((self.bits & 1) > 0) as i32,
-            ((self.bits & (1 << 1)) > 0) as i32,
-            ((self.bits & (1 << 2)) > 0) as i32,
-            ((self.bits & (1 << 3)) > 0) as i32,
-            ((self.bits & (1 << 4)) > 0) as i32,
+            self.bits & 1,
+            (self.bits & (1 << 1)) >> 1,
+            (self.bits & (1 << 2)) >> 2,
+            (self.bits & (1 << 3)) >> 3,
+            (self.bits & (1 << 4)) >> 4,
         )
     }
 }
@@ -397,11 +397,11 @@ pub trait ToStrVal {
 impl ToStrVal for TrackingArg {
     fn to_str_val(&self) -> String {
         format!("{}{}{}{}{}", 
-            ((self.bits & 1) > 0) as i32,
-            ((self.bits & (1 << 1)) > 0) as i32,
-            ((self.bits & (1 << 2)) > 0) as i32,
-            ((self.bits & (1 << 3)) > 0) as i32,
-            ((self.bits & (1 << 4)) > 0) as i32,
+            self.bits & 1,
+            (self.bits & (1 << 1)) >> 1,
+            (self.bits & (1 << 2)) >> 2,
+            (self.bits & (1 << 3)) >> 3,
+            (self.bits & (1 << 4)) >> 4,
         )
     }
 }
