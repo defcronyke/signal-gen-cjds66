@@ -1,3 +1,7 @@
+use bitflags;
+use std::fmt;
+use std::str;
+
 // -----
 macro_rules! SERIAL_TIMEOUT_MS {() => {3000}}
 pub const SERIAL_TIMEOUT_MS: u64 = SERIAL_TIMEOUT_MS!();
@@ -338,4 +342,70 @@ pub const WRITE_PHASE_COMMAND: &'static str = WRITE_PHASE_COMMAND!();
 
 macro_rules! WRITE_PHASE_RES_LEN {() => {6}}
 pub const WRITE_PHASE_RES_LEN: u8 = WRITE_PHASE_RES_LEN!();
+// -----
+
+
+// -----
+// Set the tracking mode.
+// Ex:
+//   frequency and amplitude sync = ":w54=1,0,1,0,0.\r\n"
+//
+// Argument index position meanings:
+//   0: frequency
+//   1: waveform
+//   2: amplitude
+//   3: offset
+//   4: duty cycle
+macro_rules! WRITE_TRACKING_COMMAND {() => {"54"}}
+pub const WRITE_TRACKING_COMMAND: &'static str = WRITE_TRACKING_COMMAND!();
+
+macro_rules! TRACKING_FEATURES {() => {"The bit position meanings are as follows:
+0: frequency
+1: waveform
+2: amplitude
+3: offset
+4: duty cycle"}}
+pub const TRACKING_FEATURES: &'static str = TRACKING_FEATURES!();
+
+bitflags! {
+    pub struct TrackingArg: u8 {
+        const NONE      = 0b00000000;
+        const FREQUENCY = 0b00000001;
+        const WAVEFORM  = 0b00000010;
+        const AMPLITUDE = 0b00000100;
+        const OFFSET    = 0b00001000;
+        const DUTYCYCLE = 0b00010000;
+    }
+}
+
+impl fmt::Display for TrackingArg {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{},{},{},{},{}", 
+            ((self.bits & 1) > 0) as i32,
+            ((self.bits & (1 << 1)) > 0) as i32,
+            ((self.bits & (1 << 2)) > 0) as i32,
+            ((self.bits & (1 << 3)) > 0) as i32,
+            ((self.bits & (1 << 4)) > 0) as i32,
+        )
+    }
+}
+
+pub trait ToStrVal {
+    fn to_str_val(&self) -> String;
+}
+
+impl ToStrVal for TrackingArg {
+    fn to_str_val(&self) -> String {
+        format!("{}{}{}{}{}", 
+            ((self.bits & 1) > 0) as i32,
+            ((self.bits & (1 << 1)) > 0) as i32,
+            ((self.bits & (1 << 2)) > 0) as i32,
+            ((self.bits & (1 << 3)) > 0) as i32,
+            ((self.bits & (1 << 4)) > 0) as i32,
+        )
+    }
+}
+
+macro_rules! WRITE_TRACKING_RES_LEN {() => {6}}
+pub const WRITE_TRACKING_RES_LEN: u8 = WRITE_TRACKING_RES_LEN!();
 // -----

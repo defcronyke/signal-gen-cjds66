@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate bitflags;
+
 pub mod serial;
 pub mod protocol;
 pub mod command;

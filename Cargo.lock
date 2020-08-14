@@ -119,6 +119,7 @@ dependencies = [
 name = "signal-gen-cjds66-lib"
 version = "0.0.1"
 dependencies = [
+ "bitflags",
  "serial",
 ]
 

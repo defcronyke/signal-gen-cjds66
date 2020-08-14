@@ -18,8 +18,9 @@ fn main() {
 
 fn real_main() -> i32 {
     let set_waveform_ch1_help = format!("Set the waveform preset for channel 1. The value must be either the name of the waveform preset (see below), or a number 0-16, for example, sine wave: -w 0\n\nAccepted preset names:\n{}\n", WAVEFORM_PRESET_NAMES);
+    let set_tracking_help = format!("Set the tracking mode. The value must be a set of zeros and ones in the range of 0-{}, each bit corresponding to a feature you want to toggle tracking on/off for (1 being on and 0 being off). For example: track frequency and amplitude: -T 101\n\n{}\n\nNote that a value of zero (or no value) in the bit position will turn off tracking for the corresponding feature, so to turn tracking off for all features, you can do: -T 0\nYou can also separate the values with commas if you prefer: -T 1,0,1", TrackingArg::all().to_str_val(), TRACKING_FEATURES);
 
-    let mut app = App::new("signal-gen-cjds66")
+    let app = App::new("signal-gen-cjds66")
         .version("0.0.1\n")
         .author("Jeremy Carter <jeremy@jeremycarter.ca>\n\n")
         .about("An unofficial program to control the CJDS66 60MHz DDS Signal Generator/Counter (hardware by Koolertron).\n\nSee: https://www.koolertron.com/koolertron-upgraded-60mhz-dds-signal-generator-counterhigh-precision-dualchannel-arbitrary-waveform-function-generator-frequency-meter-200msas-60mhz-p-867.html")
@@ -221,10 +222,15 @@ fn real_main() -> i32 {
                 .help("Set the phase in degrees. The value must be a number 0.0-360.0, and 360.0 wraps around to 0.0. For example: -g 180.7\n")
                 .takes_value(true)
                 .value_name("PHASE DEG")
+        )
+        .arg(
+            Arg::with_name("set tracking")
+                .short("T")
+                .long("track")
+                .help(&set_tracking_help)
+                .takes_value(true)
+                .value_name("TRACK FEATURES")
         );
-
-    println!("");
-    app.print_long_help().unwrap();
 
     let matches = app.clone().get_matches();
         
@@ -515,6 +521,19 @@ fn real_main() -> i32 {
                     let amount = matches.value_of("set phase").unwrap_or_default();
                     
                     match match_set_phase_arg(&mut port, amount) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+
+                // If set tracking mode is requested.
+                if matches.is_present("set tracking") {
+                    let track = matches.value_of("set tracking").unwrap_or_default();
+                    
+                    match match_set_tracking_arg(&mut port, track) {
                         Ok(_res) => {},
                         Err(e) => {
                             println!("\nError: {}\n", e);

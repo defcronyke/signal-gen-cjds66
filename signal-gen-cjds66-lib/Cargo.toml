@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 serial = "0.4"
+bitflags = "1.2"

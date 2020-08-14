@@ -926,13 +926,7 @@ pub fn match_set_voltage_offset_arg(mut port: &mut Box<dyn SerialPort>, chan: u6
         Ok(amount) => {
             match amount {
                 _y if amount >= -9.99 && amount <= 9.99 => {
-                    let mut amount_rounded = amount;
-
-                    if amount_rounded >= 0.0 {
-                        amount_rounded = (((amount * 100.0 + 1000.0) * 100.0).round() / 100.0).round();
-                    } else {
-                        amount_rounded = (((1000.0 + amount * 100.0) * 100.0).round() / 100.0).round();
-                    }
+                    let amount_rounded = (((1000.0 + amount * 100.0) * 100.0).round() / 100.0).round();
                     
                     res = set_voltage_offset(&mut port, chan, amount_rounded);
                 },
@@ -1011,6 +1005,83 @@ pub fn match_set_phase_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> 
 
         Err(e) => {
             res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set phase\" argument (must be 0.0-360.0): {}: {}", amount, e)));
+        },
+    }
+
+    res
+}
+
+pub fn set_tracking(port: &mut Box<dyn SerialPort>, track: TrackingArg) -> io::Result<String> {
+    let command: String;
+
+    if track > TrackingArg::all() {
+        return Err(Error::new(ErrorKind::Other, format!("Unsupported tracking argument. Must be a number 0-{}.\n\n{}", TrackingArg::all().to_str_val(), TRACKING_FEATURES)));
+    }
+
+    command = format!("{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        COMMAND_WRITE,
+        WRITE_TRACKING_COMMAND,
+        COMMAND_SEPARATOR,
+        track,
+        COMMAND_END,
+    );
+    
+    println!("\nSetting tracking: {}:\n{}", track, command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_TRACKING_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+pub fn match_set_tracking_arg(mut port: &mut Box<dyn SerialPort>, track: &str) -> io::Result<String> {
+    let max_len = 5;
+    
+    let track_stripped = track.replace(',', "");
+    if track_stripped.len() > max_len {
+        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set tracking\" argument (must be a set of zeros and ones in the range 0-{}): {}: too many digits (5 max)\n\n{}", TrackingArg::all().to_str_val(), track_stripped, TRACKING_FEATURES)));
+    }
+
+    let res: io::Result<String>;
+
+    let mut track_bits = TrackingArg::from_bits(0).unwrap();    
+
+    for (i, c) in track_stripped.chars().enumerate() {
+        match c.to_digit(10) {
+            Some(c_num) => {
+                if c_num > 1 {
+                    return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set tracking\" argument (must be a set of zeros and ones in the range 0-{}): {}\n\n{}", TrackingArg::all().to_str_val(), track_stripped, TRACKING_FEATURES)));
+                }
+                
+                if c_num == 1 {
+                    track_bits = TrackingArg::from_bits(track_bits.bits() | (1 << i)).unwrap();
+                }
+            },
+
+            None => {
+                return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set tracking\" argument (must be a set of zeros and ones in the range 0-{}): {}\n\n{}", TrackingArg::all().to_str_val(), track_stripped, TRACKING_FEATURES)));
+            },
+        }
+    }
+
+    match track_bits {
+        track_bits if track_bits <= TrackingArg::all() => {
+            res = set_tracking(&mut port, track_bits);
+        },
+
+        _ => {
+            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set tracking\" argument (must be 0-{}): {}\n\n{}", TrackingArg::all().to_str_val(), track_bits, TRACKING_FEATURES)));
         },
     }
 
