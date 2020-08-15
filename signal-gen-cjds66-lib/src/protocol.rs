@@ -1,4 +1,6 @@
 use bitflags;
+use phf::phf_map;
+
 use std::fmt;
 use std::str;
 
@@ -354,29 +356,104 @@ pub const WRITE_PHASE_RES_LEN: u8 = WRITE_PHASE_RES_LEN!();
 //   0: frequency
 //   1: waveform
 //   2: amplitude
-//   3: offset
-//   4: duty cycle
+//   3: dutycycle
+//   4: offset
 macro_rules! WRITE_TRACKING_COMMAND {() => {"54"}}
 pub const WRITE_TRACKING_COMMAND: &'static str = WRITE_TRACKING_COMMAND!();
 
 macro_rules! TRACKING_FEATURES {() => {"The bit position meanings are as follows:
-0: frequency
-1: waveform
-2: amplitude
-3: offset
-4: duty cycle"}}
+0: frequency | freq | fq | fr | f
+1: waveform | wave | wav | wv | w
+2: amplitude | ampli | amp | am | a
+3: dutycycle | duty | dc | du | d
+4: offset | off | os | ot | o
+
+turn off tracking: 0 | none | null | non | nil | no | n
+
+You can also use any of the names above separated by commas to turn on
+the tracking by feature name.
+Ex:
+frequency and amplitude sync: -T freq,amp
+
+Or you can use the single character versions with no commas in between.
+Ex:
+frequency and amplitude sync: -T fa
+
+Turn tracking off like this: -T n"}}
 pub const TRACKING_FEATURES: &'static str = TRACKING_FEATURES!();
+
+macro_rules! TRACKING_NONE      {() => {0b00000000u8}}
+macro_rules! TRACKING_FREQUENCY {() => {0b00000001u8}}
+macro_rules! TRACKING_WAVEFORM  {() => {0b00000010u8}}
+macro_rules! TRACKING_AMPLITUDE {() => {0b00000100u8}}
+macro_rules! TRACKING_DUTYCYCLE {() => {0b00001000u8}}
+macro_rules! TRACKING_OFFSET    {() => {0b00010000u8}}
+
+pub const TRACKING_NONE: u8         = TRACKING_NONE!();
+pub const TRACKING_FREQUENCY: u8    = TRACKING_FREQUENCY!();
+pub const TRACKING_WAVEFORM: u8     = TRACKING_WAVEFORM!();
+pub const TRACKING_AMPLITUDE: u8    = TRACKING_AMPLITUDE!();
+pub const TRACKING_DUTYCYCLE: u8    = TRACKING_DUTYCYCLE!();
+pub const TRACKING_OFFSET: u8       = TRACKING_OFFSET!();
 
 bitflags! {
     pub struct TrackingArg: u8 {
-        const NONE      = 0b00000000;
-        const FREQUENCY = 0b00000001;
-        const WAVEFORM  = 0b00000010;
-        const AMPLITUDE = 0b00000100;
-        const OFFSET    = 0b00001000;
-        const DUTYCYCLE = 0b00010000;
+        const NONE      = TRACKING_NONE;
+        const FREQUENCY = TRACKING_FREQUENCY;
+        const WAVEFORM  = TRACKING_WAVEFORM;
+        const AMPLITUDE = TRACKING_AMPLITUDE;
+        const DUTYCYCLE = TRACKING_DUTYCYCLE;
+        const OFFSET    = TRACKING_OFFSET;
     }
 }
+
+pub static TRACKING_ARG_MAP: phf::Map<&'static str, u8> = phf_map! {
+    "none"      => TRACKING_NONE,
+    "null"      => TRACKING_NONE,
+    "non"       => TRACKING_NONE,
+    "nil"       => TRACKING_NONE,
+    "no"        => TRACKING_NONE,
+    "n"         => TRACKING_NONE,
+
+    "frequency" => TRACKING_FREQUENCY,
+    "freq"      => TRACKING_FREQUENCY,
+    "fq"        => TRACKING_FREQUENCY,
+    "fr"        => TRACKING_FREQUENCY,
+    "f"         => TRACKING_FREQUENCY,
+
+    "waveform"  => TRACKING_WAVEFORM,
+    "wave"      => TRACKING_WAVEFORM,
+    "wav"       => TRACKING_WAVEFORM,
+    "wv"        => TRACKING_WAVEFORM,
+    "w"         => TRACKING_WAVEFORM,
+
+    "amplitude" => TRACKING_AMPLITUDE,
+    "ampli"     => TRACKING_AMPLITUDE,
+    "amp"       => TRACKING_AMPLITUDE,
+    "am"        => TRACKING_AMPLITUDE,
+    "a"         => TRACKING_AMPLITUDE,
+    
+    "dutycycle" => TRACKING_DUTYCYCLE,
+    "duty"      => TRACKING_DUTYCYCLE,
+    "dc"        => TRACKING_DUTYCYCLE,
+    "du"        => TRACKING_DUTYCYCLE,
+    "d"         => TRACKING_DUTYCYCLE,
+
+    "offset"    => TRACKING_OFFSET,
+    "off"       => TRACKING_OFFSET,
+    "os"        => TRACKING_OFFSET,
+    "ot"        => TRACKING_OFFSET,
+    "o"         => TRACKING_OFFSET,
+};
+
+pub static TRACKING_ARG_REVMAP: phf::Map<u8, &'static str> = phf_map! {
+    0b00000000u8 => "none",
+    0b00000001u8 => "frequency",
+    0b00000010u8 => "waveform",
+    0b00000100u8 => "amplitude",
+    0b00001000u8 => "dutycycle",
+    0b00010000u8 => "offset",
+};
 
 impl fmt::Display for TrackingArg {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -392,6 +469,7 @@ impl fmt::Display for TrackingArg {
 
 pub trait ToStrVal {
     fn to_str_val(&self) -> String;
+    fn to_names(&self) -> String;
 }
 
 impl ToStrVal for TrackingArg {
@@ -403,6 +481,55 @@ impl ToStrVal for TrackingArg {
             (self.bits & (1 << 3)) >> 3,
             (self.bits & (1 << 4)) >> 4,
         )
+    }
+
+    fn to_names(&self) -> String {
+        let one = if (self.bits & 1) > 0 {
+            TRACKING_ARG_REVMAP[&1] 
+        } else { 
+            TRACKING_ARG_REVMAP[&0] 
+        };
+        
+        let two = if (self.bits & (1 << 1)) > 0 { 
+            TRACKING_ARG_REVMAP[&(1 << 1)] 
+        } else { 
+            TRACKING_ARG_REVMAP[&0] 
+        };
+
+        let three = if (self.bits & (1 << 2)) > 0 { 
+            TRACKING_ARG_REVMAP[&(1 << 2)] 
+        } else { 
+            TRACKING_ARG_REVMAP[&0] 
+        };
+
+        let four = if (self.bits & (1 << 3)) > 0 { 
+            TRACKING_ARG_REVMAP[&(1 << 3)] 
+        } else { 
+            TRACKING_ARG_REVMAP[&0] 
+        };
+
+        let five = if (self.bits & (1 << 4)) > 0 { 
+            TRACKING_ARG_REVMAP[&(1 << 4)] 
+        } else { 
+            TRACKING_ARG_REVMAP[&0] 
+        };
+
+        let res = format!("{},{},{},{},{}", 
+            one, 
+            two, 
+            three, 
+            four, 
+            five,
+        ).split(",")
+            .filter(|&i| i != "none")
+            .collect::<Vec<&str>>()
+            .join(", ");
+        
+        if res == "" {
+            return TRACKING_ARG_REVMAP[&0].to_string();
+        }
+
+        res
     }
 }
 

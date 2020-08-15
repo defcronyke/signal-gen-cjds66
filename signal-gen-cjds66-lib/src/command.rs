@@ -1,12 +1,11 @@
 extern crate serial;
 
+use crate::protocol::*;
+
 use std::io;
 use std::io::{Error, ErrorKind};
 use std::thread;
 use std::time::{Duration};
-// use crate::protocol;
-// #[macro_use]
-use crate::protocol::*;
 
 use std::io::prelude::*;
 use serial::prelude::*;
@@ -1027,7 +1026,7 @@ pub fn set_tracking(port: &mut Box<dyn SerialPort>, track: TrackingArg) -> io::R
         COMMAND_END,
     );
     
-    println!("\nSetting tracking: {}:\n{}", track, command);
+    println!("\nSetting tracking: {}:\n{}", track.to_names(), command);
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_TRACKING_RES_LEN).collect();
@@ -1049,9 +1048,6 @@ pub fn match_set_tracking_arg(mut port: &mut Box<dyn SerialPort>, track: &str) -
     let max_len = 5;
     
     let track_stripped = track.replace(',', "");
-    if track_stripped.len() > max_len {
-        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set tracking\" argument (must be a set of zeros and ones in the range 0-{}): {}: too many digits (5 max)\n\n{}", TrackingArg::all().to_str_val(), track_stripped, TRACKING_FEATURES)));
-    }
 
     let res: io::Result<String>;
 
@@ -1060,8 +1056,12 @@ pub fn match_set_tracking_arg(mut port: &mut Box<dyn SerialPort>, track: &str) -
     for (i, c) in track_stripped.chars().enumerate() {
         match c.to_digit(10) {
             Some(c_num) => {
+                if track_stripped.len() > max_len {
+                    return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set tracking\" argument (must be a set of zeros and ones in the range 0-{}): {}: too many digits (5 max)\n\n{}", TrackingArg::all().to_str_val(), track, TRACKING_FEATURES)));
+                }
+
                 if c_num > 1 {
-                    return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set tracking\" argument (must be a set of zeros and ones in the range 0-{}): {}\n\n{}", TrackingArg::all().to_str_val(), track_stripped, TRACKING_FEATURES)));
+                    return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set tracking\" argument (must be a set of zeros and ones in the range 0-{}): {}\n\n{}", TrackingArg::all().to_str_val(), track, TRACKING_FEATURES)));
                 }
                 
                 if c_num == 1 {
@@ -1070,9 +1070,53 @@ pub fn match_set_tracking_arg(mut port: &mut Box<dyn SerialPort>, track: &str) -
             },
 
             None => {
-                return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set tracking\" argument (must be a set of zeros and ones in the range 0-{}): {}\n\n{}", TrackingArg::all().to_str_val(), track_stripped, TRACKING_FEATURES)));
+                let track_vec: Vec<&str> = track.split(",").collect();
+
+                if track_vec.len() > max_len {
+                    return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set tracking\" argument (must be a set of zeros and ones in the range 0-{}): {}: too many digits (5 max)\n\n{}", TrackingArg::all().to_str_val(), track, TRACKING_FEATURES)));
+                }
+
+                for (i2, word) in track_vec.into_iter().enumerate() {
+                    let mut res = TrackingArg::NONE;
+                    let mut res_bits = res.bits();
+
+                    let mut return_err = false;
+
+                    track_bits |= TrackingArg::from_bits(*TRACKING_ARG_MAP.get(word.trim()).unwrap_or_else(|| {
+                        for (i3, c) in word.chars().enumerate() {
+                            let key: String = c.to_string();
+                            let val = TRACKING_ARG_MAP.get(&key[..]);
+
+                            match val {
+                                Some(val) => {
+                                    res |= TrackingArg::from_bits(*val).unwrap_or(TrackingArg::NONE);
+                                },
+
+                                None => {
+                                    println!("Error: feature name argument at position (word: {}, char: {}) not recognized.", i2, i3);
+
+                                    res |= TrackingArg::NONE;
+                                    return_err = true;
+
+                                    return &res_bits;
+                                },
+                            }
+                        }
+
+                        res_bits = res.bits();
+                        &res_bits
+
+                    })).unwrap();
+
+                    if return_err {
+                        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set tracking\" argument (must be a set of zeros and ones in the range 0-{}): {}\n\n{}", TrackingArg::all().to_str_val(), track, TRACKING_FEATURES)));
+                    }
+                }
+                
+                break;
             },
         }
+
     }
 
     match track_bits {

@@ -18,7 +18,7 @@ fn main() {
 
 fn real_main() -> i32 {
     let set_waveform_ch1_help = format!("Set the waveform preset for channel 1. The value must be either the name of the waveform preset (see below), or a number 0-16, for example, sine wave: -w 0\n\nAccepted preset names:\n{}\n", WAVEFORM_PRESET_NAMES);
-    let set_tracking_help = format!("Set the tracking mode. The value must be a set of zeros and ones in the range of 0-{}, each bit corresponding to a feature you want to toggle tracking on/off for (1 being on and 0 being off). For example: track frequency and amplitude: -T 101\n\n{}\n\nNote that a value of zero (or no value) in the bit position will turn off tracking for the corresponding feature, so to turn tracking off for all features, you can do: -T 0\nYou can also separate the values with commas if you prefer: -T 1,0,1", TrackingArg::all().to_str_val(), TRACKING_FEATURES);
+    let set_tracking_help = format!("Set the tracking mode. The value must be either a set of comma-separated setting names (see below), or a set of zeros and ones in the range of 0-{}, each bit corresponding to a feature you want to toggle tracking on/off for (1 being on and 0 being off). For example: track frequency and amplitude: -T 101\n\n{}\n\nNote that a value of zero (or no value) in the bit position will turn off tracking for the corresponding feature, so to turn tracking off for all features, you can do: -T 0\nYou can also separate the values with commas if you prefer: -T 1,0,1", TrackingArg::all().to_str_val(), TRACKING_FEATURES);
 
     let app = App::new("signal-gen-cjds66")
         .version("0.0.1\n")

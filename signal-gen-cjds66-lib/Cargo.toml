@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 serial = "0.4"
 bitflags = "1.2"
+phf = { version = "0.8", features = ["macros"] }
