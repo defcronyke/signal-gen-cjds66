@@ -266,6 +266,19 @@ fn real_main() -> i32 {
                 }
 
 
+                // If set tracking mode is requested.
+                if matches.is_present("set tracking") {
+                    let track = matches.value_of("set tracking").unwrap_or_default();
+                    
+                    match match_set_tracking_arg(&mut port, track) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+
                 // If set waveform for channel1 is requested.
                 if matches.is_present("set waveform channel1") {
                     let preset = matches.value_of("set waveform channel1").unwrap_or_default();
@@ -521,19 +534,6 @@ fn real_main() -> i32 {
                     let amount = matches.value_of("set phase").unwrap_or_default();
                     
                     match match_set_phase_arg(&mut port, amount) {
-                        Ok(_res) => {},
-                        Err(e) => {
-                            println!("\nError: {}\n", e);
-                        },
-                    }
-                }
-
-
-                // If set tracking mode is requested.
-                if matches.is_present("set tracking") {
-                    let track = matches.value_of("set tracking").unwrap_or_default();
-                    
-                    match match_set_tracking_arg(&mut port, track) {
                         Ok(_res) => {},
                         Err(e) => {
                             println!("\nError: {}\n", e);
