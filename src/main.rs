@@ -230,6 +230,111 @@ fn real_main() -> i32 {
                 .help(&set_tracking_help)
                 .takes_value(true)
                 .value_name("TRACK FEATURES")
+        )
+        .arg(
+            Arg::with_name("set switch main ch1")
+                .short("A")
+                .long("main1")
+                .help("Switch the function panel to main channel 1 mode.")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set switch main ch2")
+                .short("B")
+                .long("main2")
+                .help("Switch the function panel to main channel 2 mode.")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set switch sys")
+                .short("Y")
+                .long("sys")
+                .help("Switch the function panel to system settings (SYS) mode.")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set switch counting")
+                .short("C")
+                .long("count")
+                .help("Switch the function panel to counting mode.")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set counting starting")
+                .short("D")
+                .long("start-count")
+                .help("Set the extended function to start counting.")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set switch sweep ch1")
+                .short("V")
+                .long("sweep1")
+                .help("Switch the function panel to sweep channel 1 mode.")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set switch sweep ch2")
+                .short("W")
+                .long("sweep2")
+                .help("Switch the function panel to sweep channel 2 mode.")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set sweep starting ch1")
+                .short("S")
+                .long("start-sweep1")
+                .help("Set the extended function to start sweep on channel 1.")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set sweep starting ch2")
+                .short("U")
+                .long("start-sweep2")
+                .help("Set the extended function to start sweep on channel 2.")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set switch pulse")
+                .short("P")
+                .long("pulse")
+                .help("Switch the function panel to pulse mode.")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set pulse starting")
+                .short("Q")
+                .long("start-pulse")
+                .help("Set the extended function to start pulse.")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set switch bursting")
+                .short("R")
+                .long("burst")
+                .help("Switch the function panel to bursting mode.")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set bursting starting")
+                .short("O")
+                .long("start-burst")
+                .help("Set the extended function to start bursting.")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set switch measurement")
+                .short("M")
+                .long("measure")
+                .help("Switch the function panel to measurement mode.")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set measurement starting")
+                .short("N")
+                .long("start-measure")
+                .help("Set the extended function to start measuring, and to stop counting, sweep, pulse, and bursting.")
+                .takes_value(false)
         );
 
     let matches = app.clone().get_matches();
@@ -535,6 +640,175 @@ fn real_main() -> i32 {
                     
                     match match_set_phase_arg(&mut port, amount) {
                         Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+
+                // If set switch function panel main ch1 is requested.
+                if matches.is_present("set switch main ch1") {
+                    match set_switch_function_panel_main(&mut port, 1) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set switch function panel main ch2 is requested.
+                if matches.is_present("set switch main ch2") {
+                    match set_switch_function_panel_main(&mut port, 2) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+
+                // If set switch function panel system settings is requested.
+                if matches.is_present("set switch sys") {
+                    match set_switch_function_panel_sys(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+
+                // If set switch function panel counting is requested.
+                if matches.is_present("set switch counting") {
+                    match set_switch_function_panel_counting(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set counting starting is requested.
+                if matches.is_present("set counting starting") {
+                    match set_counting_starting(&mut port) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+                
+
+                // If set switch function panel sweep ch1 is requested.
+                if matches.is_present("set switch sweep ch1") {
+                    match set_switch_function_panel_sweep(&mut port, 1) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set switch function panel sweep ch2 is requested.
+                if matches.is_present("set switch sweep ch2") {
+                    match set_switch_function_panel_sweep(&mut port, 2) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set sweep starting ch1 is requested.
+                if matches.is_present("set sweep starting ch1") {
+                    match set_sweep_starting(&mut port, 1) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set sweep starting ch2 is requested.
+                if matches.is_present("set sweep starting ch2") {
+                    match set_sweep_starting(&mut port, 2) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+
+                // If set switch function panel pulse is requested.
+                if matches.is_present("set switch pulse") {
+                    match set_switch_function_panel_pulse(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set pulse starting is requested.
+                if matches.is_present("set pulse starting") {
+                    match set_pulse_starting(&mut port) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+
+                // If set switch function panel bursting is requested.
+                if matches.is_present("set switch bursting") {
+                    match set_switch_function_panel_bursting(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set bursting starting is requested.
+                if matches.is_present("set bursting starting") {
+                    match set_bursting_starting(&mut port) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+
+                // If set switch function panel measurement is requested.
+                if matches.is_present("set switch measurement") {
+                    match set_switch_function_panel_measurement(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set measurement starting is requested.
+                if matches.is_present("set measurement starting") {
+                    match set_measurement_starting(&mut port) {
+                        Ok(_res) => {
+                            match set_channel_output(&mut port, false, false) {
+                                Ok(_res) => {},
+                                Err(e) => {
+                                    println!("\nError: {}\n", e);
+                                },
+                            }
+                        },
                         Err(e) => {
                             println!("\nError: {}\n", e);
                         },

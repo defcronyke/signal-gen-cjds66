@@ -49,6 +49,7 @@ pub fn read_machine_number(port: &mut Box<dyn SerialPort>) -> io::Result<String>
     Ok(res.to_string())
 }
 
+
 pub fn set_channel_output(port: &mut Box<dyn SerialPort>, ch1: bool, ch2: bool) -> io::Result<String> {
     let command: &str;
     
@@ -111,6 +112,7 @@ pub fn match_set_channel_output_arg(mut port: &mut Box<dyn SerialPort>, sco: &st
 
     res
 }
+
 
 pub fn set_waveform_preset(port: &mut Box<dyn SerialPort>, chan: u64, preset: u64) -> io::Result<String> {
     let command: String;
@@ -273,6 +275,7 @@ pub fn match_set_waveform_preset_arg(mut port: &mut Box<dyn SerialPort>, chan: u
     res
 }
 
+
 pub fn set_waveform_arbitrary(port: &mut Box<dyn SerialPort>, chan: u64, preset: u64) -> io::Result<String> {
     let command: String;
     let chan_out: &str;
@@ -339,6 +342,7 @@ pub fn match_set_waveform_arbitrary_arg(mut port: &mut Box<dyn SerialPort>, chan
 
     res
 }
+
 
 pub fn set_frequency_microhertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> io::Result<String> {
     let command: String;
@@ -415,6 +419,7 @@ pub fn match_set_frequency_microherz_arg(mut port: &mut Box<dyn SerialPort>, cha
     res
 }
 
+
 pub fn set_frequency_millihertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> io::Result<String> {
     let command: String;
     let chan_out: &str;
@@ -490,6 +495,7 @@ pub fn match_set_frequency_milliherz_arg(mut port: &mut Box<dyn SerialPort>, cha
     res
 }
 
+
 pub fn set_frequency_hertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> io::Result<String> {
     let command: String;
     let chan_out: &str;
@@ -564,6 +570,7 @@ pub fn match_set_frequency_hertz_arg(mut port: &mut Box<dyn SerialPort>, chan: u
 
     res
 }
+
 
 pub fn set_frequency_kilohertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> io::Result<String> {
     let command: String;
@@ -642,6 +649,7 @@ pub fn match_set_frequency_kilohertz_arg(mut port: &mut Box<dyn SerialPort>, cha
     res
 }
 
+
 pub fn set_frequency_megahertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> io::Result<String> {
     let command: String;
     let chan_out: &str;
@@ -719,6 +727,7 @@ pub fn match_set_frequency_megahertz_arg(mut port: &mut Box<dyn SerialPort>, cha
     res
 }
 
+
 pub fn set_amplitude(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> io::Result<String> {
     let command: String;
     let chan_out: &str;
@@ -793,6 +802,7 @@ pub fn match_set_amplitude_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, am
 
     res
 }
+
 
 pub fn set_duty_cycle(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> io::Result<String> {
     let command: String;
@@ -869,6 +879,7 @@ pub fn match_set_duty_cycle_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, a
     res
 }
 
+
 pub fn set_voltage_offset(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> io::Result<String> {
     let command: String;
     let chan_out: &str;
@@ -944,6 +955,7 @@ pub fn match_set_voltage_offset_arg(mut port: &mut Box<dyn SerialPort>, chan: u6
     res
 }
 
+
 pub fn set_phase(port: &mut Box<dyn SerialPort>, amount: f64) -> io::Result<String> {
     let command: String;
 
@@ -1009,6 +1021,7 @@ pub fn match_set_phase_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> 
 
     res
 }
+
 
 pub fn set_tracking(port: &mut Box<dyn SerialPort>, track: TrackingArg) -> io::Result<String> {
     let command: String;
@@ -1130,4 +1143,286 @@ pub fn match_set_tracking_arg(mut port: &mut Box<dyn SerialPort>, track: &str) -
     }
 
     res
+}
+
+
+pub fn set_switch_function_panel_main(port: &mut Box<dyn SerialPort>, chan: u64) -> io::Result<String> {
+    let command: &'static str;
+
+    if chan < 1 || chan > 2 {
+        return Err(Error::new(ErrorKind::Other, "Unsupported channel. Must be 1 or 2."));
+    } else if chan == 1 {
+        command = WRITE_SWITCH_FUNCTION_PANEL_MAIN_CH1;
+    } else {    // if chan == 2
+        command = WRITE_SWITCH_FUNCTION_PANEL_MAIN_CH2;
+    }
+    
+    println!("\nSwitching to function panel main ch{} mode:\n{}", chan, command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+
+pub fn set_switch_function_panel_sys(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+    let command: &'static str = WRITE_SWITCH_FUNCTION_PANEL_SYS;
+    
+    println!("\nSwitching function panel to system settings mode:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+
+pub fn set_switch_function_panel_measurement(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+    let command: &'static str = WRITE_SWITCH_FUNCTION_PANEL_MEASUREMENT;
+    
+    println!("\nSwitching function panel to measurement mode:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+// Measurement starting - counting, sweep, frequency, pulse, burst stopping.
+pub fn set_measurement_starting(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+    let command: &'static str = WRITE_EXTENDED_FUNCTION_MEASUREMENT_STARTING;
+    
+    println!("\nMeasurement starting - counting, sweep, frequency, pulse, burst stopping:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_EXTENDED_FUNCTION_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+
+pub fn set_switch_function_panel_counting(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+    let command: &'static str = WRITE_SWITCH_FUNCTION_PANEL_COUNTING;
+    
+    println!("\nSwitching function panel to counting mode:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+// Counting starting.
+pub fn set_counting_starting(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+    let command: &'static str = WRITE_EXTENDED_FUNCTION_COUNTING_STARTING;
+    
+    println!("\nCounting starting:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_EXTENDED_FUNCTION_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+
+pub fn set_switch_function_panel_sweep(port: &mut Box<dyn SerialPort>, chan: u64) -> io::Result<String> {
+    let command: &'static str;
+
+    if chan < 1 || chan > 2 {
+        return Err(Error::new(ErrorKind::Other, "Unsupported channel. Must be 1 or 2."));
+    } else if chan == 1 {
+        command = WRITE_SWITCH_FUNCTION_PANEL_SWEEP_CH1;
+    } else {    // if chan == 2
+        command = WRITE_SWITCH_FUNCTION_PANEL_SWEEP_CH2;
+    }
+    
+    println!("\nSwitching to function panel sweep ch{} mode:\n{}", chan, command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+// Sweep starting.
+pub fn set_sweep_starting(port: &mut Box<dyn SerialPort>, chan: u64) -> io::Result<String> {
+    set_switch_function_panel_sweep(port, chan)?;
+    
+    let command: &'static str = WRITE_EXTENDED_FUNCTION_SWEEP_STARTING;
+    
+    println!("\nSweep starting:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_EXTENDED_FUNCTION_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+
+pub fn set_switch_function_panel_pulse(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+    let command: &'static str = WRITE_SWITCH_FUNCTION_PANEL_PULSE;
+    
+    println!("\nSwitching function panel to pulse mode:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+// Pulse starting.
+pub fn set_pulse_starting(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+    let command: &'static str = WRITE_EXTENDED_FUNCTION_PULSE_STARTING;
+    
+    println!("\nPulse starting:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_EXTENDED_FUNCTION_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+
+pub fn set_switch_function_panel_bursting(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+    let command: &'static str = WRITE_SWITCH_FUNCTION_PANEL_BURST;
+    
+    println!("\nSwitching function panel to bursting mode:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+// Bursting starting.
+pub fn set_bursting_starting(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+    let command: &'static str = WRITE_EXTENDED_FUNCTION_BURSTING_STARTING;
+    
+    println!("\nBursting starting:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_EXTENDED_FUNCTION_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
 }
