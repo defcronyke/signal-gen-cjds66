@@ -335,6 +335,18 @@ fn real_main() -> i32 {
                 .long("start-measure")
                 .help("Set the extended function to start measuring, and to stop counting, sweep, pulse, and bursting.")
                 .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set measurement coupling ac")
+                .long("ac")
+                .help("Set the measurement mode coupling option to AC.")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set measurement coupling dc")
+                .long("dc")
+                .help("Set the measurement mode coupling option to DC.")
+                .takes_value(false)
         );
 
     let matches = app.clone().get_matches();
@@ -790,6 +802,28 @@ fn real_main() -> i32 {
                 // If set switch function panel measurement is requested.
                 if matches.is_present("set switch measurement") {
                     match set_switch_function_panel_measurement(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set measurement coupling ac is requested.
+                if matches.is_present("set measurement coupling ac") {
+                    match set_measurement_coupling_ac(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set measurement coupling dc is requested.
+                if matches.is_present("set measurement coupling dc") {
+                    match set_measurement_coupling_dc(&mut port) {
                         Ok(_res) => {
                         },
                         Err(e) => {

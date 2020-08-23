@@ -1426,3 +1426,47 @@ pub fn set_bursting_starting(port: &mut Box<dyn SerialPort>) -> io::Result<Strin
 
     Ok(res.to_string())
 }
+
+// set measurement coupling to AC.
+pub fn set_measurement_coupling_ac(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+    let command: &'static str = WRITE_MEASUREMENT_COUPLING_AC;
+    
+    println!("\nSetting measurement coupling to AC:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_MEASUREMENT_COUPLING_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+// set measurement coupling to DC.
+pub fn set_measurement_coupling_dc(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+    let command: &'static str = WRITE_MEASUREMENT_COUPLING_DC;
+    
+    println!("\nSetting measurement coupling to DC:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_MEASUREMENT_COUPLING_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
