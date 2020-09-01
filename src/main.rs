@@ -354,6 +354,18 @@ fn real_main() -> i32 {
                 .help("Set the measurement gate time in seconds. The value must be a number 0.01-10.0. For example: --gt 0.01\n")
                 .takes_value(true)
                 .value_name("GATE TIME")
+        )
+        .arg(
+            Arg::with_name("set measurement mode count frequency")
+                .long("cf")
+                .help("Set the measurement mode to count frequency.")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set measurement mode counting period")
+                .long("cp")
+                .help("Set the measurement mode to counting period.")
+                .takes_value(false)
         );
 
     let matches = app.clone().get_matches();
@@ -846,6 +858,28 @@ fn real_main() -> i32 {
                     
                     match match_set_measurement_gate_time_arg(&mut port, amount) {
                         Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set measurement mode count frequency is requested.
+                if matches.is_present("set measurement mode count frequency") {
+                    match set_measurement_mode_count_frequency(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set measurement mode counting period is requested.
+                if matches.is_present("set measurement mode counting period") {
+                    match set_measurement_mode_counting_period(&mut port) {
+                        Ok(_res) => {
+                        },
                         Err(e) => {
                             println!("\nError: {}\n", e);
                         },

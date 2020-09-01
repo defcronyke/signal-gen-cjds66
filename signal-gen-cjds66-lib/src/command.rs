@@ -1537,3 +1537,48 @@ pub fn match_set_measurement_gate_time_arg(mut port: &mut Box<dyn SerialPort>, a
 
     res
 }
+
+
+// set measurement mode to count frequency.
+pub fn set_measurement_mode_count_frequency(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+    let command: &'static str = WRITE_MEASUREMENT_MODE_COUNT_FREQUENCY;
+    
+    println!("\nSetting measurement mode to count frequency:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_MEASUREMENT_MODE_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+// set measurement mode to counting period.
+pub fn set_measurement_mode_counting_period(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+    let command: &'static str = WRITE_MEASUREMENT_MODE_COUNTING_PERIOD;
+    
+    println!("\nSetting measurement mode to counting period:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_MEASUREMENT_MODE_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
