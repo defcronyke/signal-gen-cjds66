@@ -219,7 +219,7 @@ fn real_main() -> i32 {
             Arg::with_name("set phase")
                 .short("r")
                 .long("phase")
-                .help("Set the phase in degrees. The value must be a number 0.0-360.0, and 360.0 wraps around to 0.0. For example: -g 180.7\n")
+                .help("Set the phase in degrees. The value must be a number 0.0-360.0, and 360.0 wraps around to 0.0. For example: -r 180.7\n")
                 .takes_value(true)
                 .value_name("PHASE DEG")
         )
@@ -347,6 +347,13 @@ fn real_main() -> i32 {
                 .long("dc")
                 .help("Set the measurement mode coupling option to DC.")
                 .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set measurement gate time")
+                .long("gt")
+                .help("Set the measurement gate time in seconds. The value must be a number 0.01-10.0. For example: --gt 0.01\n")
+                .takes_value(true)
+                .value_name("GATE TIME")
         );
 
     let matches = app.clone().get_matches();
@@ -810,6 +817,7 @@ fn real_main() -> i32 {
                     }
                 }
 
+
                 // If set measurement coupling ac is requested.
                 if matches.is_present("set measurement coupling ac") {
                     match set_measurement_coupling_ac(&mut port) {
@@ -831,6 +839,19 @@ fn real_main() -> i32 {
                         },
                     }
                 }
+
+                // If set measurement gate time in seconds is requested.
+                if matches.is_present("set measurement gate time") {
+                    let amount = matches.value_of("set measurement gate time").unwrap_or_default();
+                    
+                    match match_set_measurement_gate_time_arg(&mut port, amount) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
 
                 // If set measurement starting is requested.
                 if matches.is_present("set measurement starting") {

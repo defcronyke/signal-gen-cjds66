@@ -1470,3 +1470,70 @@ pub fn set_measurement_coupling_dc(port: &mut Box<dyn SerialPort>) -> io::Result
 
     Ok(res.to_string())
 }
+
+
+pub fn set_measurement_gate_time(port: &mut Box<dyn SerialPort>, amount: f64) -> io::Result<String> {
+    let command: String;
+
+    if amount < 1.0 || amount > 1000.0 {
+        return Err(Error::new(ErrorKind::Other, "Unsupported measurement gate time. Must be 0.01-10.0."));
+    }
+
+    command = format!("{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        COMMAND_WRITE,
+        WRITE_MEASUREMENT_GATE_TIME_COMMAND,
+        COMMAND_SEPARATOR,
+        amount,
+        COMMAND_END,
+    );
+    
+    println!("\nSetting measurement gate time: {}:\n{}", amount, command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_MEASUREMENT_GATE_TIME_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+pub fn match_set_measurement_gate_time_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> io::Result<String> {
+    let amount_parts: Vec<&str> = amount.split(".").collect();
+    
+    if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
+        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set measurement gate time\" argument (must be 0.01-10.0): {}: too many decimal places (2 max)", amount)));
+    }
+    
+    let res: io::Result<String>;
+    
+    match amount.parse::<f64>() {
+        Ok(amount) => {
+            match amount {
+                _y if amount >= 0.01 && amount <= 10.0 => {
+                    let amount_rounded = ((amount * 100.0 * 100.0).round() / 100.0).round();
+                    
+                    res = set_measurement_gate_time(&mut port, amount_rounded);
+                },
+
+                _ => {
+                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set measurement gate time\" argument (must be 0.01-10.0): {}", amount)));
+                },
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set measurement gate time\" argument (must be 0.01-10.0): {}: {}", amount, e)));
+        },
+    }
+
+    res
+}
