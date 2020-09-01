@@ -1582,3 +1582,26 @@ pub fn set_measurement_mode_counting_period(port: &mut Box<dyn SerialPort>) -> i
 
     Ok(res.to_string())
 }
+
+
+// set measurement count clear.
+pub fn set_measurement_count_clear(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+    let command: &'static str = WRITE_MEASUREMENT_COUNT_CLEAR;
+    
+    println!("\nSetting measurement count clear:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_MEASUREMENT_COUNT_CLEAR_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}

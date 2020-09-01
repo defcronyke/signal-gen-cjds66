@@ -366,6 +366,12 @@ fn real_main() -> i32 {
                 .long("cp")
                 .help("Set the measurement mode to counting period.")
                 .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set measurement count clear")
+                .long("cc")
+                .help("Clear the count on measurement mode.")
+                .takes_value(false)
         );
 
     let matches = app.clone().get_matches();
@@ -878,6 +884,18 @@ fn real_main() -> i32 {
                 // If set measurement mode counting period is requested.
                 if matches.is_present("set measurement mode counting period") {
                     match set_measurement_mode_counting_period(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+
+                // If set measurement count clear is requested.
+                if matches.is_present("set measurement count clear") {
+                    match set_measurement_count_clear(&mut port) {
                         Ok(_res) => {
                         },
                         Err(e) => {
