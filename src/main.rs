@@ -372,6 +372,13 @@ fn real_main() -> i32 {
                 .long("cc")
                 .help("Clear the count on measurement mode.")
                 .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set burst pulse number")
+                .long("bn")
+                .help("Burst pulse number. Set the number of burst pulses.")
+                .takes_value(true)
+                .value_name("NUM PULSES")
         );
 
     let matches = app.clone().get_matches();
@@ -903,6 +910,21 @@ fn real_main() -> i32 {
                         },
                     }
                 }
+
+
+                // If set burst pulse number is requested.
+                if matches.is_present("set burst pulse number") {
+                    let amount = matches.value_of("set burst pulse number").unwrap_or_default();
+
+                    match match_set_burst_pulse_number_arg(&mut port, amount) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
 
 
                 // If set measurement starting is requested.

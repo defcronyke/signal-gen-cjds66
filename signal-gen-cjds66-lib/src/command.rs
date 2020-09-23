@@ -1605,3 +1605,68 @@ pub fn set_measurement_count_clear(port: &mut Box<dyn SerialPort>) -> io::Result
 
     Ok(res.to_string())
 }
+
+
+pub fn set_burst_pulse_number(port: &mut Box<dyn SerialPort>, amount: f64) -> io::Result<String> {
+    let command: String;
+
+    if amount < 1.0 || amount > 1048575.0 {
+        return Err(Error::new(ErrorKind::Other, "Unsupported burst pulse number. Must be 1-1048575."));
+    }
+
+    command = format!("{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        COMMAND_WRITE,
+        WRITE_BURST_PULSE_NUMBER_COMMAND,
+        COMMAND_SEPARATOR,
+        amount,
+        COMMAND_END,
+    );
+    
+    println!("\nSetting burst pulse number: {}:\n{}", amount, command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_BURST_PULSE_NUMBER_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+pub fn match_set_burst_pulse_number_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> io::Result<String> {
+    let amount_parts: Vec<&str> = amount.split(".").collect();
+    
+    if amount_parts.len() > 1 && amount_parts[1] != "0" {
+        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set burst pulse number\" argument (must be 1-1048575): {}: too many decimal places (0 max)", amount)));
+    }
+    
+    let res: io::Result<String>;
+    
+    match amount.parse::<f64>() {
+        Ok(amount) => {
+            match amount {
+                _y if amount >= 1.0 && amount <= 1048575.0 => {
+                    res = set_burst_pulse_number(&mut port, amount);
+                },
+
+                _ => {
+                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set burst pulse number\" argument (must be 1-1048575): {}", amount)));
+                },
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set burst pulse number\" argument (must be 1-1048575): {}: {}", amount, e)));
+        },
+    }
+
+    res
+}

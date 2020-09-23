@@ -888,3 +888,15 @@ pub const WRITE_MEASUREMENT_COUNT_CLEAR: &'static str = WRITE_MEASUREMENT_COUNT_
 macro_rules! WRITE_MEASUREMENT_COUNT_CLEAR_RES_LEN {() => {6}}
 pub const WRITE_MEASUREMENT_COUNT_CLEAR_RES_LEN: u8 = WRITE_MEASUREMENT_COUNT_CLEAR_RES_LEN!();
 // -----
+
+
+// -----
+// Set burst pulse number.
+// command example:
+// ":w49=5.\r\n"
+macro_rules! WRITE_BURST_PULSE_NUMBER_COMMAND {() => {"49"}}
+pub const WRITE_BURST_PULSE_NUMBER_COMMAND: &'static str = WRITE_BURST_PULSE_NUMBER_COMMAND!();
+
+macro_rules! WRITE_BURST_PULSE_NUMBER_RES_LEN {() => {6}}
+pub const WRITE_BURST_PULSE_NUMBER_RES_LEN: u8 = WRITE_BURST_PULSE_NUMBER_RES_LEN!();
+// -----
