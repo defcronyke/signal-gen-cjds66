@@ -1692,3 +1692,88 @@ pub fn set_burst_pulse_once(port: &mut Box<dyn SerialPort>) -> io::Result<String
 
     Ok(res.to_string())
 }
+
+
+pub fn set_burst_mode_manual_trigger(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+    let command = WRITE_BURST_MODE_MANUAL_TRIGGER;
+    
+    println!("\nSetting burst mode to manual trigger:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_BURST_MODE_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+pub fn set_burst_mode_ch2_burst(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+    let command = WRITE_BURST_MODE_CH2_BURST;
+    
+    println!("\nSetting burst mode to CH2 burst:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_BURST_MODE_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+pub fn set_burst_mode_external_burst_ac(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+    let command = WRITE_BURST_MODE_EXTERNAL_BURST_AC;
+    
+    println!("\nSetting burst mode to external burst AC:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_BURST_MODE_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+pub fn set_burst_mode_external_burst_dc(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+    let command = WRITE_BURST_MODE_EXTERNAL_BURST_DC;
+    
+    println!("\nSetting burst mode to external burst DC:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_BURST_MODE_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}

@@ -925,3 +925,73 @@ pub const WRITE_BURST_PULSE_ONCE: &'static str = WRITE_BURST_PULSE_ONCE!();
 macro_rules! WRITE_BURST_PULSE_ONCE_RES_LEN {() => {6}}
 pub const WRITE_BURST_PULSE_ONCE_RES_LEN: u8 = WRITE_BURST_PULSE_ONCE_RES_LEN!();
 // -----
+
+
+// -----
+// Set burst mode.
+macro_rules! WRITE_BURST_MODE_COMMAND {() => {"50"}}
+pub const WRITE_BURST_MODE_COMMAND: &'static str = WRITE_BURST_MODE_COMMAND!();
+
+macro_rules! WRITE_BURST_MODE_ARG_MANUAL_TRIGGER {() => {"0"}}
+pub const WRITE_BURST_MODE_ARG_MANUAL_TRIGGER: &'static str = WRITE_BURST_MODE_ARG_MANUAL_TRIGGER!();
+
+macro_rules! WRITE_BURST_MODE_ARG_CH2_BURST {() => {"1"}}
+pub const WRITE_BURST_MODE_ARG_CH2_BURST: &'static str = WRITE_BURST_MODE_ARG_CH2_BURST!();
+
+macro_rules! WRITE_BURST_MODE_ARG_EXTERNAL_BURST_AC {() => {"2"}}
+pub const WRITE_BURST_MODE_ARG_EXTERNAL_BURST_AC: &'static str = WRITE_BURST_MODE_ARG_EXTERNAL_BURST_AC!();
+
+macro_rules! WRITE_BURST_MODE_ARG_EXTERNAL_BURST_DC {() => {"3"}}
+pub const WRITE_BURST_MODE_ARG_EXTERNAL_BURST_DC: &'static str = WRITE_BURST_MODE_ARG_EXTERNAL_BURST_DC!();
+
+// command example:
+// ":w50=0.\r\n"
+macro_rules! WRITE_BURST_MODE_MANUAL_TRIGGER {() => {concat!(
+    COMMAND_BEGIN!(),
+    COMMAND_WRITE!(),
+    WRITE_BURST_MODE_COMMAND!(),
+    COMMAND_SEPARATOR!(),
+    WRITE_BURST_MODE_ARG_MANUAL_TRIGGER!(),
+    COMMAND_END!(),
+)}}
+pub const WRITE_BURST_MODE_MANUAL_TRIGGER: &'static str = WRITE_BURST_MODE_MANUAL_TRIGGER!();
+
+// command example:
+// ":w50=1.\r\n"
+macro_rules! WRITE_BURST_MODE_CH2_BURST {() => {concat!(
+    COMMAND_BEGIN!(),
+    COMMAND_WRITE!(),
+    WRITE_BURST_MODE_COMMAND!(),
+    COMMAND_SEPARATOR!(),
+    WRITE_BURST_MODE_ARG_CH2_BURST!(),
+    COMMAND_END!(),
+)}}
+pub const WRITE_BURST_MODE_CH2_BURST: &'static str = WRITE_BURST_MODE_CH2_BURST!();
+
+// command example:
+// ":w50=2.\r\n"
+macro_rules! WRITE_BURST_MODE_EXTERNAL_BURST_AC {() => {concat!(
+    COMMAND_BEGIN!(),
+    COMMAND_WRITE!(),
+    WRITE_BURST_MODE_COMMAND!(),
+    COMMAND_SEPARATOR!(),
+    WRITE_BURST_MODE_ARG_EXTERNAL_BURST_AC!(),
+    COMMAND_END!(),
+)}}
+pub const WRITE_BURST_MODE_EXTERNAL_BURST_AC: &'static str = WRITE_BURST_MODE_EXTERNAL_BURST_AC!();
+
+// command example:
+// ":w50=3.\r\n"
+macro_rules! WRITE_BURST_MODE_EXTERNAL_BURST_DC {() => {concat!(
+    COMMAND_BEGIN!(),
+    COMMAND_WRITE!(),
+    WRITE_BURST_MODE_COMMAND!(),
+    COMMAND_SEPARATOR!(),
+    WRITE_BURST_MODE_ARG_EXTERNAL_BURST_DC!(),
+    COMMAND_END!(),
+)}}
+pub const WRITE_BURST_MODE_EXTERNAL_BURST_DC: &'static str = WRITE_BURST_MODE_EXTERNAL_BURST_DC!();
+
+macro_rules! WRITE_BURST_MODE_RES_LEN {() => {6}}
+pub const WRITE_BURST_MODE_RES_LEN: u8 = WRITE_BURST_MODE_RES_LEN!();
+// -----

@@ -385,6 +385,30 @@ fn real_main() -> i32 {
                 .long("b1")
                 .help("Burst pulse once.")
                 .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set burst mode manual trigger")
+                .long("bm")
+                .help("Set the burst mode to manual trigger.")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set burst mode ch2 burst")
+                .long("bc")
+                .help("Set the burst mode to CH2 burst.")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set burst mode external burst ac")
+                .long("ba")
+                .help("Set the burst mode to external burst AC.")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set burst mode external burst dc")
+                .long("bd")
+                .help("Set the burst mode to external burst DC.")
+                .takes_value(false)
         );
 
     let matches = app.clone().get_matches();
@@ -935,6 +959,51 @@ fn real_main() -> i32 {
                 // If set burst pulse once is requested.
                 if matches.is_present("set burst pulse once") {
                     match set_burst_pulse_once(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+
+                // If set burst mode manual trigger is requested.
+                if matches.is_present("set burst mode manual trigger") {
+                    match set_burst_mode_manual_trigger(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set burst mode CH2 burst is requested.
+                if matches.is_present("set burst mode ch2 burst") {
+                    match set_burst_mode_ch2_burst(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set burst mode external burst AC is requested.
+                if matches.is_present("set burst mode external burst ac") {
+                    match set_burst_mode_external_burst_ac(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set burst mode external burst DC is requested.
+                if matches.is_present("set burst mode external burst dc") {
+                    match set_burst_mode_external_burst_dc(&mut port) {
                         Ok(_res) => {
                         },
                         Err(e) => {
