@@ -900,3 +900,28 @@ pub const WRITE_BURST_PULSE_NUMBER_COMMAND: &'static str = WRITE_BURST_PULSE_NUM
 macro_rules! WRITE_BURST_PULSE_NUMBER_RES_LEN {() => {6}}
 pub const WRITE_BURST_PULSE_NUMBER_RES_LEN: u8 = WRITE_BURST_PULSE_NUMBER_RES_LEN!();
 // -----
+
+
+// -----
+// Set burst pulse once.
+macro_rules! WRITE_BURST_PULSE_ONCE_COMMAND {() => {"59"}}
+pub const WRITE_BURST_PULSE_ONCE_COMMAND: &'static str = WRITE_BURST_PULSE_ONCE_COMMAND!();
+
+macro_rules! WRITE_BURST_PULSE_ONCE_ARG {() => {"1"}}
+pub const WRITE_BURST_PULSE_ONCE_ARG: &'static str = WRITE_BURST_PULSE_ONCE_ARG!();
+
+// command example:
+// ":w59=1.\r\n"
+macro_rules! WRITE_BURST_PULSE_ONCE {() => {concat!(
+    COMMAND_BEGIN!(),
+    COMMAND_WRITE!(),
+    WRITE_BURST_PULSE_ONCE_COMMAND!(),
+    COMMAND_SEPARATOR!(),
+    WRITE_BURST_PULSE_ONCE_ARG!(),
+    COMMAND_END!(),
+)}}
+pub const WRITE_BURST_PULSE_ONCE: &'static str = WRITE_BURST_PULSE_ONCE!();
+
+macro_rules! WRITE_BURST_PULSE_ONCE_RES_LEN {() => {6}}
+pub const WRITE_BURST_PULSE_ONCE_RES_LEN: u8 = WRITE_BURST_PULSE_ONCE_RES_LEN!();
+// -----
