@@ -995,3 +995,40 @@ pub const WRITE_BURST_MODE_EXTERNAL_BURST_DC: &'static str = WRITE_BURST_MODE_EX
 macro_rules! WRITE_BURST_MODE_RES_LEN {() => {6}}
 pub const WRITE_BURST_MODE_RES_LEN: u8 = WRITE_BURST_MODE_RES_LEN!();
 // -----
+
+
+// -----
+// Set sweep starting frequency.
+// command example:
+// 10Hz:
+//   ":w40=1000.\r\n"
+macro_rules! WRITE_SWEEP_STARTING_FREQUENCY_COMMAND {() => {"40"}}
+pub const WRITE_SWEEP_STARTING_FREQUENCY_COMMAND: &'static str = WRITE_SWEEP_STARTING_FREQUENCY_COMMAND!();
+
+macro_rules! WRITE_SWEEP_STARTING_FREQUENCY_RES_LEN {() => {6}}
+pub const WRITE_SWEEP_STARTING_FREQUENCY_RES_LEN: u8 = WRITE_SWEEP_STARTING_FREQUENCY_RES_LEN!();
+// -----
+
+// -----
+// Set sweep termination frequency.
+// command example:
+// 10Hz:
+//   ":w41=1000.\r\n"
+macro_rules! WRITE_SWEEP_TERMINATION_FREQUENCY_COMMAND {() => {"41"}}
+pub const WRITE_SWEEP_TERMINATION_FREQUENCY_COMMAND: &'static str = WRITE_SWEEP_TERMINATION_FREQUENCY_COMMAND!();
+
+macro_rules! WRITE_SWEEP_TERMINATION_FREQUENCY_RES_LEN {() => {6}}
+pub const WRITE_SWEEP_TERMINATION_FREQUENCY_RES_LEN: u8 = WRITE_SWEEP_TERMINATION_FREQUENCY_RES_LEN!();
+// -----
+
+// -----
+// Set sweep time.
+// command example:
+// 1 second:
+//   ":w42=10.\r\n"
+macro_rules! WRITE_SWEEP_TIME_COMMAND {() => {"42"}}
+pub const WRITE_SWEEP_TIME_COMMAND: &'static str = WRITE_SWEEP_TIME_COMMAND!();
+
+macro_rules! WRITE_SWEEP_TIME_RES_LEN {() => {6}}
+pub const WRITE_SWEEP_TIME_RES_LEN: u8 = WRITE_SWEEP_TIME_RES_LEN!();
+// -----

@@ -1777,3 +1777,204 @@ pub fn set_burst_mode_external_burst_dc(port: &mut Box<dyn SerialPort>) -> io::R
 
     Ok(res.to_string())
 }
+
+
+pub fn set_sweep_starting_frequency(port: &mut Box<dyn SerialPort>, amount: f64) -> io::Result<String> {
+    let command: String;
+
+    if amount < 1.0 || amount > 6000000000.0 {
+        return Err(Error::new(ErrorKind::Other, "Unsupported sweep starting frequency. Must be 0.01-60000000.0."));
+    }
+
+    command = format!("{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        COMMAND_WRITE,
+        WRITE_SWEEP_STARTING_FREQUENCY_COMMAND,
+        COMMAND_SEPARATOR,
+        amount,
+        COMMAND_END,
+    );
+    
+    println!("\nSetting sweep starting frequency: {}:\n{}", amount, command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_STARTING_FREQUENCY_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+pub fn match_set_sweep_starting_frequency_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> io::Result<String> {
+    let amount_parts: Vec<&str> = amount.split(".").collect();
+    
+    if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
+        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set sweep starting frequency\" argument (must be 0.01-60000000.0): {}: too many decimal places (2 max)", amount)));
+    }
+    
+    let res: io::Result<String>;
+    
+    match amount.parse::<f64>() {
+        Ok(amount) => {
+            match amount {
+                _y if amount >= 0.01 && amount <= 60000000.0 => {
+                    let amount_rounded = ((amount * 100.0 * 10.0).round() / 10.0).round();
+                    
+                    res = set_sweep_starting_frequency(&mut port, amount_rounded);
+                },
+
+                _ => {
+                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set sweep starting frequency\" argument (must be 0.01-60000000.0): {}", amount)));
+                },
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set sweep starting frequency\" argument (must be 0.01-60000000.0): {}: {}", amount, e)));
+        },
+    }
+
+    res
+}
+
+
+pub fn set_sweep_termination_frequency(port: &mut Box<dyn SerialPort>, amount: f64) -> io::Result<String> {
+    let command: String;
+
+    if amount < 1.0 || amount > 6000000000.0 {
+        return Err(Error::new(ErrorKind::Other, "Unsupported sweep termination frequency. Must be 0.01-60000000.0."));
+    }
+
+    command = format!("{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        COMMAND_WRITE,
+        WRITE_SWEEP_TERMINATION_FREQUENCY_COMMAND,
+        COMMAND_SEPARATOR,
+        amount,
+        COMMAND_END,
+    );
+    
+    println!("\nSetting sweep termination frequency: {}:\n{}", amount, command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_TERMINATION_FREQUENCY_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+pub fn match_set_sweep_termination_frequency_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> io::Result<String> {
+    let amount_parts: Vec<&str> = amount.split(".").collect();
+    
+    if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
+        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set sweep termination frequency\" argument (must be 0.01-60000000.0): {}: too many decimal places (2 max)", amount)));
+    }
+    
+    let res: io::Result<String>;
+    
+    match amount.parse::<f64>() {
+        Ok(amount) => {
+            match amount {
+                _y if amount >= 0.01 && amount <= 60000000.0 => {
+                    let amount_rounded = ((amount * 100.0 * 10.0).round() / 10.0).round();
+                    
+                    res = set_sweep_termination_frequency(&mut port, amount_rounded);
+                },
+
+                _ => {
+                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set sweep termination frequency\" argument (must be 0.01-60000000.0): {}", amount)));
+                },
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set sweep termination frequency\" argument (must be 0.01-60000000.0): {}: {}", amount, e)));
+        },
+    }
+
+    res
+}
+
+
+pub fn set_sweep_time(port: &mut Box<dyn SerialPort>, amount: f64) -> io::Result<String> {
+    let command: String;
+
+    if amount < 1.0 || amount > 6000000000.0 {
+        return Err(Error::new(ErrorKind::Other, "Unsupported sweep time. Must be 0.1-999.9."));
+    }
+
+    command = format!("{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        COMMAND_WRITE,
+        WRITE_SWEEP_TIME_COMMAND,
+        COMMAND_SEPARATOR,
+        amount,
+        COMMAND_END,
+    );
+    
+    println!("\nSetting sweep time: {}:\n{}", amount, command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_TIME_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+pub fn match_set_sweep_time_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> io::Result<String> {
+    let amount_parts: Vec<&str> = amount.split(".").collect();
+    
+    if amount_parts.len() > 1 && amount_parts[1].len() > 1 {
+        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set sweep time\" argument (must be 0.1-999.9): {}: too many decimal places (1 max)", amount)));
+    }
+    
+    let res: io::Result<String>;
+    
+    match amount.parse::<f64>() {
+        Ok(amount) => {
+            match amount {
+                _y if amount >= 0.1 && amount <= 999.9 => {
+                    let amount_rounded = (amount * 10.0).round();
+                    
+                    res = set_sweep_time(&mut port, amount_rounded);
+                },
+
+                _ => {
+                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set sweep time\" argument (must be 0.1-999.9): {}", amount)));
+                },
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set sweep time\" argument (must be 0.1-999.9): {}: {}", amount, e)));
+        },
+    }
+
+    res
+}

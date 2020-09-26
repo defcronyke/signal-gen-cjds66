@@ -409,6 +409,27 @@ fn real_main() -> i32 {
                 .long("bd")
                 .help("Set the burst mode to external burst DC.")
                 .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set sweep starting frequency")
+                .long("ss")
+                .help("Set the sweep starting frequency.")
+                .takes_value(true)
+                .value_name("START FREQ HZ")
+        )
+        .arg(
+            Arg::with_name("set sweep termination frequency")
+                .long("se")
+                .help("Set the sweep termination frequency.")
+                .takes_value(true)
+                .value_name("TERMINATION FREQ HZ")
+        )
+        .arg(
+            Arg::with_name("set sweep time")
+                .long("st")
+                .help("Set the sweep time.")
+                .takes_value(true)
+                .value_name("SWEEP TIME SECONDS")
         );
 
     let matches = app.clone().get_matches();
@@ -1004,6 +1025,46 @@ fn real_main() -> i32 {
                 // If set burst mode external burst DC is requested.
                 if matches.is_present("set burst mode external burst dc") {
                     match set_burst_mode_external_burst_dc(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+
+                // If set sweep starting frequency is requested.
+                if matches.is_present("set sweep starting frequency") {
+                    let amount = matches.value_of("set sweep starting frequency").unwrap_or_default();
+
+                    match match_set_sweep_starting_frequency_arg(&mut port, amount) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set sweep termination frequency is requested.
+                if matches.is_present("set sweep termination frequency") {
+                    let amount = matches.value_of("set sweep termination frequency").unwrap_or_default();
+
+                    match match_set_sweep_termination_frequency_arg(&mut port, amount) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set sweep time is requested.
+                if matches.is_present("set sweep time") {
+                    let amount = matches.value_of("set sweep time").unwrap_or_default();
+
+                    match match_set_sweep_time_arg(&mut port, amount) {
                         Ok(_res) => {
                         },
                         Err(e) => {
