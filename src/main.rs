@@ -430,6 +430,24 @@ fn real_main() -> i32 {
                 .help("Set the sweep time.")
                 .takes_value(true)
                 .value_name("SWEEP TIME SECONDS")
+        )
+        .arg(
+            Arg::with_name("set sweep direction normal")
+                .long("sdn")
+                .help("Set the sweep direction to normal (rise).")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set sweep direction reverse")
+                .long("sdr")
+                .help("Set the sweep direction to reverse (fall).")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set sweep direction round trip")
+                .long("sdt")
+                .help("Set the sweep direction to round trip (rise and fall).")
+                .takes_value(false)
         );
 
     let matches = app.clone().get_matches();
@@ -1065,6 +1083,40 @@ fn real_main() -> i32 {
                     let amount = matches.value_of("set sweep time").unwrap_or_default();
 
                     match match_set_sweep_time_arg(&mut port, amount) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+
+                // If set sweep direction normal is requested.
+                if matches.is_present("set sweep direction normal") {
+                    match set_sweep_direction_normal(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set sweep direction reverse is requested.
+                if matches.is_present("set sweep direction reverse") {
+                    match set_sweep_direction_reverse(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set sweep direction round trip is requested.
+                if matches.is_present("set sweep direction round trip") {
+                    match set_sweep_direction_round_trip(&mut port) {
                         Ok(_res) => {
                         },
                         Err(e) => {
