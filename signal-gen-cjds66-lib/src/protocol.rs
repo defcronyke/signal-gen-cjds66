@@ -1086,3 +1086,43 @@ pub const WRITE_SWEEP_DIRECTION_ROUND_TRIP: &'static str = WRITE_SWEEP_DIRECTION
 macro_rules! WRITE_SWEEP_DIRECTION_RES_LEN {() => {6}}
 pub const WRITE_SWEEP_DIRECTION_RES_LEN: u8 = WRITE_SWEEP_DIRECTION_RES_LEN!();
 // -----
+
+
+// -----
+// Set sweep mode.
+macro_rules! WRITE_SWEEP_MODE_COMMAND {() => {"44"}}
+pub const WRITE_SWEEP_MODE_COMMAND: &'static str = WRITE_SWEEP_MODE_COMMAND!();
+
+macro_rules! WRITE_SWEEP_MODE_ARG_LINEAR {() => {"0"}}
+pub const WRITE_SWEEP_MODE_ARG_LINEAR: &'static str = WRITE_SWEEP_MODE_ARG_LINEAR!();
+
+macro_rules! WRITE_SWEEP_MODE_ARG_LOGARITHM {() => {"1"}}
+pub const WRITE_SWEEP_MODE_ARG_LOGARITHM: &'static str = WRITE_SWEEP_MODE_ARG_LOGARITHM!();
+
+// command example:
+// ":w44=0.\r\n"
+macro_rules! WRITE_SWEEP_MODE_LINEAR {() => {concat!(
+    COMMAND_BEGIN!(),
+    COMMAND_WRITE!(),
+    WRITE_SWEEP_MODE_COMMAND!(),
+    COMMAND_SEPARATOR!(),
+    WRITE_SWEEP_MODE_ARG_LINEAR!(),
+    COMMAND_END!(),
+)}}
+pub const WRITE_SWEEP_MODE_LINEAR: &'static str = WRITE_SWEEP_MODE_LINEAR!();
+
+// command example:
+// ":w44=1.\r\n"
+macro_rules! WRITE_SWEEP_MODE_LOGARITHM {() => {concat!(
+    COMMAND_BEGIN!(),
+    COMMAND_WRITE!(),
+    WRITE_SWEEP_MODE_COMMAND!(),
+    COMMAND_SEPARATOR!(),
+    WRITE_SWEEP_MODE_ARG_LOGARITHM!(),
+    COMMAND_END!(),
+)}}
+pub const WRITE_SWEEP_MODE_LOGARITHM: &'static str = WRITE_SWEEP_MODE_LOGARITHM!();
+
+macro_rules! WRITE_SWEEP_MODE_RES_LEN {() => {6}}
+pub const WRITE_SWEEP_MODE_RES_LEN: u8 = WRITE_SWEEP_MODE_RES_LEN!();
+// -----

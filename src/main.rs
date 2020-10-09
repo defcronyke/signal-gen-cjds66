@@ -448,6 +448,18 @@ fn real_main() -> i32 {
                 .long("sdt")
                 .help("Set the sweep direction to round trip (rise and fall).")
                 .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set sweep mode linear")
+                .long("sml")
+                .help("Set the sweep mode to linear.")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set sweep mode logarithm")
+                .long("smg")
+                .help("Set the sweep mode to logarithm.")
+                .takes_value(false)
         );
 
     let matches = app.clone().get_matches();
@@ -1117,6 +1129,29 @@ fn real_main() -> i32 {
                 // If set sweep direction round trip is requested.
                 if matches.is_present("set sweep direction round trip") {
                     match set_sweep_direction_round_trip(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+
+                // If set sweep mode linear is requested.
+                if matches.is_present("set sweep mode linear") {
+                    match set_sweep_mode_linear(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            println!("\nError: {}\n", e);
+                        },
+                    }
+                }
+
+                // If set sweep mode logarithm is requested.
+                if matches.is_present("set sweep mode logarithm") {
+                    match set_sweep_mode_logarithm(&mut port) {
                         Ok(_res) => {
                         },
                         Err(e) => {

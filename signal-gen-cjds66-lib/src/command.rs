@@ -2042,3 +2042,46 @@ pub fn set_sweep_direction_round_trip(port: &mut Box<dyn SerialPort>) -> io::Res
 
     Ok(res.to_string())
 }
+
+
+pub fn set_sweep_mode_linear(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+    let command = WRITE_SWEEP_MODE_LINEAR;
+    
+    println!("\nSetting sweep mode to linear:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_MODE_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+pub fn set_sweep_mode_logarithm(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+    let command = WRITE_SWEEP_MODE_LOGARITHM;
+    
+    println!("\nSetting sweep mode to logarithm:\n{}", command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_MODE_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
