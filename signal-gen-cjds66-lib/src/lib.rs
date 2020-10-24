@@ -1,9 +1,11 @@
 #[macro_use]
 extern crate bitflags;
+extern crate clap;
 
 pub mod serial;
 pub mod protocol;
 pub mod command;
+pub mod error;
 
 #[cfg(test)]
 mod tests {

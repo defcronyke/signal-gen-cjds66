@@ -2,8 +2,6 @@ extern crate serial;
 
 use crate::protocol::*;
 
-use std::io;
-use std::io::{Error, ErrorKind};
 use std::thread;
 use std::time::{Duration};
 
@@ -11,7 +9,9 @@ use std::io::prelude::*;
 use serial::prelude::*;
 use std::str;
 
-pub fn read_machine_model(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+use clap::{Error, ErrorKind};
+
+pub fn read_machine_model(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     println!("\nRequesting machine model number:\n{}", READ_MACHINE_MODEL);
 
     let inbuf: Vec<u8> = READ_MACHINE_MODEL.as_bytes().to_vec();
@@ -30,7 +30,7 @@ pub fn read_machine_model(port: &mut Box<dyn SerialPort>) -> io::Result<String> 
     Ok(res.to_string())
 }
 
-pub fn read_machine_number(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn read_machine_number(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     println!("\nRequesting machine serial number:\n{}", READ_MACHINE_NUMBER);
 
     let inbuf: Vec<u8> = READ_MACHINE_NUMBER.as_bytes().to_vec();
@@ -50,7 +50,7 @@ pub fn read_machine_number(port: &mut Box<dyn SerialPort>) -> io::Result<String>
 }
 
 
-pub fn set_channel_output(port: &mut Box<dyn SerialPort>, ch1: bool, ch2: bool) -> io::Result<String> {
+pub fn set_channel_output(port: &mut Box<dyn SerialPort>, ch1: bool, ch2: bool) -> Result<String, clap::Error> {
     let command: &str;
     
     // Supported states.
@@ -63,11 +63,10 @@ pub fn set_channel_output(port: &mut Box<dyn SerialPort>, ch1: bool, ch2: bool) 
     } else if !ch1 && ch2 { // ch1 off, ch2 on.
         command = WRITE_CHANNEL_OUTPUT_CH1_OFF_CH2_ON;
     } else {
-        return Err(Error::new(ErrorKind::Other, "unsupported input condition"));
+        return Err(Error::with_description("unsupported input condition", ErrorKind::ArgumentConflict));
     }
     
     println!("\nSetting channel output: ch1={} and ch2={}:\n{}", ch1, ch2, command);
-    // println!("\nSetting channel output: ch1={}, ch2={}\n{}", ch1, ch2, SET_CHANNEL_OUTPUT);
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_CHANNEL_OUTPUT_RES_LEN).collect();
@@ -85,8 +84,8 @@ pub fn set_channel_output(port: &mut Box<dyn SerialPort>, ch1: bool, ch2: bool) 
     Ok(res.to_string())
 }
 
-pub fn match_set_channel_output_arg(mut port: &mut Box<dyn SerialPort>, sco: &str) -> io::Result<String> {
-    let res: io::Result<String>;
+pub fn match_set_channel_output_arg(mut port: &mut Box<dyn SerialPort>, sco: &str) -> Result<String, clap::Error> {
+    let res: Result<String, clap::Error>;
     
     match sco {
         "1,1" | "11" | "on,on" | "1" | "on" => {
@@ -106,7 +105,7 @@ pub fn match_set_channel_output_arg(mut port: &mut Box<dyn SerialPort>, sco: &st
         },
 
         _ => {
-            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"-o\" argument: {}", sco)));
+            res = Err(Error::with_description(&format!("unsupported value passed to \"-o\" argument: {}", sco), ErrorKind::InvalidValue));
         },
     }
 
@@ -114,7 +113,7 @@ pub fn match_set_channel_output_arg(mut port: &mut Box<dyn SerialPort>, sco: &st
 }
 
 
-pub fn set_waveform_preset(port: &mut Box<dyn SerialPort>, chan: u64, preset: u64) -> io::Result<String> {
+pub fn set_waveform_preset(port: &mut Box<dyn SerialPort>, chan: u64, preset: u64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
 
@@ -123,11 +122,11 @@ pub fn set_waveform_preset(port: &mut Box<dyn SerialPort>, chan: u64, preset: u6
     } else if chan == 2 {
         chan_out = WRITE_WAVEFORM_PRESET_COMMAND_CH2;
     } else {
-        return Err(Error::new(ErrorKind::Other, "Unsupported channel number. Must be 1 or 2."));
+        return Err(Error::with_description("Unsupported channel number. Must be 1 or 2.", ErrorKind::InvalidValue));
     }
 
     if preset > 16 {
-        return Err(Error::new(ErrorKind::Other, "Unsupported waveform preset number. Must be 0-16."));
+        return Err(Error::with_description("Unsupported waveform preset number. Must be 0-16.", ErrorKind::InvalidValue));
     }
 
     command = format!("{}{}{}{}{}{}",
@@ -179,8 +178,8 @@ pub fn set_waveform_preset(port: &mut Box<dyn SerialPort>, chan: u64, preset: u6
 // 14: multi-tone || multitone || m-t || mt || m-tone || mtone
 // 15: sinc || sc
 // 16: lorenz || loren || lor || lz
-pub fn match_set_waveform_preset_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, preset: &str) -> io::Result<String> {
-    let res: io::Result<String>;
+pub fn match_set_waveform_preset_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, preset: &str) -> Result<String, clap::Error> {
+    let res: Result<String, clap::Error>;
     
     match preset.parse::<u64>() {
         Ok(preset) => {
@@ -190,7 +189,7 @@ pub fn match_set_waveform_preset_arg(mut port: &mut Box<dyn SerialPort>, chan: u
                 },
 
                 _ => {
-                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set waveform\" argument (must be 0-16): {}", preset)));
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set waveform\" argument (must be 0-16): {}", preset), ErrorKind::InvalidValue));
                 },
             }
         },
@@ -266,7 +265,7 @@ pub fn match_set_waveform_preset_arg(mut port: &mut Box<dyn SerialPort>, chan: u
                 },
 
                 _ => {
-                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set waveform\" argument (must be 0-16): {}", preset)));
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set waveform\" argument (must be 0-16): {}", preset), ErrorKind::InvalidValue));
                 },
             }
         },
@@ -276,7 +275,7 @@ pub fn match_set_waveform_preset_arg(mut port: &mut Box<dyn SerialPort>, chan: u
 }
 
 
-pub fn set_waveform_arbitrary(port: &mut Box<dyn SerialPort>, chan: u64, preset: u64) -> io::Result<String> {
+pub fn set_waveform_arbitrary(port: &mut Box<dyn SerialPort>, chan: u64, preset: u64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
 
@@ -285,11 +284,11 @@ pub fn set_waveform_arbitrary(port: &mut Box<dyn SerialPort>, chan: u64, preset:
     } else if chan == 2 {
         chan_out = WRITE_WAVEFORM_PRESET_COMMAND_CH2;
     } else {
-        return Err(Error::new(ErrorKind::Other, "Unsupported channel number. Must be 1 or 2."));
+        return Err(Error::with_description("Unsupported channel number. Must be 1 or 2.", ErrorKind::InvalidValue));
     }
 
     if preset < 1 || preset > 60 {
-        return Err(Error::new(ErrorKind::Other, "Unsupported waveform preset number. Must be 1-60."));
+        return Err(Error::with_description("Unsupported waveform preset number. Must be 1-60.", ErrorKind::InvalidValue));
     }
 
     command = format!("{}{}{}{}{}{}",
@@ -319,8 +318,8 @@ pub fn set_waveform_arbitrary(port: &mut Box<dyn SerialPort>, chan: u64, preset:
     Ok(res.to_string())
 }
 
-pub fn match_set_waveform_arbitrary_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, preset: &str) -> io::Result<String> {
-    let res: io::Result<String>;
+pub fn match_set_waveform_arbitrary_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, preset: &str) -> Result<String, clap::Error> {
+    let res: Result<String, clap::Error>;
     
     match preset.parse::<u64>() {
         Ok(preset) => {
@@ -330,13 +329,13 @@ pub fn match_set_waveform_arbitrary_arg(mut port: &mut Box<dyn SerialPort>, chan
                 },
 
                 _ => {
-                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set arbitrary waveform\" argument (must be 1-60): {}", preset)));
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set arbitrary waveform\" argument (must be 1-60): {}", preset), ErrorKind::InvalidValue));
                 },
             }
         },
 
         Err(e) => {
-            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set arbitrary waveform\" argument (must be 1-60): {}: {}", preset, e)));
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set arbitrary waveform\" argument (must be 1-60): {}: {}", preset, e), ErrorKind::InvalidValue));
         },
     }
 
@@ -344,7 +343,7 @@ pub fn match_set_waveform_arbitrary_arg(mut port: &mut Box<dyn SerialPort>, chan
 }
 
 
-pub fn set_frequency_microhertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> io::Result<String> {
+pub fn set_frequency_microhertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
 
@@ -353,11 +352,11 @@ pub fn set_frequency_microhertz(port: &mut Box<dyn SerialPort>, chan: u64, amoun
     } else if chan == 2 {
         chan_out = WRITE_FREQUENCY_COMMAND_CH2;
     } else {
-        return Err(Error::new(ErrorKind::Other, "Unsupported channel number. Must be 1 or 2."));
+        return Err(Error::with_description("Unsupported channel number. Must be 1 or 2.", ErrorKind::InvalidValue));
     }
 
     if amount < 1.0 || amount > 8000000000.0 {
-        return Err(Error::new(ErrorKind::Other, "Unsupported amount of uHz. Must be 0.01-80000000.0."));
+        return Err(Error::with_description("Unsupported amount of uHz. Must be 0.01-80000000.0.", ErrorKind::InvalidValue));
     }
 
     command = format!("{}{}{}{}{}{}{}{}",
@@ -389,14 +388,14 @@ pub fn set_frequency_microhertz(port: &mut Box<dyn SerialPort>, chan: u64, amoun
     Ok(res.to_string())
 }
 
-pub fn match_set_frequency_microherz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> io::Result<String> {    
+pub fn match_set_frequency_microherz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> Result<String, clap::Error> {    
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
-        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency uHz\" argument (must be 0.01-80000000.0): {}: too many decimal places (2 max)", amount)));
+        return Err(Error::with_description(&format!("unsupported value passed to \"set frequency uHz\" argument (must be 0.01-80000000.0): {}: too many decimal places (2 max)", amount), ErrorKind::InvalidValue));
     }
 
-    let res: io::Result<String>;
+    let res: Result<String, clap::Error>;
     
     match amount.parse::<f64>() {
         Ok(amount) => {
@@ -406,13 +405,13 @@ pub fn match_set_frequency_microherz_arg(mut port: &mut Box<dyn SerialPort>, cha
                 },
 
                 _ => {
-                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency uHz\" argument (must be 0.01-80000000.0): {}", amount)));
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency uHz\" argument (must be 0.01-80000000.0): {}", amount), ErrorKind::InvalidValue));
                 },
             }
         },
 
         Err(e) => {
-            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency uHz\" argument (must be 0.01-80000000.0): {}: {}", amount, e)));
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency uHz\" argument (must be 0.01-80000000.0): {}: {}", amount, e), ErrorKind::InvalidValue));
         },
     }
 
@@ -420,7 +419,7 @@ pub fn match_set_frequency_microherz_arg(mut port: &mut Box<dyn SerialPort>, cha
 }
 
 
-pub fn set_frequency_millihertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> io::Result<String> {
+pub fn set_frequency_millihertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
 
@@ -429,11 +428,11 @@ pub fn set_frequency_millihertz(port: &mut Box<dyn SerialPort>, chan: u64, amoun
     } else if chan == 2 {
         chan_out = WRITE_FREQUENCY_COMMAND_CH2;
     } else {
-        return Err(Error::new(ErrorKind::Other, "Unsupported channel number. Must be 1 or 2."));
+        return Err(Error::with_description("Unsupported channel number. Must be 1 or 2.", ErrorKind::InvalidValue));
     }
 
     if amount < 1.0 || amount > 8000000000.0 {
-        return Err(Error::new(ErrorKind::Other, "Unsupported amount of mHz. Must be 0.01-80000000.0."));
+        return Err(Error::with_description("Unsupported amount of mHz. Must be 0.01-80000000.0.", ErrorKind::InvalidValue));
     }
 
     command = format!("{}{}{}{}{}{}{}{}",
@@ -465,14 +464,14 @@ pub fn set_frequency_millihertz(port: &mut Box<dyn SerialPort>, chan: u64, amoun
     Ok(res.to_string())
 }
 
-pub fn match_set_frequency_milliherz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> io::Result<String> {
+pub fn match_set_frequency_milliherz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
-        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-80000000.0): {}: too many decimal places (2 max)", amount)));
+        return Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-80000000.0): {}: too many decimal places (2 max)", amount), ErrorKind::InvalidValue));
     }
     
-    let res: io::Result<String>;
+    let res: Result<String, clap::Error>;
     
     match amount.parse::<f64>() {
         Ok(amount) => {
@@ -482,13 +481,13 @@ pub fn match_set_frequency_milliherz_arg(mut port: &mut Box<dyn SerialPort>, cha
                 },
 
                 _ => {
-                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-80000000.0): {}", amount)));
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-80000000.0): {}", amount), ErrorKind::InvalidValue));
                 },
             }
         },
 
         Err(e) => {
-            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-80000000.0): {}: {}", amount, e)));
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-80000000.0): {}: {}", amount, e), ErrorKind::InvalidValue));
         },
     }
 
@@ -496,7 +495,7 @@ pub fn match_set_frequency_milliherz_arg(mut port: &mut Box<dyn SerialPort>, cha
 }
 
 
-pub fn set_frequency_hertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> io::Result<String> {
+pub fn set_frequency_hertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
 
@@ -505,11 +504,11 @@ pub fn set_frequency_hertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f6
     } else if chan == 2 {
         chan_out = WRITE_FREQUENCY_COMMAND_CH2;
     } else {
-        return Err(Error::new(ErrorKind::Other, "Unsupported channel number. Must be 1 or 2."));
+        return Err(Error::with_description("Unsupported channel number. Must be 1 or 2.", ErrorKind::InvalidValue));
     }
 
     if amount < 1.0 || amount > 6000000000.0 {
-        return Err(Error::new(ErrorKind::Other, "Unsupported amount of Hz. Must be 0.01-60000000.0."));
+        return Err(Error::with_description("Unsupported amount of Hz. Must be 0.01-60000000.0.", ErrorKind::InvalidValue));
     }
 
     command = format!("{}{}{}{}{}{}{}{}",
@@ -541,14 +540,14 @@ pub fn set_frequency_hertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f6
     Ok(res.to_string())
 }
 
-pub fn match_set_frequency_hertz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> io::Result<String> {
+pub fn match_set_frequency_hertz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
-        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency Hz\" argument (must be 0.01-60000000.0): {}: too many decimal places (2 max)", amount)));
+        return Err(Error::with_description(&format!("unsupported value passed to \"set frequency Hz\" argument (must be 0.01-60000000.0): {}: too many decimal places (2 max)", amount), ErrorKind::InvalidValue));
     }
     
-    let res: io::Result<String>;
+    let res: Result<String, clap::Error>;
     
     match amount.parse::<f64>() {
         Ok(amount) => {
@@ -558,13 +557,13 @@ pub fn match_set_frequency_hertz_arg(mut port: &mut Box<dyn SerialPort>, chan: u
                 },
 
                 _ => {
-                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-60000000.0): {}", amount)));
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-60000000.0): {}", amount), ErrorKind::InvalidValue));
                 },
             }
         },
 
         Err(e) => {
-            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-60000000.0): {}: {}", amount, e)));
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-60000000.0): {}: {}", amount, e), ErrorKind::InvalidValue));
         },
     }
 
@@ -572,7 +571,7 @@ pub fn match_set_frequency_hertz_arg(mut port: &mut Box<dyn SerialPort>, chan: u
 }
 
 
-pub fn set_frequency_kilohertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> io::Result<String> {
+pub fn set_frequency_kilohertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
 
@@ -581,11 +580,11 @@ pub fn set_frequency_kilohertz(port: &mut Box<dyn SerialPort>, chan: u64, amount
     } else if chan == 2 {
         chan_out = WRITE_FREQUENCY_COMMAND_CH2;
     } else {
-        return Err(Error::new(ErrorKind::Other, "Unsupported channel number. Must be 1 or 2."));
+        return Err(Error::with_description("Unsupported channel number. Must be 1 or 2.", ErrorKind::InvalidValue));
     }
 
     if amount < 1.0 || amount > 6000000000.0 {
-        return Err(Error::new(ErrorKind::Other, "Unsupported amount of kHz. Must be 0.00001-60000.0."));
+        return Err(Error::with_description("Unsupported amount of kHz. Must be 0.00001-60000.0.", ErrorKind::InvalidValue));
     }
 
     command = format!("{}{}{}{}{}{}{}{}",
@@ -617,14 +616,14 @@ pub fn set_frequency_kilohertz(port: &mut Box<dyn SerialPort>, chan: u64, amount
     Ok(res.to_string())
 }
 
-pub fn match_set_frequency_kilohertz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> io::Result<String> {
+pub fn match_set_frequency_kilohertz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 5 {
-        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency kHz\" argument (must be 0.00001-60000.0): {}: too many decimal places (5 max)", amount)));
+        return Err(Error::with_description(&format!("unsupported value passed to \"set frequency kHz\" argument (must be 0.00001-60000.0): {}: too many decimal places (5 max)", amount), ErrorKind::InvalidValue));
     }
     
-    let res: io::Result<String>;
+    let res: Result<String, clap::Error>;
     
     match amount.parse::<f64>() {
         Ok(amount) => {
@@ -636,13 +635,13 @@ pub fn match_set_frequency_kilohertz_arg(mut port: &mut Box<dyn SerialPort>, cha
                 },
 
                 _ => {
-                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency kHz\" argument (must be 0.00001-60000.0): {}", amount)));
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency kHz\" argument (must be 0.00001-60000.0): {}", amount), ErrorKind::InvalidValue));
                 },
             }
         },
 
         Err(e) => {
-            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency kHz\" argument (must be 0.00001-60000.0): {}: {}", amount, e)));
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency kHz\" argument (must be 0.00001-60000.0): {}: {}", amount, e), ErrorKind::InvalidValue));
         },
     }
 
@@ -650,7 +649,7 @@ pub fn match_set_frequency_kilohertz_arg(mut port: &mut Box<dyn SerialPort>, cha
 }
 
 
-pub fn set_frequency_megahertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> io::Result<String> {
+pub fn set_frequency_megahertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
 
@@ -659,11 +658,11 @@ pub fn set_frequency_megahertz(port: &mut Box<dyn SerialPort>, chan: u64, amount
     } else if chan == 2 {
         chan_out = WRITE_FREQUENCY_COMMAND_CH2;
     } else {
-        return Err(Error::new(ErrorKind::Other, "Unsupported channel number. Must be 1 or 2."));
+        return Err(Error::with_description("Unsupported channel number. Must be 1 or 2.", ErrorKind::InvalidValue));
     }
 
     if amount < 1.0 || amount > 6000000000.0 {
-        return Err(Error::new(ErrorKind::Other, "Unsupported amount of MHz. Must be 0.00000001-60.0."));
+        return Err(Error::with_description("Unsupported amount of MHz. Must be 0.00000001-60.0.", ErrorKind::InvalidValue));
     }
 
     command = format!("{}{}{}{}{}{}{}{}",
@@ -695,14 +694,14 @@ pub fn set_frequency_megahertz(port: &mut Box<dyn SerialPort>, chan: u64, amount
     Ok(res.to_string())
 }
 
-pub fn match_set_frequency_megahertz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> io::Result<String> {
+pub fn match_set_frequency_megahertz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 8 {
-        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency MHz\" argument (must be 0.00000001-60.0): {}: too many decimal places (8 max)", amount)));
+        return Err(Error::with_description(&format!("unsupported value passed to \"set frequency MHz\" argument (must be 0.00000001-60.0): {}: too many decimal places (8 max)", amount), ErrorKind::InvalidValue));
     }
     
-    let res: io::Result<String>;
+    let res: Result<String, clap::Error>;
     
     match amount.parse::<f64>() {
         Ok(amount) => {
@@ -714,13 +713,13 @@ pub fn match_set_frequency_megahertz_arg(mut port: &mut Box<dyn SerialPort>, cha
                 },
 
                 _ => {
-                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency MHz\" argument (must be 0.00000001-60.0): {}", amount)));
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency MHz\" argument (must be 0.00000001-60.0): {}", amount), ErrorKind::InvalidValue));
                 },
             }
         },
 
         Err(e) => {
-            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set frequency MHz\" argument (must be 0.00000001-60.0): {}: {}", amount, e)));
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency MHz\" argument (must be 0.00000001-60.0): {}: {}", amount, e), ErrorKind::InvalidValue));
         },
     }
 
@@ -728,7 +727,7 @@ pub fn match_set_frequency_megahertz_arg(mut port: &mut Box<dyn SerialPort>, cha
 }
 
 
-pub fn set_amplitude(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> io::Result<String> {
+pub fn set_amplitude(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
 
@@ -737,11 +736,11 @@ pub fn set_amplitude(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> 
     } else if chan == 2 {
         chan_out = WRITE_AMPLITUDE_COMMAND_CH2;
     } else {
-        return Err(Error::new(ErrorKind::Other, "Unsupported channel number. Must be 1 or 2."));
+        return Err(Error::with_description("Unsupported channel number. Must be 1 or 2.", ErrorKind::InvalidValue));
     }
 
     if amount < 0.0 || amount > 20000.0 {
-        return Err(Error::new(ErrorKind::Other, "Unsupported amount of volts. Must be 0.000-20.0."));
+        return Err(Error::with_description("Unsupported amount of volts. Must be 0.000-20.0.", ErrorKind::InvalidValue));
     }
 
     command = format!("{}{}{}{}{}{}",
@@ -771,14 +770,14 @@ pub fn set_amplitude(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> 
     Ok(res.to_string())
 }
 
-pub fn match_set_amplitude_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> io::Result<String> {
+pub fn match_set_amplitude_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 3 {
-        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set amplitude volts\" argument (must be 0.000-20.0): {}: too many decimal places (3 max)", amount)));
+        return Err(Error::with_description(&format!("unsupported value passed to \"set amplitude volts\" argument (must be 0.000-20.0): {}: too many decimal places (3 max)", amount), ErrorKind::InvalidValue));
     }
     
-    let res: io::Result<String>;
+    let res: Result<String, clap::Error>;
     
     match amount.parse::<f64>() {
         Ok(amount) => {
@@ -790,13 +789,13 @@ pub fn match_set_amplitude_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, am
                 },
 
                 _ => {
-                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set amplitude volts\" argument (must be 0.000-20.0): {}", amount)));
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set amplitude volts\" argument (must be 0.000-20.0): {}", amount), ErrorKind::InvalidValue));
                 },
             }
         },
 
         Err(e) => {
-            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set amplitude volts\" argument (must be 0.000-20.0): {}: {}", amount, e)));
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set amplitude volts\" argument (must be 0.000-20.0): {}: {}", amount, e), ErrorKind::InvalidValue));
         },
     }
 
@@ -804,7 +803,7 @@ pub fn match_set_amplitude_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, am
 }
 
 
-pub fn set_duty_cycle(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> io::Result<String> {
+pub fn set_duty_cycle(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
 
@@ -813,11 +812,11 @@ pub fn set_duty_cycle(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) ->
     } else if chan == 2 {
         chan_out = WRITE_DUTY_CYCLE_COMMAND_CH2;
     } else {
-        return Err(Error::new(ErrorKind::Other, "Unsupported channel number. Must be 1 or 2."));
+        return Err(Error::with_description("Unsupported channel number. Must be 1 or 2.", ErrorKind::InvalidValue));
     }
 
     if amount < 0.0 || amount > 999.0 {
-        return Err(Error::new(ErrorKind::Other, "Unsupported duty cycle. Must be 0.0-99.9."));
+        return Err(Error::with_description("Unsupported duty cycle. Must be 0.0-99.9.", ErrorKind::InvalidValue));
     }
 
     command = format!("{}{}{}{}{}{}",
@@ -847,14 +846,14 @@ pub fn set_duty_cycle(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) ->
     Ok(res.to_string())
 }
 
-pub fn match_set_duty_cycle_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> io::Result<String> {
+pub fn match_set_duty_cycle_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 1 {
-        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set duty cycle\" argument (must be 0.0-99.9): {}: too many decimal places (1 max)", amount)));
+        return Err(Error::with_description(&format!("unsupported value passed to \"set duty cycle\" argument (must be 0.0-99.9): {}: too many decimal places (1 max)", amount), ErrorKind::InvalidValue));
     }
     
-    let res: io::Result<String>;
+    let res: Result<String, clap::Error>;
     
     match amount.parse::<f64>() {
         Ok(amount) => {
@@ -866,13 +865,13 @@ pub fn match_set_duty_cycle_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, a
                 },
 
                 _ => {
-                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set duty cycle\" argument (must be 0.0-99.9): {}", amount)));
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set duty cycle\" argument (must be 0.0-99.9): {}", amount), ErrorKind::InvalidValue));
                 },
             }
         },
 
         Err(e) => {
-            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set duty cycle\" argument (must be 0.0-99.9): {}: {}", amount, e)));
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set duty cycle\" argument (must be 0.0-99.9): {}: {}", amount, e), ErrorKind::InvalidValue));
         },
     }
 
@@ -880,7 +879,7 @@ pub fn match_set_duty_cycle_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, a
 }
 
 
-pub fn set_voltage_offset(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> io::Result<String> {
+pub fn set_voltage_offset(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
 
@@ -889,11 +888,11 @@ pub fn set_voltage_offset(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64
     } else if chan == 2 {
         chan_out = WRITE_VOLTAGE_OFFSET_COMMAND_CH2;
     } else {
-        return Err(Error::new(ErrorKind::Other, "Unsupported channel number. Must be 1 or 2."));
+        return Err(Error::with_description("Unsupported channel number. Must be 1 or 2.", ErrorKind::InvalidValue));
     }
 
     if amount < 1.0 || amount > 1999.0 {
-        return Err(Error::new(ErrorKind::Other, "Unsupported voltage offset. Must be -9.99-9.99."));
+        return Err(Error::with_description("Unsupported voltage offset. Must be -9.99-9.99.", ErrorKind::InvalidValue));
     }
 
     command = format!("{}{}{}{}{}{}",
@@ -923,14 +922,14 @@ pub fn set_voltage_offset(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64
     Ok(res.to_string())
 }
 
-pub fn match_set_voltage_offset_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> io::Result<String> {
+pub fn match_set_voltage_offset_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
-        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set voltage offset\" argument (must be -9.99-9.99): {}: too many decimal places (2 max)", amount)));
+        return Err(Error::with_description(&format!("unsupported value passed to \"set voltage offset\" argument (must be -9.99-9.99): {}: too many decimal places (2 max)", amount), ErrorKind::InvalidValue));
     }
     
-    let res: io::Result<String>;
+    let res: Result<String, clap::Error>;
     
     match amount.parse::<f64>() {
         Ok(amount) => {
@@ -942,13 +941,13 @@ pub fn match_set_voltage_offset_arg(mut port: &mut Box<dyn SerialPort>, chan: u6
                 },
 
                 _ => {
-                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set voltage offset\" argument (must be -9.99-9.99): {}", amount)));
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set voltage offset\" argument (must be -9.99-9.99): {}", amount), ErrorKind::InvalidValue));
                 },
             }
         },
 
         Err(e) => {
-            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set voltage offset\" argument (must be -9.99-9.99): {}: {}", amount, e)));
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set voltage offset\" argument (must be -9.99-9.99): {}: {}", amount, e), ErrorKind::InvalidValue));
         },
     }
 
@@ -956,11 +955,11 @@ pub fn match_set_voltage_offset_arg(mut port: &mut Box<dyn SerialPort>, chan: u6
 }
 
 
-pub fn set_phase(port: &mut Box<dyn SerialPort>, amount: f64) -> io::Result<String> {
+pub fn set_phase(port: &mut Box<dyn SerialPort>, amount: f64) -> Result<String, clap::Error> {
     let command: String;
 
     if amount < 0.0 || amount > 3600.0 {
-        return Err(Error::new(ErrorKind::Other, "Unsupported phase. Must be 0.0-360.0."));
+        return Err(Error::with_description("Unsupported phase. Must be 0.0-360.0.", ErrorKind::InvalidValue));
     }
 
     command = format!("{}{}{}{}{}{}",
@@ -990,14 +989,14 @@ pub fn set_phase(port: &mut Box<dyn SerialPort>, amount: f64) -> io::Result<Stri
     Ok(res.to_string())
 }
 
-pub fn match_set_phase_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> io::Result<String> {
+pub fn match_set_phase_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 1 {
-        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set phase\" argument (must be 0.0-360.0): {}: too many decimal places (1 max)", amount)));
+        return Err(Error::with_description(&format!("unsupported value passed to \"set phase\" argument (must be 0.0-360.0): {}: too many decimal places (1 max)", amount), ErrorKind::InvalidValue));
     }
     
-    let res: io::Result<String>;
+    let res: Result<String, clap::Error>;
     
     match amount.parse::<f64>() {
         Ok(amount) => {
@@ -1009,13 +1008,13 @@ pub fn match_set_phase_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> 
                 },
 
                 _ => {
-                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set phase\" argument (must be 0.0-360.0): {}", amount)));
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set phase\" argument (must be 0.0-360.0): {}", amount), ErrorKind::InvalidValue));
                 },
             }
         },
 
         Err(e) => {
-            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set phase\" argument (must be 0.0-360.0): {}: {}", amount, e)));
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set phase\" argument (must be 0.0-360.0): {}: {}", amount, e), ErrorKind::InvalidValue));
         },
     }
 
@@ -1023,11 +1022,11 @@ pub fn match_set_phase_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> 
 }
 
 
-pub fn set_tracking(port: &mut Box<dyn SerialPort>, track: TrackingArg) -> io::Result<String> {
+pub fn set_tracking(port: &mut Box<dyn SerialPort>, track: TrackingArg) -> Result<String, clap::Error> {
     let command: String;
 
     if track > TrackingArg::all() {
-        return Err(Error::new(ErrorKind::Other, format!("Unsupported tracking argument. Must be a number 0-{}.\n\n{}", TrackingArg::all().to_str_val(), TRACKING_FEATURES)));
+        return Err(Error::with_description(&format!("Unsupported tracking argument. Must be a number 0-{}.\n\n{}", TrackingArg::all().to_str_val(), TRACKING_FEATURES), ErrorKind::InvalidValue));
     }
 
     command = format!("{}{}{}{}{}{}",
@@ -1057,12 +1056,12 @@ pub fn set_tracking(port: &mut Box<dyn SerialPort>, track: TrackingArg) -> io::R
     Ok(res.to_string())
 }
 
-pub fn match_set_tracking_arg(mut port: &mut Box<dyn SerialPort>, track: &str) -> io::Result<String> {
+pub fn match_set_tracking_arg(mut port: &mut Box<dyn SerialPort>, track: &str) -> Result<String, clap::Error> {
     let max_len = 5;
     
     let track_stripped = track.replace(',', "");
 
-    let res: io::Result<String>;
+    let res: Result<String, clap::Error>;
 
     let mut track_bits = TrackingArg::from_bits(0).unwrap();    
 
@@ -1070,11 +1069,11 @@ pub fn match_set_tracking_arg(mut port: &mut Box<dyn SerialPort>, track: &str) -
         match c.to_digit(10) {
             Some(c_num) => {
                 if track_stripped.len() > max_len {
-                    return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set tracking\" argument (must be a set of zeros and ones in the range 0-{}): {}: too many digits (5 max)\n\n{}", TrackingArg::all().to_str_val(), track, TRACKING_FEATURES)));
+                    return Err(Error::with_description(&format!("unsupported value passed to \"set tracking\" argument (must be a set of zeros and ones in the range 0-{}): {}: too many digits (5 max)\n\n{}", TrackingArg::all().to_str_val(), track, TRACKING_FEATURES), ErrorKind::InvalidValue));
                 }
 
                 if c_num > 1 {
-                    return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set tracking\" argument (must be a set of zeros and ones in the range 0-{}): {}\n\n{}", TrackingArg::all().to_str_val(), track, TRACKING_FEATURES)));
+                    return Err(Error::with_description(&format!("unsupported value passed to \"set tracking\" argument (must be a set of zeros and ones in the range 0-{}): {}\n\n{}", TrackingArg::all().to_str_val(), track, TRACKING_FEATURES), ErrorKind::InvalidValue));
                 }
                 
                 if c_num == 1 {
@@ -1086,7 +1085,7 @@ pub fn match_set_tracking_arg(mut port: &mut Box<dyn SerialPort>, track: &str) -
                 let track_vec: Vec<&str> = track.split(",").collect();
 
                 if track_vec.len() > max_len {
-                    return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set tracking\" argument (must be a set of zeros and ones in the range 0-{}): {}: too many digits (5 max)\n\n{}", TrackingArg::all().to_str_val(), track, TRACKING_FEATURES)));
+                    return Err(Error::with_description(&format!("unsupported value passed to \"set tracking\" argument (must be a set of zeros and ones in the range 0-{}): {}: too many digits (5 max)\n\n{}", TrackingArg::all().to_str_val(), track, TRACKING_FEATURES), ErrorKind::InvalidValue));
                 }
 
                 for (i2, word) in track_vec.into_iter().enumerate() {
@@ -1122,7 +1121,7 @@ pub fn match_set_tracking_arg(mut port: &mut Box<dyn SerialPort>, track: &str) -
                     })).unwrap();
 
                     if return_err {
-                        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set tracking\" argument (must be a set of zeros and ones in the range 0-{}): {}\n\n{}", TrackingArg::all().to_str_val(), track, TRACKING_FEATURES)));
+                        return Err(Error::with_description(&format!("unsupported value passed to \"set tracking\" argument (must be a set of zeros and ones in the range 0-{}): {}\n\n{}", TrackingArg::all().to_str_val(), track, TRACKING_FEATURES), ErrorKind::InvalidValue));
                     }
                 }
                 
@@ -1138,7 +1137,7 @@ pub fn match_set_tracking_arg(mut port: &mut Box<dyn SerialPort>, track: &str) -
         },
 
         _ => {
-            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set tracking\" argument (must be 0-{}): {}\n\n{}", TrackingArg::all().to_str_val(), track_bits, TRACKING_FEATURES)));
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set tracking\" argument (must be 0-{}): {}\n\n{}", TrackingArg::all().to_str_val(), track_bits, TRACKING_FEATURES), ErrorKind::InvalidValue));
         },
     }
 
@@ -1146,11 +1145,11 @@ pub fn match_set_tracking_arg(mut port: &mut Box<dyn SerialPort>, track: &str) -
 }
 
 
-pub fn set_switch_function_panel_main(port: &mut Box<dyn SerialPort>, chan: u64) -> io::Result<String> {
+pub fn set_switch_function_panel_main(port: &mut Box<dyn SerialPort>, chan: u64) -> Result<String, clap::Error> {
     let command: &'static str;
 
     if chan < 1 || chan > 2 {
-        return Err(Error::new(ErrorKind::Other, "Unsupported channel. Must be 1 or 2."));
+        return Err(Error::with_description("Unsupported channel. Must be 1 or 2.", ErrorKind::InvalidValue));
     } else if chan == 1 {
         command = WRITE_SWITCH_FUNCTION_PANEL_MAIN_CH1;
     } else {    // if chan == 2
@@ -1176,7 +1175,7 @@ pub fn set_switch_function_panel_main(port: &mut Box<dyn SerialPort>, chan: u64)
 }
 
 
-pub fn set_switch_function_panel_sys(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_switch_function_panel_sys(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_SWITCH_FUNCTION_PANEL_SYS;
     
     println!("\nSwitching function panel to system settings mode:\n{}", command);
@@ -1198,7 +1197,7 @@ pub fn set_switch_function_panel_sys(port: &mut Box<dyn SerialPort>) -> io::Resu
 }
 
 
-pub fn set_switch_function_panel_measurement(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_switch_function_panel_measurement(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_SWITCH_FUNCTION_PANEL_MEASUREMENT;
     
     println!("\nSwitching function panel to measurement mode:\n{}", command);
@@ -1220,7 +1219,7 @@ pub fn set_switch_function_panel_measurement(port: &mut Box<dyn SerialPort>) -> 
 }
 
 // Measurement starting - counting, sweep, frequency, pulse, burst stopping.
-pub fn set_measurement_starting(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_measurement_starting(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_EXTENDED_FUNCTION_MEASUREMENT_STARTING;
     
     println!("\nMeasurement starting - counting, sweep, frequency, pulse, burst stopping:\n{}", command);
@@ -1242,7 +1241,7 @@ pub fn set_measurement_starting(port: &mut Box<dyn SerialPort>) -> io::Result<St
 }
 
 
-pub fn set_switch_function_panel_counting(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_switch_function_panel_counting(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_SWITCH_FUNCTION_PANEL_COUNTING;
     
     println!("\nSwitching function panel to counting mode:\n{}", command);
@@ -1264,7 +1263,7 @@ pub fn set_switch_function_panel_counting(port: &mut Box<dyn SerialPort>) -> io:
 }
 
 // Counting starting.
-pub fn set_counting_starting(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_counting_starting(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_EXTENDED_FUNCTION_COUNTING_STARTING;
     
     println!("\nCounting starting:\n{}", command);
@@ -1286,11 +1285,11 @@ pub fn set_counting_starting(port: &mut Box<dyn SerialPort>) -> io::Result<Strin
 }
 
 
-pub fn set_switch_function_panel_sweep(port: &mut Box<dyn SerialPort>, chan: u64) -> io::Result<String> {
+pub fn set_switch_function_panel_sweep(port: &mut Box<dyn SerialPort>, chan: u64) -> Result<String, clap::Error> {
     let command: &'static str;
 
     if chan < 1 || chan > 2 {
-        return Err(Error::new(ErrorKind::Other, "Unsupported channel. Must be 1 or 2."));
+        return Err(Error::with_description("Unsupported channel. Must be 1 or 2.", ErrorKind::InvalidValue));
     } else if chan == 1 {
         command = WRITE_SWITCH_FUNCTION_PANEL_SWEEP_CH1;
     } else {    // if chan == 2
@@ -1316,7 +1315,7 @@ pub fn set_switch_function_panel_sweep(port: &mut Box<dyn SerialPort>, chan: u64
 }
 
 // Sweep starting.
-pub fn set_sweep_starting(port: &mut Box<dyn SerialPort>, chan: u64) -> io::Result<String> {
+pub fn set_sweep_starting(port: &mut Box<dyn SerialPort>, chan: u64) -> Result<String, clap::Error> {
     set_switch_function_panel_sweep(port, chan)?;
     
     let command: &'static str = WRITE_EXTENDED_FUNCTION_SWEEP_STARTING;
@@ -1340,7 +1339,7 @@ pub fn set_sweep_starting(port: &mut Box<dyn SerialPort>, chan: u64) -> io::Resu
 }
 
 
-pub fn set_switch_function_panel_pulse(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_switch_function_panel_pulse(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_SWITCH_FUNCTION_PANEL_PULSE;
     
     println!("\nSwitching function panel to pulse mode:\n{}", command);
@@ -1362,7 +1361,7 @@ pub fn set_switch_function_panel_pulse(port: &mut Box<dyn SerialPort>) -> io::Re
 }
 
 // Pulse starting.
-pub fn set_pulse_starting(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_pulse_starting(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_EXTENDED_FUNCTION_PULSE_STARTING;
     
     println!("\nPulse starting:\n{}", command);
@@ -1384,7 +1383,7 @@ pub fn set_pulse_starting(port: &mut Box<dyn SerialPort>) -> io::Result<String> 
 }
 
 
-pub fn set_switch_function_panel_bursting(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_switch_function_panel_bursting(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_SWITCH_FUNCTION_PANEL_BURST;
     
     println!("\nSwitching function panel to bursting mode:\n{}", command);
@@ -1406,7 +1405,7 @@ pub fn set_switch_function_panel_bursting(port: &mut Box<dyn SerialPort>) -> io:
 }
 
 // Bursting starting.
-pub fn set_bursting_starting(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_bursting_starting(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_EXTENDED_FUNCTION_BURSTING_STARTING;
     
     println!("\nBursting starting:\n{}", command);
@@ -1428,7 +1427,7 @@ pub fn set_bursting_starting(port: &mut Box<dyn SerialPort>) -> io::Result<Strin
 }
 
 // set measurement coupling to AC.
-pub fn set_measurement_coupling_ac(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_measurement_coupling_ac(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_MEASUREMENT_COUPLING_AC;
     
     println!("\nSetting measurement coupling to AC:\n{}", command);
@@ -1450,7 +1449,7 @@ pub fn set_measurement_coupling_ac(port: &mut Box<dyn SerialPort>) -> io::Result
 }
 
 // set measurement coupling to DC.
-pub fn set_measurement_coupling_dc(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_measurement_coupling_dc(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_MEASUREMENT_COUPLING_DC;
     
     println!("\nSetting measurement coupling to DC:\n{}", command);
@@ -1472,11 +1471,11 @@ pub fn set_measurement_coupling_dc(port: &mut Box<dyn SerialPort>) -> io::Result
 }
 
 
-pub fn set_measurement_gate_time(port: &mut Box<dyn SerialPort>, amount: f64) -> io::Result<String> {
+pub fn set_measurement_gate_time(port: &mut Box<dyn SerialPort>, amount: f64) -> Result<String, clap::Error> {
     let command: String;
 
     if amount < 1.0 || amount > 1000.0 {
-        return Err(Error::new(ErrorKind::Other, "Unsupported measurement gate time. Must be 0.01-10.0."));
+        return Err(Error::with_description("Unsupported measurement gate time. Must be 0.01-10.0.", ErrorKind::InvalidValue));
     }
 
     command = format!("{}{}{}{}{}{}",
@@ -1506,14 +1505,14 @@ pub fn set_measurement_gate_time(port: &mut Box<dyn SerialPort>, amount: f64) ->
     Ok(res.to_string())
 }
 
-pub fn match_set_measurement_gate_time_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> io::Result<String> {
+pub fn match_set_measurement_gate_time_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
-        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set measurement gate time\" argument (must be 0.01-10.0): {}: too many decimal places (2 max)", amount)));
+        return Err(Error::with_description(&format!("unsupported value passed to \"set measurement gate time\" argument (must be 0.01-10.0): {}: too many decimal places (2 max)", amount), ErrorKind::InvalidValue));
     }
     
-    let res: io::Result<String>;
+    let res: Result<String, clap::Error>;
     
     match amount.parse::<f64>() {
         Ok(amount) => {
@@ -1525,13 +1524,13 @@ pub fn match_set_measurement_gate_time_arg(mut port: &mut Box<dyn SerialPort>, a
                 },
 
                 _ => {
-                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set measurement gate time\" argument (must be 0.01-10.0): {}", amount)));
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set measurement gate time\" argument (must be 0.01-10.0): {}", amount), ErrorKind::InvalidValue));
                 },
             }
         },
 
         Err(e) => {
-            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set measurement gate time\" argument (must be 0.01-10.0): {}: {}", amount, e)));
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set measurement gate time\" argument (must be 0.01-10.0): {}: {}", amount, e), ErrorKind::InvalidValue));
         },
     }
 
@@ -1540,7 +1539,7 @@ pub fn match_set_measurement_gate_time_arg(mut port: &mut Box<dyn SerialPort>, a
 
 
 // set measurement mode to count frequency.
-pub fn set_measurement_mode_count_frequency(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_measurement_mode_count_frequency(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_MEASUREMENT_MODE_COUNT_FREQUENCY;
     
     println!("\nSetting measurement mode to count frequency:\n{}", command);
@@ -1562,7 +1561,7 @@ pub fn set_measurement_mode_count_frequency(port: &mut Box<dyn SerialPort>) -> i
 }
 
 // set measurement mode to counting period.
-pub fn set_measurement_mode_counting_period(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_measurement_mode_counting_period(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_MEASUREMENT_MODE_COUNTING_PERIOD;
     
     println!("\nSetting measurement mode to counting period:\n{}", command);
@@ -1585,7 +1584,7 @@ pub fn set_measurement_mode_counting_period(port: &mut Box<dyn SerialPort>) -> i
 
 
 // set measurement count clear.
-pub fn set_measurement_count_clear(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_measurement_count_clear(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_MEASUREMENT_COUNT_CLEAR;
     
     println!("\nSetting measurement count clear:\n{}", command);
@@ -1607,11 +1606,11 @@ pub fn set_measurement_count_clear(port: &mut Box<dyn SerialPort>) -> io::Result
 }
 
 
-pub fn set_burst_pulse_number(port: &mut Box<dyn SerialPort>, amount: f64) -> io::Result<String> {
+pub fn set_burst_pulse_number(port: &mut Box<dyn SerialPort>, amount: f64) -> Result<String, clap::Error> {
     let command: String;
 
     if amount < 1.0 || amount > 1048575.0 {
-        return Err(Error::new(ErrorKind::Other, "Unsupported burst pulse number. Must be 1-1048575."));
+        return Err(Error::with_description("Unsupported burst pulse number. Must be 1-1048575.", ErrorKind::InvalidValue));
     }
 
     command = format!("{}{}{}{}{}{}",
@@ -1641,14 +1640,14 @@ pub fn set_burst_pulse_number(port: &mut Box<dyn SerialPort>, amount: f64) -> io
     Ok(res.to_string())
 }
 
-pub fn match_set_burst_pulse_number_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> io::Result<String> {
+pub fn match_set_burst_pulse_number_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1] != "0" {
-        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set burst pulse number\" argument (must be 1-1048575): {}: too many decimal places (0 max)", amount)));
+        return Err(Error::with_description(&format!("unsupported value passed to \"set burst pulse number\" argument (must be 1-1048575): {}: too many decimal places (0 max)", amount), ErrorKind::InvalidValue));
     }
     
-    let res: io::Result<String>;
+    let res: Result<String, clap::Error>;
     
     match amount.parse::<f64>() {
         Ok(amount) => {
@@ -1658,13 +1657,13 @@ pub fn match_set_burst_pulse_number_arg(mut port: &mut Box<dyn SerialPort>, amou
                 },
 
                 _ => {
-                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set burst pulse number\" argument (must be 1-1048575): {}", amount)));
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set burst pulse number\" argument (must be 1-1048575): {}", amount), ErrorKind::InvalidValue));
                 },
             }
         },
 
         Err(e) => {
-            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set burst pulse number\" argument (must be 1-1048575): {}: {}", amount, e)));
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set burst pulse number\" argument (must be 1-1048575): {}: {}", amount, e), ErrorKind::InvalidValue));
         },
     }
 
@@ -1672,7 +1671,7 @@ pub fn match_set_burst_pulse_number_arg(mut port: &mut Box<dyn SerialPort>, amou
 }
 
 
-pub fn set_burst_pulse_once(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_burst_pulse_once(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command = WRITE_BURST_PULSE_ONCE;
     
     println!("\nBurst pulse once:\n{}", command);
@@ -1694,7 +1693,7 @@ pub fn set_burst_pulse_once(port: &mut Box<dyn SerialPort>) -> io::Result<String
 }
 
 
-pub fn set_burst_mode_manual_trigger(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_burst_mode_manual_trigger(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command = WRITE_BURST_MODE_MANUAL_TRIGGER;
     
     println!("\nSetting burst mode to manual trigger:\n{}", command);
@@ -1715,7 +1714,7 @@ pub fn set_burst_mode_manual_trigger(port: &mut Box<dyn SerialPort>) -> io::Resu
     Ok(res.to_string())
 }
 
-pub fn set_burst_mode_ch2_burst(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_burst_mode_ch2_burst(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command = WRITE_BURST_MODE_CH2_BURST;
     
     println!("\nSetting burst mode to CH2 burst:\n{}", command);
@@ -1736,7 +1735,7 @@ pub fn set_burst_mode_ch2_burst(port: &mut Box<dyn SerialPort>) -> io::Result<St
     Ok(res.to_string())
 }
 
-pub fn set_burst_mode_external_burst_ac(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_burst_mode_external_burst_ac(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command = WRITE_BURST_MODE_EXTERNAL_BURST_AC;
     
     println!("\nSetting burst mode to external burst AC:\n{}", command);
@@ -1757,7 +1756,7 @@ pub fn set_burst_mode_external_burst_ac(port: &mut Box<dyn SerialPort>) -> io::R
     Ok(res.to_string())
 }
 
-pub fn set_burst_mode_external_burst_dc(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_burst_mode_external_burst_dc(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command = WRITE_BURST_MODE_EXTERNAL_BURST_DC;
     
     println!("\nSetting burst mode to external burst DC:\n{}", command);
@@ -1779,11 +1778,11 @@ pub fn set_burst_mode_external_burst_dc(port: &mut Box<dyn SerialPort>) -> io::R
 }
 
 
-pub fn set_sweep_starting_frequency(port: &mut Box<dyn SerialPort>, amount: f64) -> io::Result<String> {
+pub fn set_sweep_starting_frequency(port: &mut Box<dyn SerialPort>, amount: f64) -> Result<String, clap::Error> {
     let command: String;
 
     if amount < 1.0 || amount > 6000000000.0 {
-        return Err(Error::new(ErrorKind::Other, "Unsupported sweep starting frequency. Must be 0.01-60000000.0."));
+        return Err(Error::with_description("Unsupported sweep starting frequency. Must be 0.01-60000000.0.", ErrorKind::InvalidValue));
     }
 
     command = format!("{}{}{}{}{}{}",
@@ -1813,14 +1812,14 @@ pub fn set_sweep_starting_frequency(port: &mut Box<dyn SerialPort>, amount: f64)
     Ok(res.to_string())
 }
 
-pub fn match_set_sweep_starting_frequency_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> io::Result<String> {
+pub fn match_set_sweep_starting_frequency_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
-        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set sweep starting frequency\" argument (must be 0.01-60000000.0): {}: too many decimal places (2 max)", amount)));
+        return Err(Error::with_description(&format!("unsupported value passed to \"set sweep starting frequency\" argument (must be 0.01-60000000.0): {}: too many decimal places (2 max)", amount), ErrorKind::InvalidValue));
     }
     
-    let res: io::Result<String>;
+    let res: Result<String, clap::Error>;
     
     match amount.parse::<f64>() {
         Ok(amount) => {
@@ -1832,13 +1831,13 @@ pub fn match_set_sweep_starting_frequency_arg(mut port: &mut Box<dyn SerialPort>
                 },
 
                 _ => {
-                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set sweep starting frequency\" argument (must be 0.01-60000000.0): {}", amount)));
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set sweep starting frequency\" argument (must be 0.01-60000000.0): {}", amount), ErrorKind::InvalidValue));
                 },
             }
         },
 
         Err(e) => {
-            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set sweep starting frequency\" argument (must be 0.01-60000000.0): {}: {}", amount, e)));
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set sweep starting frequency\" argument (must be 0.01-60000000.0): {}: {}", amount, e), ErrorKind::InvalidValue));
         },
     }
 
@@ -1846,11 +1845,11 @@ pub fn match_set_sweep_starting_frequency_arg(mut port: &mut Box<dyn SerialPort>
 }
 
 
-pub fn set_sweep_termination_frequency(port: &mut Box<dyn SerialPort>, amount: f64) -> io::Result<String> {
+pub fn set_sweep_termination_frequency(port: &mut Box<dyn SerialPort>, amount: f64) -> Result<String, clap::Error> {
     let command: String;
 
     if amount < 1.0 || amount > 6000000000.0 {
-        return Err(Error::new(ErrorKind::Other, "Unsupported sweep termination frequency. Must be 0.01-60000000.0."));
+        return Err(Error::with_description("Unsupported sweep termination frequency. Must be 0.01-60000000.0.", ErrorKind::InvalidValue));
     }
 
     command = format!("{}{}{}{}{}{}",
@@ -1880,14 +1879,14 @@ pub fn set_sweep_termination_frequency(port: &mut Box<dyn SerialPort>, amount: f
     Ok(res.to_string())
 }
 
-pub fn match_set_sweep_termination_frequency_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> io::Result<String> {
+pub fn match_set_sweep_termination_frequency_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
-        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set sweep termination frequency\" argument (must be 0.01-60000000.0): {}: too many decimal places (2 max)", amount)));
+        return Err(Error::with_description(&format!("unsupported value passed to \"set sweep termination frequency\" argument (must be 0.01-60000000.0): {}: too many decimal places (2 max)", amount), ErrorKind::InvalidValue));
     }
     
-    let res: io::Result<String>;
+    let res: Result<String, clap::Error>;
     
     match amount.parse::<f64>() {
         Ok(amount) => {
@@ -1899,13 +1898,13 @@ pub fn match_set_sweep_termination_frequency_arg(mut port: &mut Box<dyn SerialPo
                 },
 
                 _ => {
-                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set sweep termination frequency\" argument (must be 0.01-60000000.0): {}", amount)));
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set sweep termination frequency\" argument (must be 0.01-60000000.0): {}", amount), ErrorKind::InvalidValue));
                 },
             }
         },
 
         Err(e) => {
-            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set sweep termination frequency\" argument (must be 0.01-60000000.0): {}: {}", amount, e)));
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set sweep termination frequency\" argument (must be 0.01-60000000.0): {}: {}", amount, e), ErrorKind::InvalidValue));
         },
     }
 
@@ -1913,11 +1912,11 @@ pub fn match_set_sweep_termination_frequency_arg(mut port: &mut Box<dyn SerialPo
 }
 
 
-pub fn set_sweep_time(port: &mut Box<dyn SerialPort>, amount: f64) -> io::Result<String> {
+pub fn set_sweep_time(port: &mut Box<dyn SerialPort>, amount: f64) -> Result<String, clap::Error> {
     let command: String;
 
     if amount < 1.0 || amount > 6000000000.0 {
-        return Err(Error::new(ErrorKind::Other, "Unsupported sweep time. Must be 0.1-999.9."));
+        return Err(Error::with_description("Unsupported sweep time. Must be 0.1-999.9.", ErrorKind::InvalidValue));
     }
 
     command = format!("{}{}{}{}{}{}",
@@ -1947,14 +1946,14 @@ pub fn set_sweep_time(port: &mut Box<dyn SerialPort>, amount: f64) -> io::Result
     Ok(res.to_string())
 }
 
-pub fn match_set_sweep_time_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> io::Result<String> {
+pub fn match_set_sweep_time_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 1 {
-        return Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set sweep time\" argument (must be 0.1-999.9): {}: too many decimal places (1 max)", amount)));
+        return Err(Error::with_description(&format!("unsupported value passed to \"set sweep time\" argument (must be 0.1-999.9): {}: too many decimal places (1 max)", amount), ErrorKind::InvalidValue));
     }
     
-    let res: io::Result<String>;
+    let res: Result<String, clap::Error>;
     
     match amount.parse::<f64>() {
         Ok(amount) => {
@@ -1966,13 +1965,13 @@ pub fn match_set_sweep_time_arg(mut port: &mut Box<dyn SerialPort>, amount: &str
                 },
 
                 _ => {
-                    res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set sweep time\" argument (must be 0.1-999.9): {}", amount)));
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set sweep time\" argument (must be 0.1-999.9): {}", amount), ErrorKind::InvalidValue));
                 },
             }
         },
 
         Err(e) => {
-            res = Err(Error::new(ErrorKind::Other, format!("unsupported value passed to \"set sweep time\" argument (must be 0.1-999.9): {}: {}", amount, e)));
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set sweep time\" argument (must be 0.1-999.9): {}: {}", amount, e), ErrorKind::InvalidValue));
         },
     }
 
@@ -1980,7 +1979,7 @@ pub fn match_set_sweep_time_arg(mut port: &mut Box<dyn SerialPort>, amount: &str
 }
 
 
-pub fn set_sweep_direction_normal(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_sweep_direction_normal(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command = WRITE_SWEEP_DIRECTION_NORMAL;
     
     println!("\nSetting sweep direction to normal:\n{}", command);
@@ -2001,7 +2000,7 @@ pub fn set_sweep_direction_normal(port: &mut Box<dyn SerialPort>) -> io::Result<
     Ok(res.to_string())
 }
 
-pub fn set_sweep_direction_reverse(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_sweep_direction_reverse(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command = WRITE_SWEEP_DIRECTION_REVERSE;
     
     println!("\nSetting sweep direction to reverse:\n{}", command);
@@ -2022,7 +2021,7 @@ pub fn set_sweep_direction_reverse(port: &mut Box<dyn SerialPort>) -> io::Result
     Ok(res.to_string())
 }
 
-pub fn set_sweep_direction_round_trip(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_sweep_direction_round_trip(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command = WRITE_SWEEP_DIRECTION_ROUND_TRIP;
     
     println!("\nSetting sweep direction to round trip:\n{}", command);
@@ -2044,7 +2043,7 @@ pub fn set_sweep_direction_round_trip(port: &mut Box<dyn SerialPort>) -> io::Res
 }
 
 
-pub fn set_sweep_mode_linear(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_sweep_mode_linear(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command = WRITE_SWEEP_MODE_LINEAR;
     
     println!("\nSetting sweep mode to linear:\n{}", command);
@@ -2065,7 +2064,7 @@ pub fn set_sweep_mode_linear(port: &mut Box<dyn SerialPort>) -> io::Result<Strin
     Ok(res.to_string())
 }
 
-pub fn set_sweep_mode_logarithm(port: &mut Box<dyn SerialPort>) -> io::Result<String> {
+pub fn set_sweep_mode_logarithm(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
     let command = WRITE_SWEEP_MODE_LOGARITHM;
     
     println!("\nSetting sweep mode to logarithm:\n{}", command);
@@ -2084,4 +2083,120 @@ pub fn set_sweep_mode_logarithm(port: &mut Box<dyn SerialPort>) -> io::Result<St
     thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
 
     Ok(res.to_string())
+}
+
+// Set the modulation pulse width. It is in nanosecond units unless 
+// the microseconds parameter is true.
+// 
+// IMPORTANT NOTE: There seems to be no option on the device's physical 
+// controls to switch between nanosecond and microsecond units, but if 
+// you specify a value in microseconds, the device will switch to 
+// microsecond mode, and all future values to this command entered through
+// the physical device interface will be interpreted as microsecond units 
+// until you turn off the device, or set a nanosecond value using this 
+// serial-interface-only command. If you save the device state while in 
+// microseconds mode, this could be a problem, because then you need to 
+// use this serial program to get back to the default nanoseconds mode.
+pub fn set_pulse_width(port: &mut Box<dyn SerialPort>, amount: f64, microseconds: bool) -> Result<String, clap::Error> {
+    let units: &'static str;
+    let arg_min: f64;
+    let arg_max: f64;
+    let command: String;
+    
+    if microseconds {
+        units = "us";
+        arg_min = WRITE_PULSE_WIDTH_ARG_MICROSECONDS_MIN;
+        arg_max = WRITE_PULSE_WIDTH_ARG_MICROSECONDS_MAX;
+
+        command = format!("{}{}{}{}{}{}{}{}",
+            COMMAND_BEGIN,
+            COMMAND_WRITE,
+            WRITE_PULSE_WIDTH_COMMAND,
+            COMMAND_SEPARATOR,
+            amount,
+            COMMAND_ARG_SEPARATOR,
+            WRITE_PULSE_WIDTH_ARG_MICROSECONDS,
+            COMMAND_END,
+        );
+
+    } else {
+        units = "ns";
+        arg_min = WRITE_PULSE_WIDTH_ARG_NANOSECONDS_MIN;
+        arg_max = WRITE_PULSE_WIDTH_ARG_NANOSECONDS_MAX;
+
+        command = format!("{}{}{}{}{}{}{}{}",
+            COMMAND_BEGIN,
+            COMMAND_WRITE,
+            WRITE_PULSE_WIDTH_COMMAND,
+            COMMAND_SEPARATOR,
+            amount,
+            COMMAND_ARG_SEPARATOR,
+            WRITE_PULSE_WIDTH_ARG_NANOSECONDS,
+            COMMAND_END,
+        );
+    }
+
+    if amount < arg_min || amount > arg_max {
+        return Err(Error::with_description(&format!("Unsupported pulse width ({}). Must be {}-{}.", units, arg_min, arg_max), ErrorKind::InvalidValue));
+    }
+    
+    println!("\nSetting pulse width: {} {}:\n{}", amount, units, command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_PULSE_WIDTH_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+pub fn match_set_pulse_width_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, microseconds: bool) -> Result<String, clap::Error> {
+    let amount_parts: Vec<&str> = amount.split(".").collect();
+    let units: &'static str;
+    let arg_min: f64;
+    let arg_max: f64;
+
+    if microseconds {
+        units = "us";
+        arg_min = WRITE_PULSE_WIDTH_ARG_MICROSECONDS_MIN;
+        arg_max = WRITE_PULSE_WIDTH_ARG_MICROSECONDS_MAX;
+    } else {
+        units = "ns";
+        arg_min = WRITE_PULSE_WIDTH_ARG_NANOSECONDS_MIN;
+        arg_max = WRITE_PULSE_WIDTH_ARG_NANOSECONDS_MAX;
+    }
+    
+    if amount_parts.len() > 1 {
+        return Err(Error::with_description(&format!("unsupported value passed to \"set pulse width ({})\" argument (must be {}-{}): {}: too many decimal places (0 max)", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
+    }
+    
+    let res: Result<String, clap::Error>;
+    
+    match amount.parse::<f64>() {
+        Ok(amount) => {
+            match amount {
+                _y if amount >= arg_min && amount <= arg_max => {
+                    res = set_pulse_width(&mut port, amount, microseconds);
+                },
+
+                _ => {
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse width ({})\" argument (must be {}-{}): {}", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
+                },
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse width ({})\" argument (must be {}-{}): {}: {}", units, arg_min, arg_max, amount, e), ErrorKind::InvalidValue));
+        },
+    }
+
+    res
 }

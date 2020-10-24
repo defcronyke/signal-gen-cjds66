@@ -4,26 +4,106 @@ extern crate clap;
 use signal_gen_cjds66_lib::serial::open;
 use signal_gen_cjds66_lib::command::*;
 use signal_gen_cjds66_lib::protocol::*;
+use signal_gen_cjds66_lib::error;
+use signal_gen_cjds66_lib::error::From;
 
 use clap::{
-    Arg, 
-    App, 
+    Arg,
+    App,
     values_t,
 };
 
 fn main() {
-    let exit_code = real_main();
-    std::process::exit(exit_code);
+    let res = real_main();
+
+    std::process::exit(error::handle_exit(res)
+        .map_or_else(
+        |e| {
+            e.code
+        },
+        |code| {
+            code
+        })
+    );
 }
 
-fn real_main() -> i32 {
+fn real_main() -> Result<i32, error::Error> {
+    let mut err: Option<error::Error> = None;
+
+    let bin_name: &'static str = "signal-gen-cjds66";
+    let copyright_years: &'static str = "2020";
+    let copyright_authors: &'static str = "Jeremy Carter <jeremy@jeremycarter.ca>";
+    let about: &'static str = "An unofficial program to control the CJDS66 60MHz DDS 
+Signal Generator/Counter (hardware by Koolertron).
+
+See: https://www.koolertron.com/koolertron-upgraded-60mhz-dds-signal-generator-counterhigh-precision-dualchannel-arbitrary-waveform-function-generator-frequency-meter-200msas-60mhz-p-867.html";
+    
+    let license: &'static str = "LICENSE
+-------
+By using this software, you agree to the following 
+LICENSE TERMS (if you don't agree, you aren't allowed 
+to use this software, and you must not use it from now 
+on):
+
+The MIT License
+
+Permission is hereby granted, free of charge, to any 
+person obtaining a copy of this software and 
+associated documentation files (the \"Software\"), to 
+deal in the Software without restriction, including 
+without limitation the rights to use, copy, modify, 
+merge, publish, distribute, sublicense, and/or sell 
+copies of the Software, and to permit persons to whom 
+the Software is furnished to do so, subject to the 
+following conditions:
+
+The above copyright notice and this permission notice 
+shall be included in all copies or substantial 
+portions of the Software.
+
+THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY 
+OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT 
+LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO 
+EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
+FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN 
+AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+USE OR OTHER DEALINGS IN THE SOFTWARE.
+-------";
+
+    let help_template = &*format!("
+{{bin}} {{version}}
+Copyright © {copyright_years} {{author}}
+
+{{about}}
+
+
+{license}
+
+
+{{usage}}
+
+-------
+
+{{all-args}}
+
+-------
+", 
+        copyright_years = copyright_years,
+        license = license,
+    );
+
     let set_waveform_ch1_help = format!("Set the waveform preset for channel 1. The value must be either the name of the waveform preset (see below), or a number 0-16, for example, sine wave: -w 0\n\nAccepted preset names:\n{}\n", WAVEFORM_PRESET_NAMES);
     let set_tracking_help = format!("Set the tracking mode. The value must be either a set of comma-separated setting names (see below), or a set of zeros and ones in the range of 0-{}, each bit corresponding to a feature you want to toggle tracking on/off for (1 being on and 0 being off). For example: track frequency and amplitude: -T 101\n\n{}\n\nNote that a value of zero (or no value) in the bit position will turn off tracking for the corresponding feature, so to turn tracking off for all features, you can do: -T 0\nYou can also separate the values with commas if you prefer: -T 1,0,1", TrackingArg::all().to_str_val(), TRACKING_FEATURES);
 
-    let app = App::new("signal-gen-cjds66")
+    let app = App::new(bin_name)
         .version("0.0.1\n")
-        .author("Jeremy Carter <jeremy@jeremycarter.ca>\n\n")
-        .about("An unofficial program to control the CJDS66 60MHz DDS Signal Generator/Counter (hardware by Koolertron).\n\nSee: https://www.koolertron.com/koolertron-upgraded-60mhz-dds-signal-generator-counterhigh-precision-dualchannel-arbitrary-waveform-function-generator-frequency-meter-200msas-60mhz-p-867.html")
+        .version_short("v")
+        .author(copyright_authors)
+        .about(about)
+        .template(help_template)
+
         .arg(
             Arg::with_name("devices")
                 .short("d")
@@ -95,7 +175,7 @@ fn real_main() -> i32 {
         )
         .arg(
             Arg::with_name("set frequency in uHz channel2")
-                .short("v")
+                .short("2")
                 .long("freq-micro-ch2")
                 .help("Set the waveform frequency for channel 2 in uHz. The value must be a number 0.01-80000000.0. For example: -v 0.01\n")
                 .takes_value(true)
@@ -460,9 +540,25 @@ fn real_main() -> i32 {
                 .long("smg")
                 .help("Set the sweep mode to logarithm.")
                 .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("set pulse width nanoseconds")
+                .long("pwn")
+                .help("Set the modulation pulse width in nanoseconds.")
+                .takes_value(true)
+                .value_name("PULSE WIDTH NANOSECONDS")
+        )
+        .arg(
+            Arg::with_name("set pulse width microseconds")
+                .long("pwu")
+                .help("Set the modulation pulse width in microseconds.")
+                .takes_value(true)
+                .value_name("PULSE WIDTH MICROSECONDS")
         );
-
-    let matches = app.clone().get_matches();
+    
+    let matches = app.clone().get_matches_safe().map_err(|e| {
+        error::Error::from_clap_error(e)
+    })?;
         
     let devices = values_t!(matches.values_of("devices"), String)
         .unwrap_or_else(|_e| {
@@ -485,15 +581,132 @@ fn real_main() -> i32 {
         match open(device) {
             // If device was opened successfully.
             Ok(mut port) => {
-                // If model number is requested.
-                if matches.is_present("model") {
-                    read_machine_model(&mut port).unwrap();
+
+
+                /* ----- Commands which navigate to a different
+                         view on the device's display panel.    ----- */
+
+
+                // If set switch function panel main ch1 is requested.
+                if matches.is_present("set switch main ch1") {
+                    match set_switch_function_panel_main(&mut port, 1) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
+                        },
+                    }
                 }
 
-                // If serial number is requested.
-                if matches.is_present("serial") {
-                    read_machine_number(&mut port).unwrap();
+                // If set switch function panel main ch2 is requested.
+                if matches.is_present("set switch main ch2") {
+                    match set_switch_function_panel_main(&mut port, 2) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
+                        },
+                    }
                 }
+
+
+                // If set switch function panel system settings is requested.
+                if matches.is_present("set switch sys") {
+                    match set_switch_function_panel_sys(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
+                        },
+                    }
+                }
+
+
+                // If set switch function panel counting is requested.
+                if matches.is_present("set switch counting") {
+                    match set_switch_function_panel_counting(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
+                        },
+                    }
+                }
+
+                
+                // If set switch function panel sweep ch1 is requested.
+                if matches.is_present("set switch sweep ch1") {
+                    match set_switch_function_panel_sweep(&mut port, 1) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
+                        },
+                    }
+                }
+
+                // If set switch function panel sweep ch2 is requested.
+                if matches.is_present("set switch sweep ch2") {
+                    match set_switch_function_panel_sweep(&mut port, 2) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
+                        },
+                    }
+                }
+
+                
+                // If set switch function panel pulse is requested.
+                if matches.is_present("set switch pulse") {
+                    match set_switch_function_panel_pulse(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
+                        },
+                    }
+                }
+
+                
+                // If set switch function panel bursting is requested.
+                if matches.is_present("set switch bursting") {
+                    match set_switch_function_panel_bursting(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
+                        },
+                    }
+                }
+
+                
+                // If set switch function panel measurement is requested.
+                if matches.is_present("set switch measurement") {
+                    match set_switch_function_panel_measurement(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
+                        },
+                    }
+                }
+                
+
+                /* ----- END Commands which navigate to a different
+                         view on the device's display panel.        ----- */
+
+
+
+
+                /* ----- Commands which change the device's 
+                         settings or state, but don't 
+                         activate the channels.             ----- */
 
 
                 // If set tracking mode is requested.
@@ -503,7 +716,8 @@ fn real_main() -> i32 {
                     match match_set_tracking_arg(&mut port, track) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -516,7 +730,8 @@ fn real_main() -> i32 {
                     match match_set_waveform_preset_arg(&mut port, 1, preset) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -528,11 +743,11 @@ fn real_main() -> i32 {
                     match match_set_waveform_preset_arg(&mut port, 2, preset) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
-
 
                 // If set arbitrary waveform for channel1 is requested.
                 if matches.is_present("set arbitrary waveform channel1") {
@@ -541,7 +756,8 @@ fn real_main() -> i32 {
                     match match_set_waveform_arbitrary_arg(&mut port, 1, preset) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -553,7 +769,8 @@ fn real_main() -> i32 {
                     match match_set_waveform_arbitrary_arg(&mut port, 2, preset) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -566,7 +783,8 @@ fn real_main() -> i32 {
                     match match_set_frequency_microherz_arg(&mut port, 1, amount) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -578,11 +796,11 @@ fn real_main() -> i32 {
                     match match_set_frequency_microherz_arg(&mut port, 2, amount) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
-
 
                 // If set frequency for channel1 in mHz is requested.
                 if matches.is_present("set frequency in mHz channel1") {
@@ -591,7 +809,8 @@ fn real_main() -> i32 {
                     match match_set_frequency_milliherz_arg(&mut port, 1, amount) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -603,11 +822,11 @@ fn real_main() -> i32 {
                     match match_set_frequency_milliherz_arg(&mut port, 2, amount) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
-
 
                 // If set frequency for channel1 in Hz is requested.
                 if matches.is_present("set frequency in Hz channel1") {
@@ -616,7 +835,8 @@ fn real_main() -> i32 {
                     match match_set_frequency_hertz_arg(&mut port, 1, amount) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -628,11 +848,11 @@ fn real_main() -> i32 {
                     match match_set_frequency_hertz_arg(&mut port, 2, amount) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
-
 
                 // If set frequency for channel1 in kHz is requested.
                 if matches.is_present("set frequency in kHz channel1") {
@@ -641,7 +861,8 @@ fn real_main() -> i32 {
                     match match_set_frequency_kilohertz_arg(&mut port, 1, amount) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -653,11 +874,11 @@ fn real_main() -> i32 {
                     match match_set_frequency_kilohertz_arg(&mut port, 2, amount) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
-
 
                 // If set frequency for channel1 in MHz is requested.
                 if matches.is_present("set frequency in MHz channel1") {
@@ -666,7 +887,8 @@ fn real_main() -> i32 {
                     match match_set_frequency_megahertz_arg(&mut port, 1, amount) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -678,7 +900,8 @@ fn real_main() -> i32 {
                     match match_set_frequency_megahertz_arg(&mut port, 2, amount) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -691,7 +914,8 @@ fn real_main() -> i32 {
                     match match_set_amplitude_arg(&mut port, 1, amount) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -703,7 +927,8 @@ fn real_main() -> i32 {
                     match match_set_amplitude_arg(&mut port, 2, amount) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -716,7 +941,8 @@ fn real_main() -> i32 {
                     match match_set_duty_cycle_arg(&mut port, 1, amount) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -728,7 +954,8 @@ fn real_main() -> i32 {
                     match match_set_duty_cycle_arg(&mut port, 2, amount) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -741,7 +968,8 @@ fn real_main() -> i32 {
                     match match_set_voltage_offset_arg(&mut port, 1, amount) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -753,7 +981,8 @@ fn real_main() -> i32 {
                     match match_set_voltage_offset_arg(&mut port, 2, amount) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -766,171 +995,21 @@ fn real_main() -> i32 {
                     match match_set_phase_arg(&mut port, amount) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
 
-
-                // If set switch function panel main ch1 is requested.
-                if matches.is_present("set switch main ch1") {
-                    match set_switch_function_panel_main(&mut port, 1) {
-                        Ok(_res) => {},
-                        Err(e) => {
-                            println!("\nError: {}\n", e);
-                        },
-                    }
-                }
-
-                // If set switch function panel main ch2 is requested.
-                if matches.is_present("set switch main ch2") {
-                    match set_switch_function_panel_main(&mut port, 2) {
-                        Ok(_res) => {},
-                        Err(e) => {
-                            println!("\nError: {}\n", e);
-                        },
-                    }
-                }
-
-
-                // If set switch function panel system settings is requested.
-                if matches.is_present("set switch sys") {
-                    match set_switch_function_panel_sys(&mut port) {
-                        Ok(_res) => {
-                        },
-                        Err(e) => {
-                            println!("\nError: {}\n", e);
-                        },
-                    }
-                }
-
-
-                // If set switch function panel counting is requested.
-                if matches.is_present("set switch counting") {
-                    match set_switch_function_panel_counting(&mut port) {
-                        Ok(_res) => {
-                        },
-                        Err(e) => {
-                            println!("\nError: {}\n", e);
-                        },
-                    }
-                }
-
-                // If set counting starting is requested.
-                if matches.is_present("set counting starting") {
-                    match set_counting_starting(&mut port) {
-                        Ok(_res) => {},
-                        Err(e) => {
-                            println!("\nError: {}\n", e);
-                        },
-                    }
-                }
                 
-
-                // If set switch function panel sweep ch1 is requested.
-                if matches.is_present("set switch sweep ch1") {
-                    match set_switch_function_panel_sweep(&mut port, 1) {
-                        Ok(_res) => {},
-                        Err(e) => {
-                            println!("\nError: {}\n", e);
-                        },
-                    }
-                }
-
-                // If set switch function panel sweep ch2 is requested.
-                if matches.is_present("set switch sweep ch2") {
-                    match set_switch_function_panel_sweep(&mut port, 2) {
-                        Ok(_res) => {},
-                        Err(e) => {
-                            println!("\nError: {}\n", e);
-                        },
-                    }
-                }
-
-                // If set sweep starting ch1 is requested.
-                if matches.is_present("set sweep starting ch1") {
-                    match set_sweep_starting(&mut port, 1) {
-                        Ok(_res) => {},
-                        Err(e) => {
-                            println!("\nError: {}\n", e);
-                        },
-                    }
-                }
-
-                // If set sweep starting ch2 is requested.
-                if matches.is_present("set sweep starting ch2") {
-                    match set_sweep_starting(&mut port, 2) {
-                        Ok(_res) => {},
-                        Err(e) => {
-                            println!("\nError: {}\n", e);
-                        },
-                    }
-                }
-
-
-                // If set switch function panel pulse is requested.
-                if matches.is_present("set switch pulse") {
-                    match set_switch_function_panel_pulse(&mut port) {
-                        Ok(_res) => {
-                        },
-                        Err(e) => {
-                            println!("\nError: {}\n", e);
-                        },
-                    }
-                }
-
-                // If set pulse starting is requested.
-                if matches.is_present("set pulse starting") {
-                    match set_pulse_starting(&mut port) {
-                        Ok(_res) => {},
-                        Err(e) => {
-                            println!("\nError: {}\n", e);
-                        },
-                    }
-                }
-
-
-                // If set switch function panel bursting is requested.
-                if matches.is_present("set switch bursting") {
-                    match set_switch_function_panel_bursting(&mut port) {
-                        Ok(_res) => {
-                        },
-                        Err(e) => {
-                            println!("\nError: {}\n", e);
-                        },
-                    }
-                }
-
-                // If set bursting starting is requested.
-                if matches.is_present("set bursting starting") {
-                    match set_bursting_starting(&mut port) {
-                        Ok(_res) => {},
-                        Err(e) => {
-                            println!("\nError: {}\n", e);
-                        },
-                    }
-                }
-
-
-                // If set switch function panel measurement is requested.
-                if matches.is_present("set switch measurement") {
-                    match set_switch_function_panel_measurement(&mut port) {
-                        Ok(_res) => {
-                        },
-                        Err(e) => {
-                            println!("\nError: {}\n", e);
-                        },
-                    }
-                }
-
-
                 // If set measurement coupling ac is requested.
                 if matches.is_present("set measurement coupling ac") {
                     match set_measurement_coupling_ac(&mut port) {
                         Ok(_res) => {
                         },
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -941,10 +1020,12 @@ fn real_main() -> i32 {
                         Ok(_res) => {
                         },
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
+
 
                 // If set measurement gate time in seconds is requested.
                 if matches.is_present("set measurement gate time") {
@@ -953,10 +1034,12 @@ fn real_main() -> i32 {
                     match match_set_measurement_gate_time_arg(&mut port, amount) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
+
 
                 // If set measurement mode count frequency is requested.
                 if matches.is_present("set measurement mode count frequency") {
@@ -964,10 +1047,12 @@ fn real_main() -> i32 {
                         Ok(_res) => {
                         },
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
+
 
                 // If set measurement mode counting period is requested.
                 if matches.is_present("set measurement mode counting period") {
@@ -975,19 +1060,8 @@ fn real_main() -> i32 {
                         Ok(_res) => {
                         },
                         Err(e) => {
-                            println!("\nError: {}\n", e);
-                        },
-                    }
-                }
-
-
-                // If set measurement count clear is requested.
-                if matches.is_present("set measurement count clear") {
-                    match set_measurement_count_clear(&mut port) {
-                        Ok(_res) => {
-                        },
-                        Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -1001,19 +1075,8 @@ fn real_main() -> i32 {
                         Ok(_res) => {
                         },
                         Err(e) => {
-                            println!("\nError: {}\n", e);
-                        },
-                    }
-                }
-
-
-                // If set burst pulse once is requested.
-                if matches.is_present("set burst pulse once") {
-                    match set_burst_pulse_once(&mut port) {
-                        Ok(_res) => {
-                        },
-                        Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -1025,7 +1088,8 @@ fn real_main() -> i32 {
                         Ok(_res) => {
                         },
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -1036,7 +1100,8 @@ fn real_main() -> i32 {
                         Ok(_res) => {
                         },
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -1047,7 +1112,8 @@ fn real_main() -> i32 {
                         Ok(_res) => {
                         },
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -1058,7 +1124,8 @@ fn real_main() -> i32 {
                         Ok(_res) => {
                         },
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -1072,7 +1139,8 @@ fn real_main() -> i32 {
                         Ok(_res) => {
                         },
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -1085,11 +1153,13 @@ fn real_main() -> i32 {
                         Ok(_res) => {
                         },
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
 
+                
                 // If set sweep time is requested.
                 if matches.is_present("set sweep time") {
                     let amount = matches.value_of("set sweep time").unwrap_or_default();
@@ -1098,7 +1168,8 @@ fn real_main() -> i32 {
                         Ok(_res) => {
                         },
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -1110,7 +1181,8 @@ fn real_main() -> i32 {
                         Ok(_res) => {
                         },
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -1121,7 +1193,8 @@ fn real_main() -> i32 {
                         Ok(_res) => {
                         },
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -1132,7 +1205,8 @@ fn real_main() -> i32 {
                         Ok(_res) => {
                         },
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -1144,7 +1218,8 @@ fn real_main() -> i32 {
                         Ok(_res) => {
                         },
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -1155,7 +1230,155 @@ fn real_main() -> i32 {
                         Ok(_res) => {
                         },
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
+                        },
+                    }
+                }
+
+
+                // If set pulse width nanoseconds is requested.
+                if matches.is_present("set pulse width nanoseconds") {
+                    let amount = matches.value_of("set pulse width nanoseconds").unwrap_or_default();
+
+                    match match_set_pulse_width_arg(&mut port, amount, false) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
+                        },
+                    }
+                }
+
+                // If set pulse width microseconds is requested.
+                if matches.is_present("set pulse width microseconds") {
+                    let amount = matches.value_of("set pulse width microseconds").unwrap_or_default();
+
+                    match match_set_pulse_width_arg(&mut port, amount, true) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
+                        },
+                    }
+                }
+
+
+                // If set measurement count clear is requested.
+                if matches.is_present("set measurement count clear") {
+                    match set_measurement_count_clear(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
+                        },
+                    }
+                }
+
+
+                /* ----- END Commands which change the device's 
+                         settings or state, but don't  
+                         activate the channels.                 ----- */
+
+
+
+
+                /* ----- Commands which retrieve values from 
+                         the device.                         ----- */
+
+
+                // If model number is requested.
+                if matches.is_present("model") {
+                    read_machine_model(&mut port).unwrap();
+                }
+
+                // If serial number is requested.
+                if matches.is_present("serial") {
+                    read_machine_number(&mut port).unwrap();
+                }
+
+
+                /* ----- END Commands which retrieve values from 
+                         the device.                             ----- */
+
+
+
+
+                /* ----- Commands which set one or both of the 
+                         device's channels ON or OFF.          ----- */
+
+
+                // If set counting starting is requested.
+                if matches.is_present("set counting starting") {
+                    match set_counting_starting(&mut port) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
+                        },
+                    }
+                }
+
+
+                // If set sweep starting ch1 is requested.
+                if matches.is_present("set sweep starting ch1") {
+                    match set_sweep_starting(&mut port, 1) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
+                        },
+                    }
+                }
+
+
+                // If set sweep starting ch2 is requested.
+                if matches.is_present("set sweep starting ch2") {
+                    match set_sweep_starting(&mut port, 2) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
+                        },
+                    }
+                }
+
+
+                // If set pulse starting is requested.
+                if matches.is_present("set pulse starting") {
+                    match set_pulse_starting(&mut port) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
+                        },
+                    }
+                }
+
+
+                // If set burst pulse once is requested.
+                if matches.is_present("set burst pulse once") {
+                    match set_burst_pulse_once(&mut port) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
+                        },
+                    }
+                }
+
+
+                // If set bursting starting is requested.
+                if matches.is_present("set bursting starting") {
+                    match set_bursting_starting(&mut port) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -1168,12 +1391,14 @@ fn real_main() -> i32 {
                             match set_channel_output(&mut port, false, false) {
                                 Ok(_res) => {},
                                 Err(e) => {
-                                    println!("\nError: {}\n", e);
+                                    err = Some(error::Error::from_clap_error(e));
+                                    return Err(err.unwrap());
                                 },
                             }
                         },
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
@@ -1186,14 +1411,23 @@ fn real_main() -> i32 {
                     match match_set_channel_output_arg(&mut port, sco) {
                         Ok(_res) => {},
                         Err(e) => {
-                            println!("\nError: {}\n", e);
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
                         },
                     }
                 }
+
+
+                /* ----- END Commands which set one or both of the 
+                         device's channels ON.                     ----- */
+
+
             },
 
             Err(e) => {
-                println!("\nError: {}\n", e);
+                // If we can't connect to a device, continue with any 
+                // devices we can connect to.
+                err = Some(error::Error::with_description(&format!("(device: {}): {}", device, e), clap::ErrorKind::Io));
                 continue;
             }
         }
@@ -1201,5 +1435,9 @@ fn real_main() -> i32 {
 
     println!("");
 
-    0
+    if err.is_some() {
+        return Err(err.unwrap());
+    }
+
+    Ok(0)
 }
