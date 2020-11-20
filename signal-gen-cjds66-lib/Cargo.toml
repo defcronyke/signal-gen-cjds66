@@ -9,5 +9,5 @@ edition = "2018"
 [dependencies]
 serial = "0.4"
 bitflags = "1.2"
-clap = "2.33"
+clap = { version = "2.33", features = ["yaml"] }
 phf = { version = "0.8", features = ["macros"] }

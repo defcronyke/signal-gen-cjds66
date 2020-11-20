@@ -13,4 +13,4 @@ edition = "2018"
 signal-gen-cjds66-lib = { path = "signal-gen-cjds66-lib", version = "0.0" }
 
 # For parsing command line arguments and subcommands.
-clap = "2.33"
+clap = { version = "2.33", features = ["yaml"] }

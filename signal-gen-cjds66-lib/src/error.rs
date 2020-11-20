@@ -1,52 +1,51 @@
 use clap;
+use clap::ErrorKind;
+use clap::ErrorKind::*;
 use std::fmt;
-
-pub type ErrorKind = clap::ErrorKind;
 
 pub fn get_code(kind: ErrorKind) -> i32 {
     match kind {
-        ErrorKind::InvalidValue                  => 0b_00000000000000000001_i32,
-        ErrorKind::UnknownArgument               => 0b_00000000000000000011_i32,
-        ErrorKind::InvalidSubcommand             => 0b_00000000000000000111_i32,
-        ErrorKind::UnrecognizedSubcommand        => 0b_00000000000000001111_i32,
-        ErrorKind::EmptyValue                    => 0b_00000000000000011111_i32,
-        ErrorKind::ValueValidation               => 0b_00000000000000111111_i32,
-        ErrorKind::TooManyValues                 => 0b_00000000000001111111_i32,
-        ErrorKind::TooFewValues                  => 0b_00000000000011111111_i32,
-        ErrorKind::WrongNumberOfValues           => 0b_00000000000111111111_i32,
-        ErrorKind::ArgumentConflict              => 0b_00000000001111111111_i32,
-        ErrorKind::MissingRequiredArgument       => 0b_00000000011111111111_i32,
-        ErrorKind::MissingSubcommand             => 0b_00000000111111111111_i32,
-        ErrorKind::MissingArgumentOrSubcommand   => 0b_00000001111111111111_i32,
-        ErrorKind::UnexpectedMultipleUsage       => 0b_00000011111111111111_i32,
-        ErrorKind::InvalidUtf8                   => 0b_00000111111111111111_i32,
-        ErrorKind::HelpDisplayed                 => 0b_00001111111111111111_i32,
-        ErrorKind::VersionDisplayed              => 0b_00011111111111111111_i32,
-        ErrorKind::ArgumentNotFound              => 0b_00111111111111111111_i32,
-        ErrorKind::Io                            => 0b_01111111111111111111_i32,
-        ErrorKind::Format                        => 0b_11111111111111111111_i32,
+        InvalidValue                  => 1,
+        UnknownArgument               => 2,
+        InvalidSubcommand             => 3,
+        UnrecognizedSubcommand        => 4,
+        EmptyValue                    => 5,
+        ValueValidation               => 6,
+        TooManyValues                 => 7,
+        TooFewValues                  => 8,
+        WrongNumberOfValues           => 9,
+        ArgumentConflict              => 10,
+        MissingRequiredArgument       => 11,
+        MissingSubcommand             => 12,
+        MissingArgumentOrSubcommand   => 13,
+        UnexpectedMultipleUsage       => 14,
+        InvalidUtf8                   => 15,
+        HelpDisplayed                 => 16,
+        VersionDisplayed              => 17,
+        ArgumentNotFound              => 18,
+        Io                            => 19,
+        Format                        => 20,
     }
 }
 
 pub fn handle_exit(res: Result<i32, Error>) -> Result<i32, Error> {
+    let suppress_errors = [
+        HelpDisplayed,
+        VersionDisplayed,
+        MissingArgumentOrSubcommand,
+    ];
+
     res.map_err(
         |e| {
-            match e.kind {
-                ErrorKind::HelpDisplayed => {
+            for suppress in suppress_errors.iter().cloned() {
+                if e.kind == suppress {
                     println!("{}", e.message);
-                    e
-                },
-
-                ErrorKind::VersionDisplayed => {
-                    println!("{}", e.message);
-                    e
-                },
-
-                _ => {
-                    println!("{}", e);
-                    e
-                },
+                    return e;
+                }
             }
+
+            println!("exit with error: {}", e);
+            e
         }
     )
 }

@@ -1,0 +1,496 @@
+name: signal-gen-cjds66
+
+author: Jeremy Carter <jeremy@jeremycarter.ca>
+
+version: "0.0.1"
+
+about: |
+  An unofficial program to control the CJDS66 60MHz DDS 
+  Signal Generator/Counter (hardware by Koolertron).
+
+  See: https://bit.ly/2J07i6X
+
+settings:
+  - ArgRequiredElseHelp
+
+template: |
+  {bin} {version}
+  Copyright © 2020 {author}
+
+  {about}
+
+  LICENSE
+  -------
+  By using this software, you agree to the following 
+  LICENSE TERMS (if you don't agree, you aren't allowed 
+  to use this software, and you must not use it from now 
+  on):
+
+  MIT License
+
+  Permission is hereby granted, free of charge, to any 
+  person obtaining a copy of this software and 
+  associated documentation files (the \"Software\"), to 
+  deal in the Software without restriction, including 
+  without limitation the rights to use, copy, modify, 
+  merge, publish, distribute, sublicense, and/or sell 
+  copies of the Software, and to permit persons to whom 
+  the Software is furnished to do so, subject to the 
+  following conditions:
+
+  The above copyright notice and this permission notice 
+  shall be included in all copies or substantial 
+  portions of the Software.
+
+  THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY 
+  OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT 
+  LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
+  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO 
+  EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
+  FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN 
+  AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+  USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -------
+
+
+  USAGE:
+
+  {usage}
+
+  -------
+
+  {all-args}
+
+  
+args:
+  - devices:
+      short: d
+      long: device
+      takes_value: true
+      value_name: path
+      multiple: true
+      help: The device(s) to communicate with.
+
+
+  # ----- Commands which navigate to a different 
+  #       view on the device's display panel         -----
+
+  - switch_main_ch1:
+      short: A
+      long: main1
+      help: Switch the function panel to main channel 1 mode.
+      
+  - switch_main_ch2:
+      short: B
+      long: main2
+      help: Switch the function panel to main channel 2 mode.
+
+  - switch_sys:
+      short: "Y"
+      long: sys
+      help: Switch the function panel to system settings (SYS) mode.
+
+  - switch_counting:
+      short: C
+      long: count
+      help: Switch the function panel to counting mode.
+
+  - switch_sweep_ch1:
+      short: V
+      long: sweep1
+      help: Switch the function panel to sweep channel 1 mode.
+
+  - switch_sweep_ch2:
+      short: W
+      long: sweep2
+      help: Switch the function panel to sweep channel 2 mode.
+
+  - switch_pulse:
+      short: P
+      long: pulse
+      help: Switch the function panel to pulse mode.
+
+  - switch_burst:
+      short: R
+      long: burst
+      help: Switch the function panel to bursting mode.
+
+  - switch_measurement:
+      short: M
+      long: measure
+      help: Switch the function panel to measurement mode.
+  
+  # ----- END Commands which navigate to a different 
+  #       view on the device's display panel         -----
+
+  
+  # ----- Commands which change the device's 
+  #       settings or state, but don't 
+  #       activate the channels.             -----
+
+  - set_tracking:
+      short: T
+      long: track
+      takes_value: true
+      value_name: track_features
+      help: |
+        Set the tracking mode. The value must be either a set of comma-separated setting names (see below), or a set of zeros and ones in the range of 0-11111, each bit corresponding to a feature you want to toggle tracking on/off for (1 being on and 0 being off). For example: track frequency and amplitude: -T 101
+        
+        The bit position meanings are as follows:
+        0: frequency | freq | fq | fr | f
+        1: waveform | wave | wav | wv | w
+        2: amplitude | ampli | amp | am | a
+        3: dutycycle | duty | dc | du | d
+        4: offset | off | os | ot | o
+
+        turn off tracking: 0 | none | null | non | nil | no | n
+
+        You can also use any of the names above separated by commas to turn on
+        the tracking by feature name.
+        Ex:
+        frequency and amplitude sync: -T freq,amp
+
+        Or you can use the single character versions with no commas in between.
+        Ex:
+        frequency and amplitude sync: -T fa
+
+        Turn tracking off like this: -T n
+        
+        Note that a value of zero (or no value) in the bit position will turn off tracking for the corresponding feature, so to turn tracking off for all features, you can do: -T 0
+        You can also separate the values with commas if you prefer: -T 1,0,1
+
+  - set_waveform_channel1:
+      short: w
+      long: wave-preset-ch1
+      takes_value: true
+      value_name: ch1_preset
+      help: |
+        Set the waveform preset for channel 1. The value must be either the name of the waveform preset (see below), or a number 0-16, for example, 
+        sine wave: -w 0
+        
+        Accepted preset names:
+        0:  sine || sin
+        1:  square || sq
+        2:  pulse || pul
+        3:  triangle || tri
+        4:  partialsine || partial-sine || parsine || par-sine || parsin || par-sin || psine || p-sine || psin || p-sin
+        5:  cmos || cm
+        6:  dc
+        7:  halfwave || half-wave || hw || h-w
+        8:  fullwave || full-wave || fw || f-w
+        9:  pos-ladder || posladder || pos-lad || poslad || positive-ladder || positiveladder || pl
+        10: neg-ladder || negladder || neg-lad || neglad || negative-ladder || negativeladder || nl
+        11: noise || nois || noi || no || n
+        12: exp-rise || exprise || e-r || er || e-rise || erise || e-ris || eris
+        13: exp-decay || expdecay || e-d || ed || e-decay || edecay || e-dec || edec
+        14: multi-tone || multitone || m-t || mt || m-tone || mtone
+        15: sinc || sc
+        16: lorenz || loren || lor || lz
+
+  - set_waveform_channel2:
+      short: x
+      long: wave-preset-ch2
+      takes_value: true
+      value_name: ch2_preset
+      help: "Set the waveform preset for channel 2. The value must be either the name of the waveform preset (see channel1 help item for details), or a number 0-16. For example, sine wave: -x 0"
+
+  - set_arbitrary_waveform_channel1:
+      short: a
+      long: wave-arb-ch1
+      takes_value: true
+      value_name: ch1_arb_preset
+      help: "Set the arbitrary waveform preset for channel 1. The value must be a number 1-60. For example: -a 1"
+
+  - set_arbitrary_waveform_channel2:
+      short: b
+      long: wave-arb-ch2
+      takes_value: true
+      value_name: ch2_arb_preset
+      help: "Set the arbitrary waveform preset for channel 2. The value must be a number 1-60. For example: -b 1"
+  
+  - set_frequency_uhz_channel1:
+      short: u
+      long: freq-micro-ch1
+      takes_value: true
+      value_name: ch1_freq_uHz
+      help: "Set the waveform frequency for channel 1 in uHz. The value must be a number 0.01-80000000.0. For example: -u 0.01"
+
+  - set_frequency_uhz_channel2:
+      short: "2"
+      long: freq-micro-ch2
+      takes_value: true
+      value_name: ch2_freq_uHz
+      help: "Set the waveform frequency for channel 2 in uHz. The value must be a number 0.01-80000000.0. For example: -2 0.01"
+
+  - set_frequency_millihz_channel1:
+      short: i
+      long: freq-milli-ch1
+      takes_value: true
+      value_name: ch1_freq_mHz
+      help: "Set the waveform frequency for channel 1 in mHz (millihertz). The value must be a number 0.01-80000000.0. For example: -i 0.01"
+
+  - set_frequency_millihz_channel2:
+      short: j
+      long: freq-milli-ch2
+      takes_value: true
+      value_name: ch2_freq_mHz
+      help: "Set the waveform frequency for channel 2 in mHz (millihertz). The value must be a number 0.01-80000000.0. For example: -j 0.01"
+
+  - set_frequency_hz_channel1:
+      short: e
+      long: freq-hz-ch1
+      takes_value: true
+      value_name: ch1_freq_Hz
+      help: "Set the waveform frequency for channel 1 in Hz. The value must be a number 0.01-60000000.0. For example: -e 0.01"
+
+  - set_frequency_hz_channel2:
+      short: f
+      long: freq-hz-ch2
+      takes_value: true
+      value_name: ch2_freq_Hz
+      help: "Set the waveform frequency for channel 2 in Hz. The value must be a number 0.01-60000000.0. For example: -f 0.01"
+
+  - set_frequency_khz_channel1:
+      short: k
+      long: freq-khz-ch1
+      takes_value: true
+      value_name: ch1_freq_kHz
+      help: "Set the waveform frequency for channel 1 in kHz. The value must be a number 0.00001-60000.0. For example: -k 0.00001"
+
+  - set_frequency_khz_channel2:
+      short: l
+      long: freq-khz-ch2
+      takes_value: true
+      value_name: ch2_freq_kHz
+      help: "Set the waveform frequency for channel 2 in kHz. The value must be a number 0.00001-60000.0. For example: -l 0.00001"
+
+  - set_frequency_mega_channel1:
+      short: "y"
+      long: freq-mega-ch1
+      takes_value: true
+      value_name: ch1_freq_MHz
+      help: "Set the waveform frequency for channel 1 in MHz (megahertz). The value must be a number 0.00000001-60.0. For example: -y 0.00000001"
+
+  - set_frequency_mega_channel2:
+      short: z
+      long: freq-mega-ch2
+      takes_value: true
+      value_name: ch2_freq_MHz
+      help: "Set the waveform frequency for channel 2 in MHz (megahertz). The value must be a number 0.00000001-60.0. For example: -z 0.00000001"
+
+  - set_amplitude_volts_channel1:
+      short: p
+      long: ampli-ch1
+      takes_value: true
+      value_name: ch1_ampli_v
+      help: "Set the signal amplitude for channel 1 in volts. The value must be a number 0.000-20.0. For example: -p 0.001"
+
+  - set_amplitude_volts_channel2:
+      short: q
+      long: ampli-ch2
+      takes_value: true
+      value_name: ch2_ampli_v
+      help: "Set the signal amplitude for channel 2 in volts. The value must be a number 0.000-20.0. For example: -q 0.001"
+  
+  - set_duty_cycle_channel1:
+      short: t
+      long: duty-ch1
+      takes_value: true
+      value_name: ch1_duty_cycle
+      help: "Set the duty cycle for channel 1 in percent. The value must be a number 0.0-99.9. For example: -t 40.1"
+
+  - set_duty_cycle_channel2:
+      short: c
+      long: duty-ch2
+      takes_value: true
+      value_name: ch2_duty_cycle
+      help: "Set the duty cycle for channel 2 in percent. The value must be a number 0.0-99.9. For example: -c 40.1"
+
+  - set_voltage_offset_channel1:
+      short: g
+      long: offset-ch1
+      takes_value: true
+      value_name: ch1_volt_offset
+      allow_hyphen_values: true
+      help: "Set the voltage offset for channel 1 in volts. The value must be a number -9.99-9.99. For example: -g -1.23"
+
+  - set_voltage_offset_channel2:
+      short: "n"
+      long: offset-ch2
+      takes_value: true
+      value_name: ch2_volt_offset
+      allow_hyphen_values: true
+      help: "Set the voltage offset for channel 2 in volts. The value must be a number -9.99-9.99. For example: -n -1.23"
+
+  - set_phase:
+      short: r
+      long: phase
+      takes_value: true
+      value_name: phase_deg
+      help: "Set the phase in ° (degrees). The value must be a number 0.0-360.0, and 360.0 wraps around to 0.0. For example: -r 180.7"
+  
+  - set_measurement_coupling_ac:
+      long: ac
+      help: Set the measurement mode coupling option to AC.
+
+  - set_measurement_coupling_dc:
+      long: dc
+      help: Set the measurement mode coupling option to DC.
+
+  - set_measurement_gate_time:
+      long: gt
+      takes_value: true
+      value_name: gate_time
+      help: "Set the measurement gate time in seconds. The value must be a number 0.01-10.0. For example: --gt 0.01"
+
+  - set_measurement_count_frequency:
+      long: cf
+      help: Set the measurement mode to count frequency.
+
+  - set_measurement_counting_period:
+      long: cp
+      help: Set the measurement mode to counting period.
+  
+  - set_burst_pulse_number:
+      long: bn
+      takes_value: true
+      value_name: num_pulses
+      help: Burst pulse number. Set the number of burst pulses.
+  
+  - set_burst_manual_trigger:
+      long: bm
+      help: Set the burst mode to manual trigger.
+
+  - set_burst_ch2:
+      long: bc
+      help: Set the burst mode to CH2 burst.
+
+  - set_burst_external_ac:
+      long: ba
+      help: Set the burst mode to external burst AC.
+
+  - set_burst_external_dc:
+      long: bd
+      help: Set the burst mode to external burst DC.
+
+  - set_sweep_start_freq:
+      long: ss
+      takes_value: true
+      value_name: start_freq_hz
+      help: Set the sweep starting frequency.
+
+  - set_sweep_stop_freq:
+      long: se
+      takes_value: true
+      value_name: stop_freq_hz
+      help: Set the sweep stopping frequency.
+
+  - set_sweep_time:
+      long: st
+      takes_value: true
+      value_name: sweep_time_seconds
+      help: Set the sweep time
+
+  - set_sweep_direction_rise:
+      long: sdr
+      help: Set the sweep direction to rise (normal).
+
+  - set_sweep_direction_fall:
+      long: sdf
+      help: Set the sweep direction to fall (reverse).
+
+  - set_sweep_direction_rise_fall:
+      long: sdt
+      help: Set the sweep direction to rise and fall (round trip).
+
+  - set_sweep_linear:
+      long: sml
+      help: Set the sweep mode to linear.
+
+  - set_sweep_logarithm:
+      long: smg
+      help: Set the sweep mode to logarithm.
+
+  - set_pulse_width_nanoseconds:
+      long: pwn
+      takes_value: true
+      value_name: pulse_width_nanoseconds
+
+  - set_pulse_width_microseconds:
+      long: pwu
+      takes_value: true
+      value_name: pulse_width_microseconds
+    
+  - clear_measurement_count:
+      long: cc
+      help: Clear the count on measurement mode.
+  
+  # ----- END Commands which change the device's 
+  #       settings or state, but don't 
+  #       activate the channels.                 -----
+      
+
+  # ----- Commands which retrieve values from 
+  #       the device.                         -----
+
+  - get_model:
+      short: m
+      long: model
+      help: Get the device's model number.
+
+  - get_serial:
+      short: s
+      long: serial
+      help: Get the device's serial number.
+
+  # ----- END Commands which retrieve values from 
+  #       the device.                             -----
+
+  
+  # ----- Commands which set one or both of the 
+  #       device's channels ON or OFF.          -----
+
+  - start_counting:
+      short: D
+      long: start-count
+      help: Set the extended function to start counting.
+
+  - start_sweeping_ch1:
+      short: S
+      long: start-sweep1
+      help: Set the extended function to start sweep on channel 1.
+
+  - start_sweeping_ch2:
+      short: U
+      long: start-sweep2
+      help: Set the extended function to start sweep on channel 2.
+
+  - start_pulsing:
+      short: Q
+      long: start-pulse
+      help: Set the extended function to start pulse.
+
+  - burst_pulse_once:
+      long: b1
+      help: Burst pulse once.
+
+  - start_bursting:
+      short: O
+      long: start-burst
+      help: Set the extended function to start bursting.
+
+  - start_measuring:
+      short: "N"
+      long: start-measure
+      help: Set the extended function to start measuring, and to stop counting, sweep, pulse, and bursting.
+
+  - set_channel_output:
+      short: o
+      long: output
+      takes_value: true
+      value_name: ch1_on,ch2_on
+      help: "Set the output state to on or off for channels 1 and 2. For example, ch1 on, ch 2 off: -o 1,0"
+
+  # ----- END Commands which set one or both of the 
+  #       device's channels ON or OFF.              -----
