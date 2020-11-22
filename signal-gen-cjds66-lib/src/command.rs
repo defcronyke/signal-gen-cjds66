@@ -2184,6 +2184,10 @@ pub fn match_set_pulse_width_arg(mut port: &mut Box<dyn SerialPort>, amount: &st
         Ok(amount) => {
             match amount {
                 _y if amount >= arg_min && amount <= arg_max => {
+                    if units == "ns" && amount as i64 % 5 != 0 {
+                        return Err(Error::with_description(&format!("unsupported value passed to \"set pulse width ({})\" argument (must be {}-{}): {}: if nanoseconds, it must be a multiple of 5", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
+                    }
+
                     res = set_pulse_width(&mut port, amount, microseconds);
                 },
 
@@ -2195,6 +2199,127 @@ pub fn match_set_pulse_width_arg(mut port: &mut Box<dyn SerialPort>, amount: &st
 
         Err(e) => {
             res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse width ({})\" argument (must be {}-{}): {}: {}", units, arg_min, arg_max, amount, e), ErrorKind::InvalidValue));
+        },
+    }
+
+    res
+}
+
+
+// Set the modulation period. It is in nanosecond units unless 
+// the microseconds parameter is true.
+// 
+// IMPORTANT NOTE: There seems to be no option on the device's physical 
+// controls to switch between nanosecond and microsecond units, but if 
+// you specify a value in microseconds, the device will switch to 
+// microsecond mode, and all future values to this command entered through
+// the physical device interface will be interpreted as microsecond units 
+// until you turn off the device, or set a nanosecond value using this 
+// serial-interface-only command. If you save the device state while in 
+// microseconds mode, this could be a problem, because then you need to 
+// use this serial program to get back to the default nanoseconds mode.
+pub fn set_period(port: &mut Box<dyn SerialPort>, amount: f64, microseconds: bool) -> Result<String, clap::Error> {
+    let units: &'static str;
+    let arg_min: f64;
+    let arg_max: f64;
+    let command: String;
+    
+    if microseconds {
+        units = "us";
+        arg_min = WRITE_PERIOD_ARG_MICROSECONDS_MIN;
+        arg_max = WRITE_PERIOD_ARG_MICROSECONDS_MAX;
+
+        command = format!("{}{}{}{}{}{}{}{}",
+            COMMAND_BEGIN,
+            COMMAND_WRITE,
+            WRITE_PERIOD_COMMAND,
+            COMMAND_SEPARATOR,
+            amount,
+            COMMAND_ARG_SEPARATOR,
+            WRITE_PERIOD_ARG_MICROSECONDS,
+            COMMAND_END,
+        );
+
+    } else {
+        units = "ns";
+        arg_min = WRITE_PERIOD_ARG_NANOSECONDS_MIN;
+        arg_max = WRITE_PERIOD_ARG_NANOSECONDS_MAX;
+
+        command = format!("{}{}{}{}{}{}{}{}",
+            COMMAND_BEGIN,
+            COMMAND_WRITE,
+            WRITE_PERIOD_COMMAND,
+            COMMAND_SEPARATOR,
+            amount,
+            COMMAND_ARG_SEPARATOR,
+            WRITE_PERIOD_ARG_NANOSECONDS,
+            COMMAND_END,
+        );
+    }
+
+    if amount < arg_min || amount > arg_max {
+        return Err(Error::with_description(&format!("Unsupported period ({}). Must be {}-{}.", units, arg_min, arg_max), ErrorKind::InvalidValue));
+    }
+    
+    println!("\nSetting period: {} {}:\n{}", amount, units, command);
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_PERIOD_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    println!("Response:");
+    println!("{}", res);
+
+    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+
+    Ok(res.to_string())
+}
+
+pub fn match_set_period_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, microseconds: bool) -> Result<String, clap::Error> {
+    let amount_parts: Vec<&str> = amount.split(".").collect();
+    let units: &'static str;
+    let arg_min: f64;
+    let arg_max: f64;
+
+    if microseconds {
+        units = "us";
+        arg_min = WRITE_PERIOD_ARG_MICROSECONDS_MIN;
+        arg_max = WRITE_PERIOD_ARG_MICROSECONDS_MAX;
+    } else {
+        units = "ns";
+        arg_min = WRITE_PERIOD_ARG_NANOSECONDS_MIN;
+        arg_max = WRITE_PERIOD_ARG_NANOSECONDS_MAX;
+    }
+    
+    if amount_parts.len() > 1 {
+        return Err(Error::with_description(&format!("unsupported value passed to \"set period ({})\" argument (must be {}-{}): {}: too many decimal places (0 max)", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
+    }
+    
+    let res: Result<String, clap::Error>;
+    
+    match amount.parse::<f64>() {
+        Ok(amount) => {
+            match amount {
+                _y if amount >= arg_min && amount <= arg_max => {
+                    if units == "ns" && amount as i64 % 5 != 0 {
+                        return Err(Error::with_description(&format!("unsupported value passed to \"set period ({})\" argument (must be {}-{}): {}: if nanoseconds, it must be a multiple of 5", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
+                    }
+
+                    res = set_period(&mut port, amount, microseconds);
+                },
+
+                _ => {
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set period ({})\" argument (must be {}-{}): {}", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
+                },
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set period ({})\" argument (must be {}-{}): {}: {}", units, arg_min, arg_max, amount, e), ErrorKind::InvalidValue));
         },
     }
 

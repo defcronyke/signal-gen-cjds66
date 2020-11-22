@@ -749,6 +749,35 @@ fn real_main() -> Result<i32, error::Error> {
                 }
 
 
+                // If set period nanoseconds is requested.
+                if matches.is_present("set_period_nanoseconds") {
+                    let amount = matches.value_of("set_period_nanoseconds").unwrap_or_default();
+
+                    match match_set_period_arg(&mut port, amount, false) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
+                        },
+                    }
+                }
+
+                // If set period microseconds is requested.
+                if matches.is_present("set_period_microseconds") {
+                    let amount = matches.value_of("set_period_microseconds").unwrap_or_default();
+
+                    match match_set_period_arg(&mut port, amount, true) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            return Err(err.unwrap());
+                        },
+                    }
+                }
+
+
                 // If set measurement count clear is requested.
                 if matches.is_present("clear_measurement_count") {
                     match set_measurement_count_clear(&mut port) {

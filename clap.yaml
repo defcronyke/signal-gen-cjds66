@@ -416,11 +416,25 @@ args:
       long: pwn
       takes_value: true
       value_name: pulse_width_nanoseconds
+      help: Set the pulse width for the pulse function in nanoseconds.
 
   - set_pulse_width_microseconds:
       long: pwu
       takes_value: true
       value_name: pulse_width_microseconds
+      help: Set the pulse width for the pulse function in microseconds.
+
+  - set_period_nanoseconds:
+      long: pdn
+      takes_value: true
+      value_name: pulse_width_nanoseconds
+      help: Set the period for the pulse function in nanoseconds.
+
+  - set_period_microseconds:
+      long: pdu
+      takes_value: true
+      value_name: pulse_width_microseconds
+      help: Set the period for the pulse function in microseconds.
     
   - clear_measurement_count:
       long: cc
