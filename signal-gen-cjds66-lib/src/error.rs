@@ -44,7 +44,7 @@ pub fn handle_exit(res: Result<i32, Error>) -> Result<i32, Error> {
                 }
             }
 
-            println!("exit with error: {}", e);
+            println!("\nexiting with error: {}\nexit code:\n{}", e, e.code);
             e
         }
     )

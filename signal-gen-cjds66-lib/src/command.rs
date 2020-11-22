@@ -2,17 +2,16 @@ extern crate serial;
 
 use crate::protocol::*;
 
-use std::thread;
-use std::time::{Duration};
-
 use std::io::prelude::*;
 use serial::prelude::*;
 use std::str;
 
 use clap::{Error, ErrorKind};
 
-pub fn read_machine_model(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
-    println!("\nRequesting machine model number:\n{}", READ_MACHINE_MODEL);
+pub fn read_machine_model(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
+    if verbose > 0 {
+        println!("\nRequesting machine model number:\n{}", READ_MACHINE_MODEL);
+    }
 
     let inbuf: Vec<u8> = READ_MACHINE_MODEL.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..READ_MACHINE_MODEL_RES_LEN).collect();
@@ -22,16 +21,32 @@ pub fn read_machine_model(port: &mut Box<dyn SerialPort>) -> Result<String, clap
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    } else {
+        let res2: Vec<&str> = res.split("=").collect();
 
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+        if res2.len() < 2 {
+            return Err(Error::with_description(&format!("unexpected response from device: missing separator ({}): {}", COMMAND_SEPARATOR, res), ErrorKind::ValueValidation));
+        }
+
+        if res2[1].len() < 4 {
+            return Err(Error::with_description(&format!("unexpected response from device: missing terminator ({}): {}", COMMAND_END, res), ErrorKind::ValueValidation));
+        }
+
+        let res3: &str = &res2[1][0..res2[1].len()-3];
+
+        println!("model:\t{}", res3);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn read_machine_number(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
-    println!("\nRequesting machine serial number:\n{}", READ_MACHINE_NUMBER);
+pub fn read_machine_number(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
+    if verbose > 0 {
+        println!("\nRequesting machine serial number:\n{}", READ_MACHINE_NUMBER);
+    }
 
     let inbuf: Vec<u8> = READ_MACHINE_NUMBER.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..READ_MACHINE_NUMBER_RES_LEN).collect();
@@ -41,16 +56,30 @@ pub fn read_machine_number(port: &mut Box<dyn SerialPort>) -> Result<String, cla
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    } else {
+        let res2: Vec<&str> = res.split("=").collect();
 
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+        if res2.len() < 2 {
+            return Err(Error::with_description(&format!("unexpected response from device: missing separator ({}): {}", COMMAND_SEPARATOR, res), ErrorKind::ValueValidation));
+        }
+
+        if res2[1].len() < 4 {
+            return Err(Error::with_description(&format!("unexpected response from device: missing terminator ({}): {}", COMMAND_END, res), ErrorKind::ValueValidation));
+        }
+
+        let res3: &str = &res2[1][0..res2[1].len()-3];
+
+        println!("serial:\t{}", res3);
+    }
 
     Ok(res.to_string())
 }
 
 
-pub fn set_channel_output(port: &mut Box<dyn SerialPort>, ch1: bool, ch2: bool) -> Result<String, clap::Error> {
+pub fn set_channel_output(port: &mut Box<dyn SerialPort>, ch1: bool, ch2: bool, verbose: u64) -> Result<String, clap::Error> {
     let command: &str;
     
     // Supported states.
@@ -66,7 +95,9 @@ pub fn set_channel_output(port: &mut Box<dyn SerialPort>, ch1: bool, ch2: bool) 
         return Err(Error::with_description("unsupported input condition", ErrorKind::ArgumentConflict));
     }
     
-    println!("\nSetting channel output: ch1={} and ch2={}:\n{}", ch1, ch2, command);
+    if verbose > 0 {
+        println!("\nSetting channel output: ch1={} and ch2={}:\n{}", ch1, ch2, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_CHANNEL_OUTPUT_RES_LEN).collect();
@@ -76,32 +107,32 @@ pub fn set_channel_output(port: &mut Box<dyn SerialPort>, ch1: bool, ch2: bool) 
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn match_set_channel_output_arg(mut port: &mut Box<dyn SerialPort>, sco: &str) -> Result<String, clap::Error> {
+pub fn match_set_channel_output_arg(mut port: &mut Box<dyn SerialPort>, sco: &str, verbose: u64) -> Result<String, clap::Error> {
     let res: Result<String, clap::Error>;
     
     match sco {
         "1,1" | "11" | "on,on" | "1" | "on" => {
-            res = set_channel_output(&mut port, true, true);
+            res = set_channel_output(&mut port, true, true, verbose);
         },
         
         "0,0" | "00" | "off,off" | "0" | "off" => {
-            res = set_channel_output(&mut port, false, false);
+            res = set_channel_output(&mut port, false, false, verbose);
         },
 
         "1,0" | "10" | "on,off" => {
-            res = set_channel_output(&mut port, true, false);
+            res = set_channel_output(&mut port, true, false, verbose);
         },
 
         "0,1" | "01" | "off,on" => {
-            res = set_channel_output(&mut port, false, true);
+            res = set_channel_output(&mut port, false, true, verbose);
         },
 
         _ => {
@@ -113,7 +144,7 @@ pub fn match_set_channel_output_arg(mut port: &mut Box<dyn SerialPort>, sco: &st
 }
 
 
-pub fn set_waveform_preset(port: &mut Box<dyn SerialPort>, chan: u64, preset: u64) -> Result<String, clap::Error> {
+pub fn set_waveform_preset(port: &mut Box<dyn SerialPort>, chan: u64, preset: u64, verbose: u64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
 
@@ -138,7 +169,9 @@ pub fn set_waveform_preset(port: &mut Box<dyn SerialPort>, chan: u64, preset: u6
         COMMAND_END,
     );
     
-    println!("\nSetting waveform preset: ch{}={}:\n{}", chan, preset, command);
+    if verbose > 0 {
+        println!("\nSetting waveform preset: ch{}={}:\n{}", chan, preset, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_WAVEFORM_PRESET_RES_LEN).collect();
@@ -148,10 +181,10 @@ pub fn set_waveform_preset(port: &mut Box<dyn SerialPort>, chan: u64, preset: u6
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
@@ -178,14 +211,14 @@ pub fn set_waveform_preset(port: &mut Box<dyn SerialPort>, chan: u64, preset: u6
 // 14: multi-tone || multitone || m-t || mt || m-tone || mtone
 // 15: sinc || sc
 // 16: lorenz || loren || lor || lz
-pub fn match_set_waveform_preset_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, preset: &str) -> Result<String, clap::Error> {
+pub fn match_set_waveform_preset_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, preset: &str, verbose: u64) -> Result<String, clap::Error> {
     let res: Result<String, clap::Error>;
     
     match preset.parse::<u64>() {
         Ok(preset) => {
             match preset {
                 0..=16 => {
-                    res = set_waveform_preset(&mut port, chan, preset);
+                    res = set_waveform_preset(&mut port, chan, preset, verbose);
                 },
 
                 _ => {
@@ -197,71 +230,71 @@ pub fn match_set_waveform_preset_arg(mut port: &mut Box<dyn SerialPort>, chan: u
         Err(_e) => {
             match preset {
                 "sine" | "sin" => {
-                    res = set_waveform_preset(&mut port, chan, 0);
+                    res = set_waveform_preset(&mut port, chan, 0, verbose);
                 },
 
                 "square" | "sq" => {
-                    res = set_waveform_preset(&mut port, chan, 1);
+                    res = set_waveform_preset(&mut port, chan, 1, verbose);
                 },
 
                 "pulse" | "pul" => {
-                    res = set_waveform_preset(&mut port, chan, 2);
+                    res = set_waveform_preset(&mut port, chan, 2, verbose);
                 },
 
                 "triangle" | "tri" => {
-                    res = set_waveform_preset(&mut port, chan, 3);
+                    res = set_waveform_preset(&mut port, chan, 3, verbose);
                 },
 
                 "partialsine" | "partial-sine" | "parsine" | "par-sine" | "parsin" | "par-sin" | "psine" | "p-sine" | "psin" | "p-sin" => {
-                    res = set_waveform_preset(&mut port, chan, 4);
+                    res = set_waveform_preset(&mut port, chan, 4, verbose);
                 },
 
                 "cmos" | "cm" => {
-                    res = set_waveform_preset(&mut port, chan, 5);
+                    res = set_waveform_preset(&mut port, chan, 5, verbose);
                 },
 
                 "dc" => {
-                    res = set_waveform_preset(&mut port, chan, 6);
+                    res = set_waveform_preset(&mut port, chan, 6, verbose);
                 },
 
                 "halfwave" | "half-wave" | "hw" | "h-w" => {
-                    res = set_waveform_preset(&mut port, chan, 7);
+                    res = set_waveform_preset(&mut port, chan, 7, verbose);
                 },
 
                 "fullwave" | "full-wave" | "fw" | "f-w" => {
-                    res = set_waveform_preset(&mut port, chan, 8);
+                    res = set_waveform_preset(&mut port, chan, 8, verbose);
                 },
 
                 "pos-ladder" | "posladder" | "pos-lad" | "poslad" | "positive-ladder" | "positiveladder" | "pl" => {
-                    res = set_waveform_preset(&mut port, chan, 9);
+                    res = set_waveform_preset(&mut port, chan, 9, verbose);
                 },
 
                 "neg-ladder" | "negladder" | "neg-lad" | "neglad" | "negative-ladder" | "negativeladder" | "nl" => {
-                    res = set_waveform_preset(&mut port, chan, 10);
+                    res = set_waveform_preset(&mut port, chan, 10, verbose);
                 },
 
                 "noise" | "nois" | "noi" | "no" | "n" => {
-                    res = set_waveform_preset(&mut port, chan, 11);
+                    res = set_waveform_preset(&mut port, chan, 11, verbose);
                 },
 
                 "exp-rise" | "exprise" | "e-r" | "er" | "e-rise" | "erise" | "e-ris" | "eris" => {
-                    res = set_waveform_preset(&mut port, chan, 12);
+                    res = set_waveform_preset(&mut port, chan, 12, verbose);
                 },
 
                 "exp-decay" | "expdecay" | "e-d" | "ed" | "e-decay" | "edecay" | "e-dec" | "edec" => {
-                    res = set_waveform_preset(&mut port, chan, 13);
+                    res = set_waveform_preset(&mut port, chan, 13, verbose);
                 },
 
                 "multi-tone" | "multitone" | "m-t" | "mt" | "m-tone" | "mtone" => {
-                    res = set_waveform_preset(&mut port, chan, 14);
+                    res = set_waveform_preset(&mut port, chan, 14, verbose);
                 },
 
                 "sinc" | "sc" => {
-                    res = set_waveform_preset(&mut port, chan, 15);
+                    res = set_waveform_preset(&mut port, chan, 15, verbose);
                 },
 
                 "lorenz" | "loren" | "lor" | "lz" => {
-                    res = set_waveform_preset(&mut port, chan, 16);
+                    res = set_waveform_preset(&mut port, chan, 16, verbose);
                 },
 
                 _ => {
@@ -275,7 +308,7 @@ pub fn match_set_waveform_preset_arg(mut port: &mut Box<dyn SerialPort>, chan: u
 }
 
 
-pub fn set_waveform_arbitrary(port: &mut Box<dyn SerialPort>, chan: u64, preset: u64) -> Result<String, clap::Error> {
+pub fn set_waveform_arbitrary(port: &mut Box<dyn SerialPort>, chan: u64, preset: u64, verbose: u64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
 
@@ -300,7 +333,9 @@ pub fn set_waveform_arbitrary(port: &mut Box<dyn SerialPort>, chan: u64, preset:
         COMMAND_END,
     );
     
-    println!("\nSetting waveform preset: ch{}={}:\n{}", chan, preset, command);
+    if verbose > 0 {
+        println!("\nSetting waveform preset: ch{}={}:\n{}", chan, preset, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_WAVEFORM_PRESET_RES_LEN).collect();
@@ -310,22 +345,22 @@ pub fn set_waveform_arbitrary(port: &mut Box<dyn SerialPort>, chan: u64, preset:
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn match_set_waveform_arbitrary_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, preset: &str) -> Result<String, clap::Error> {
+pub fn match_set_waveform_arbitrary_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, preset: &str, verbose: u64) -> Result<String, clap::Error> {
     let res: Result<String, clap::Error>;
     
     match preset.parse::<u64>() {
         Ok(preset) => {
             match preset {
                 1..=60 => {
-                    res = set_waveform_arbitrary(&mut port, chan, preset);
+                    res = set_waveform_arbitrary(&mut port, chan, preset, verbose);
                 },
 
                 _ => {
@@ -343,7 +378,7 @@ pub fn match_set_waveform_arbitrary_arg(mut port: &mut Box<dyn SerialPort>, chan
 }
 
 
-pub fn set_frequency_microhertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> Result<String, clap::Error> {
+pub fn set_frequency_microhertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64, verbose: u64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
 
@@ -370,7 +405,9 @@ pub fn set_frequency_microhertz(port: &mut Box<dyn SerialPort>, chan: u64, amoun
         COMMAND_END,
     );
     
-    println!("\nSetting frequency in uHz: ch{}={}:\n{}", chan, amount, command);
+    if verbose > 0 {
+        println!("\nSetting frequency in uHz: ch{}={}:\n{}", chan, amount, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_FREQUENCY_RES_LEN).collect();
@@ -380,15 +417,15 @@ pub fn set_frequency_microhertz(port: &mut Box<dyn SerialPort>, chan: u64, amoun
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn match_set_frequency_microherz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> Result<String, clap::Error> {    
+pub fn match_set_frequency_microherz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str, verbose: u64) -> Result<String, clap::Error> {    
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
@@ -401,7 +438,7 @@ pub fn match_set_frequency_microherz_arg(mut port: &mut Box<dyn SerialPort>, cha
         Ok(amount) => {
             match amount {
                 _y if amount >= 0.01 && amount <= 80000000.0 => {
-                    res = set_frequency_microhertz(&mut port, chan, amount * 100.0);
+                    res = set_frequency_microhertz(&mut port, chan, amount * 100.0, verbose);
                 },
 
                 _ => {
@@ -419,7 +456,7 @@ pub fn match_set_frequency_microherz_arg(mut port: &mut Box<dyn SerialPort>, cha
 }
 
 
-pub fn set_frequency_millihertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> Result<String, clap::Error> {
+pub fn set_frequency_millihertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64, verbose: u64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
 
@@ -446,7 +483,9 @@ pub fn set_frequency_millihertz(port: &mut Box<dyn SerialPort>, chan: u64, amoun
         COMMAND_END,
     );
     
-    println!("\nSetting frequency in mHz: ch{}={}:\n{}", chan, amount, command);
+    if verbose > 0 {
+        println!("\nSetting frequency in mHz: ch{}={}:\n{}", chan, amount, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_FREQUENCY_RES_LEN).collect();
@@ -456,15 +495,15 @@ pub fn set_frequency_millihertz(port: &mut Box<dyn SerialPort>, chan: u64, amoun
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn match_set_frequency_milliherz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> Result<String, clap::Error> {
+pub fn match_set_frequency_milliherz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str, verbose: u64) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
@@ -477,7 +516,7 @@ pub fn match_set_frequency_milliherz_arg(mut port: &mut Box<dyn SerialPort>, cha
         Ok(amount) => {
             match amount {
                 _y if amount >= 0.01 && amount <= 80000000.0 => {
-                    res = set_frequency_millihertz(&mut port, chan, amount * 100.0);
+                    res = set_frequency_millihertz(&mut port, chan, amount * 100.0, verbose);
                 },
 
                 _ => {
@@ -495,7 +534,7 @@ pub fn match_set_frequency_milliherz_arg(mut port: &mut Box<dyn SerialPort>, cha
 }
 
 
-pub fn set_frequency_hertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> Result<String, clap::Error> {
+pub fn set_frequency_hertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64, verbose: u64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
 
@@ -522,7 +561,9 @@ pub fn set_frequency_hertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f6
         COMMAND_END,
     );
     
-    println!("\nSetting frequency in Hz: ch{}={}:\n{}", chan, amount, command);
+    if verbose > 0 {
+        println!("\nSetting frequency in Hz: ch{}={}:\n{}", chan, amount, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_FREQUENCY_RES_LEN).collect();
@@ -532,15 +573,15 @@ pub fn set_frequency_hertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f6
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn match_set_frequency_hertz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> Result<String, clap::Error> {
+pub fn match_set_frequency_hertz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str, verbose: u64) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
@@ -553,7 +594,7 @@ pub fn match_set_frequency_hertz_arg(mut port: &mut Box<dyn SerialPort>, chan: u
         Ok(amount) => {
             match amount {
                 _y if amount >= 0.01 && amount <= 60000000.0 => {
-                    res = set_frequency_hertz(&mut port, chan, amount * 100.0);
+                    res = set_frequency_hertz(&mut port, chan, amount * 100.0, verbose);
                 },
 
                 _ => {
@@ -571,7 +612,7 @@ pub fn match_set_frequency_hertz_arg(mut port: &mut Box<dyn SerialPort>, chan: u
 }
 
 
-pub fn set_frequency_kilohertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> Result<String, clap::Error> {
+pub fn set_frequency_kilohertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64, verbose: u64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
 
@@ -598,7 +639,9 @@ pub fn set_frequency_kilohertz(port: &mut Box<dyn SerialPort>, chan: u64, amount
         COMMAND_END,
     );
     
-    println!("\nSetting frequency in kHz: ch{}={}:\n{}", chan, amount, command);
+    if verbose > 0 {
+        println!("\nSetting frequency in kHz: ch{}={}:\n{}", chan, amount, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_FREQUENCY_RES_LEN).collect();
@@ -608,15 +651,15 @@ pub fn set_frequency_kilohertz(port: &mut Box<dyn SerialPort>, chan: u64, amount
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn match_set_frequency_kilohertz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> Result<String, clap::Error> {
+pub fn match_set_frequency_kilohertz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str, verbose: u64) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 5 {
@@ -631,7 +674,7 @@ pub fn match_set_frequency_kilohertz_arg(mut port: &mut Box<dyn SerialPort>, cha
                 _y if amount >= 0.00001 && amount <= 60000.0 => {
                     let amount_rounded = ((amount * 100000.0 * 100000.0).round() / 100000.0).round();
                     
-                    res = set_frequency_kilohertz(&mut port, chan, amount_rounded);
+                    res = set_frequency_kilohertz(&mut port, chan, amount_rounded, verbose);
                 },
 
                 _ => {
@@ -649,7 +692,7 @@ pub fn match_set_frequency_kilohertz_arg(mut port: &mut Box<dyn SerialPort>, cha
 }
 
 
-pub fn set_frequency_megahertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> Result<String, clap::Error> {
+pub fn set_frequency_megahertz(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64, verbose: u64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
 
@@ -676,7 +719,9 @@ pub fn set_frequency_megahertz(port: &mut Box<dyn SerialPort>, chan: u64, amount
         COMMAND_END,
     );
     
-    println!("\nSetting frequency in MHz: ch{}={}:\n{}", chan, amount, command);
+    if verbose > 0 {
+        println!("\nSetting frequency in MHz: ch{}={}:\n{}", chan, amount, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_FREQUENCY_RES_LEN).collect();
@@ -686,15 +731,15 @@ pub fn set_frequency_megahertz(port: &mut Box<dyn SerialPort>, chan: u64, amount
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn match_set_frequency_megahertz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> Result<String, clap::Error> {
+pub fn match_set_frequency_megahertz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str, verbose: u64) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 8 {
@@ -709,7 +754,7 @@ pub fn match_set_frequency_megahertz_arg(mut port: &mut Box<dyn SerialPort>, cha
                 _y if amount >= 0.00000001 && amount <= 60.0 => {
                     let amount_rounded = ((amount * 100000000.0 * 10000000.0).round() / 10000000.0).round();
                     
-                    res = set_frequency_megahertz(&mut port, chan, amount_rounded);
+                    res = set_frequency_megahertz(&mut port, chan, amount_rounded, verbose);
                 },
 
                 _ => {
@@ -727,7 +772,7 @@ pub fn match_set_frequency_megahertz_arg(mut port: &mut Box<dyn SerialPort>, cha
 }
 
 
-pub fn set_amplitude(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> Result<String, clap::Error> {
+pub fn set_amplitude(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64, verbose: u64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
 
@@ -752,7 +797,9 @@ pub fn set_amplitude(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> 
         COMMAND_END,
     );
     
-    println!("\nSetting amplitude in volts: ch{}={}:\n{}", chan, amount, command);
+    if verbose > 0 {
+        println!("\nSetting amplitude in volts: ch{}={}:\n{}", chan, amount, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_AMPLITUDE_RES_LEN).collect();
@@ -762,15 +809,15 @@ pub fn set_amplitude(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> 
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn match_set_amplitude_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> Result<String, clap::Error> {
+pub fn match_set_amplitude_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str, verbose: u64) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 3 {
@@ -785,7 +832,7 @@ pub fn match_set_amplitude_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, am
                 _y if amount >= 0.0 && amount <= 20.0 => {
                     let amount_rounded = ((amount * 1000.0 * 1000.0).round() / 1000.0).round();
                     
-                    res = set_amplitude(&mut port, chan, amount_rounded);
+                    res = set_amplitude(&mut port, chan, amount_rounded, verbose);
                 },
 
                 _ => {
@@ -803,7 +850,7 @@ pub fn match_set_amplitude_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, am
 }
 
 
-pub fn set_duty_cycle(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> Result<String, clap::Error> {
+pub fn set_duty_cycle(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64, verbose: u64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
 
@@ -828,7 +875,9 @@ pub fn set_duty_cycle(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) ->
         COMMAND_END,
     );
     
-    println!("\nSetting duty cycle percent: ch{}={}:\n{}", chan, amount, command);
+    if verbose > 0 {
+        println!("\nSetting duty cycle percent: ch{}={}:\n{}", chan, amount, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_DUTY_CYCLE_RES_LEN).collect();
@@ -838,15 +887,15 @@ pub fn set_duty_cycle(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) ->
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn match_set_duty_cycle_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> Result<String, clap::Error> {
+pub fn match_set_duty_cycle_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str, verbose: u64) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 1 {
@@ -861,7 +910,7 @@ pub fn match_set_duty_cycle_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, a
                 _y if amount >= 0.0 && amount <= 99.9 => {
                     let amount_rounded = ((amount * 10.0 * 10.0).round() / 10.0).round();
                     
-                    res = set_duty_cycle(&mut port, chan, amount_rounded);
+                    res = set_duty_cycle(&mut port, chan, amount_rounded, verbose);
                 },
 
                 _ => {
@@ -879,7 +928,7 @@ pub fn match_set_duty_cycle_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, a
 }
 
 
-pub fn set_voltage_offset(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64) -> Result<String, clap::Error> {
+pub fn set_voltage_offset(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64, verbose: u64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
 
@@ -904,7 +953,9 @@ pub fn set_voltage_offset(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64
         COMMAND_END,
     );
     
-    println!("\nSetting voltage offset: ch{}={}:\n{}", chan, amount, command);
+    if verbose > 0 {
+        println!("\nSetting voltage offset: ch{}={}:\n{}", chan, amount, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_VOLTAGE_OFFSET_RES_LEN).collect();
@@ -914,15 +965,15 @@ pub fn set_voltage_offset(port: &mut Box<dyn SerialPort>, chan: u64, amount: f64
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn match_set_voltage_offset_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str) -> Result<String, clap::Error> {
+pub fn match_set_voltage_offset_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str, verbose: u64) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
@@ -937,7 +988,7 @@ pub fn match_set_voltage_offset_arg(mut port: &mut Box<dyn SerialPort>, chan: u6
                 _y if amount >= -9.99 && amount <= 9.99 => {
                     let amount_rounded = (((1000.0 + amount * 100.0) * 100.0).round() / 100.0).round();
                     
-                    res = set_voltage_offset(&mut port, chan, amount_rounded);
+                    res = set_voltage_offset(&mut port, chan, amount_rounded, verbose);
                 },
 
                 _ => {
@@ -955,7 +1006,7 @@ pub fn match_set_voltage_offset_arg(mut port: &mut Box<dyn SerialPort>, chan: u6
 }
 
 
-pub fn set_phase(port: &mut Box<dyn SerialPort>, amount: f64) -> Result<String, clap::Error> {
+pub fn set_phase(port: &mut Box<dyn SerialPort>, amount: f64, verbose: u64) -> Result<String, clap::Error> {
     let command: String;
 
     if amount < 0.0 || amount > 3600.0 {
@@ -971,7 +1022,9 @@ pub fn set_phase(port: &mut Box<dyn SerialPort>, amount: f64) -> Result<String, 
         COMMAND_END,
     );
     
-    println!("\nSetting phase: {}:\n{}", amount, command);
+    if verbose > 0 {
+        println!("\nSetting phase: {}:\n{}", amount, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_PHASE_RES_LEN).collect();
@@ -981,15 +1034,15 @@ pub fn set_phase(port: &mut Box<dyn SerialPort>, amount: f64) -> Result<String, 
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn match_set_phase_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> Result<String, clap::Error> {
+pub fn match_set_phase_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, verbose: u64) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 1 {
@@ -1004,7 +1057,7 @@ pub fn match_set_phase_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> 
                 _y if amount >= 0.0 && amount <= 360.0 => {
                     let amount_rounded = ((amount * 10.0 * 10.0).round() / 10.0).round();
                     
-                    res = set_phase(&mut port, amount_rounded);
+                    res = set_phase(&mut port, amount_rounded, verbose);
                 },
 
                 _ => {
@@ -1022,7 +1075,7 @@ pub fn match_set_phase_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> 
 }
 
 
-pub fn set_tracking(port: &mut Box<dyn SerialPort>, track: TrackingArg) -> Result<String, clap::Error> {
+pub fn set_tracking(port: &mut Box<dyn SerialPort>, track: TrackingArg, verbose: u64) -> Result<String, clap::Error> {
     let command: String;
 
     if track > TrackingArg::all() {
@@ -1038,7 +1091,9 @@ pub fn set_tracking(port: &mut Box<dyn SerialPort>, track: TrackingArg) -> Resul
         COMMAND_END,
     );
     
-    println!("\nSetting tracking: {}:\n{}", track.to_names(), command);
+    if verbose > 0 {
+        println!("\nSetting tracking: {}:\n{}", track.to_names(), command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_TRACKING_RES_LEN).collect();
@@ -1048,15 +1103,15 @@ pub fn set_tracking(port: &mut Box<dyn SerialPort>, track: TrackingArg) -> Resul
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn match_set_tracking_arg(mut port: &mut Box<dyn SerialPort>, track: &str) -> Result<String, clap::Error> {
+pub fn match_set_tracking_arg(mut port: &mut Box<dyn SerialPort>, track: &str, verbose: u64) -> Result<String, clap::Error> {
     let max_len = 5;
     
     let track_stripped = track.replace(',', "");
@@ -1133,7 +1188,7 @@ pub fn match_set_tracking_arg(mut port: &mut Box<dyn SerialPort>, track: &str) -
 
     match track_bits {
         track_bits if track_bits <= TrackingArg::all() => {
-            res = set_tracking(&mut port, track_bits);
+            res = set_tracking(&mut port, track_bits, verbose);
         },
 
         _ => {
@@ -1145,7 +1200,7 @@ pub fn match_set_tracking_arg(mut port: &mut Box<dyn SerialPort>, track: &str) -
 }
 
 
-pub fn set_switch_function_panel_main(port: &mut Box<dyn SerialPort>, chan: u64) -> Result<String, clap::Error> {
+pub fn set_switch_function_panel_main(port: &mut Box<dyn SerialPort>, chan: u64, verbose: u64) -> Result<String, clap::Error> {
     let command: &'static str;
 
     if chan < 1 || chan > 2 {
@@ -1156,7 +1211,9 @@ pub fn set_switch_function_panel_main(port: &mut Box<dyn SerialPort>, chan: u64)
         command = WRITE_SWITCH_FUNCTION_PANEL_MAIN_CH2;
     }
     
-    println!("\nSwitching to function panel main ch{} mode:\n{}", chan, command);
+    if verbose > 0 {
+        println!("\nSwitching to function panel main ch{} mode:\n{}", chan, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
@@ -1166,19 +1223,21 @@ pub fn set_switch_function_panel_main(port: &mut Box<dyn SerialPort>, chan: u64)
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
 
-pub fn set_switch_function_panel_sys(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_switch_function_panel_sys(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_SWITCH_FUNCTION_PANEL_SYS;
     
-    println!("\nSwitching function panel to system settings mode:\n{}", command);
+    if verbose > 0 {
+        println!("\nSwitching function panel to system settings mode:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
@@ -1188,19 +1247,21 @@ pub fn set_switch_function_panel_sys(port: &mut Box<dyn SerialPort>) -> Result<S
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
 
-pub fn set_switch_function_panel_measurement(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_switch_function_panel_measurement(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_SWITCH_FUNCTION_PANEL_MEASUREMENT;
     
-    println!("\nSwitching function panel to measurement mode:\n{}", command);
+    if verbose > 0 {
+        println!("\nSwitching function panel to measurement mode:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
@@ -1210,19 +1271,21 @@ pub fn set_switch_function_panel_measurement(port: &mut Box<dyn SerialPort>) -> 
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
 // Measurement starting - counting, sweep, frequency, pulse, burst stopping.
-pub fn set_measurement_starting(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_measurement_starting(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_EXTENDED_FUNCTION_MEASUREMENT_STARTING;
     
-    println!("\nMeasurement starting - counting, sweep, frequency, pulse, burst stopping:\n{}", command);
+    if verbose > 0 {
+        println!("\nMeasurement starting - counting, sweep, frequency, pulse, burst stopping:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_EXTENDED_FUNCTION_RES_LEN).collect();
@@ -1232,19 +1295,21 @@ pub fn set_measurement_starting(port: &mut Box<dyn SerialPort>) -> Result<String
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
 
-pub fn set_switch_function_panel_counting(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_switch_function_panel_counting(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_SWITCH_FUNCTION_PANEL_COUNTING;
     
-    println!("\nSwitching function panel to counting mode:\n{}", command);
+    if verbose > 0 {
+        println!("\nSwitching function panel to counting mode:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
@@ -1254,19 +1319,21 @@ pub fn set_switch_function_panel_counting(port: &mut Box<dyn SerialPort>) -> Res
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
 // Counting starting.
-pub fn set_counting_starting(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_counting_starting(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_EXTENDED_FUNCTION_COUNTING_STARTING;
     
-    println!("\nCounting starting:\n{}", command);
+    if verbose > 0 {
+        println!("\nCounting starting:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_EXTENDED_FUNCTION_RES_LEN).collect();
@@ -1276,16 +1343,16 @@ pub fn set_counting_starting(port: &mut Box<dyn SerialPort>) -> Result<String, c
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
 
-pub fn set_switch_function_panel_sweep(port: &mut Box<dyn SerialPort>, chan: u64) -> Result<String, clap::Error> {
+pub fn set_switch_function_panel_sweep(port: &mut Box<dyn SerialPort>, chan: u64, verbose: u64) -> Result<String, clap::Error> {
     let command: &'static str;
 
     if chan < 1 || chan > 2 {
@@ -1296,7 +1363,9 @@ pub fn set_switch_function_panel_sweep(port: &mut Box<dyn SerialPort>, chan: u64
         command = WRITE_SWITCH_FUNCTION_PANEL_SWEEP_CH2;
     }
     
-    println!("\nSwitching to function panel sweep ch{} mode:\n{}", chan, command);
+    if verbose > 0 {
+        println!("\nSwitching to function panel sweep ch{} mode:\n{}", chan, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
@@ -1306,21 +1375,23 @@ pub fn set_switch_function_panel_sweep(port: &mut Box<dyn SerialPort>, chan: u64
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
 // Sweep starting.
-pub fn set_sweep_starting(port: &mut Box<dyn SerialPort>, chan: u64) -> Result<String, clap::Error> {
-    set_switch_function_panel_sweep(port, chan)?;
+pub fn set_sweep_starting(port: &mut Box<dyn SerialPort>, chan: u64, verbose: u64) -> Result<String, clap::Error> {
+    set_switch_function_panel_sweep(port, chan, verbose)?;
     
     let command: &'static str = WRITE_EXTENDED_FUNCTION_SWEEP_STARTING;
     
-    println!("\nSweep starting:\n{}", command);
+    if verbose > 0 {
+        println!("\nSweep starting:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_EXTENDED_FUNCTION_RES_LEN).collect();
@@ -1330,19 +1401,21 @@ pub fn set_sweep_starting(port: &mut Box<dyn SerialPort>, chan: u64) -> Result<S
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
 
-pub fn set_switch_function_panel_pulse(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_switch_function_panel_pulse(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_SWITCH_FUNCTION_PANEL_PULSE;
     
-    println!("\nSwitching function panel to pulse mode:\n{}", command);
+    if verbose > 0 {
+        println!("\nSwitching function panel to pulse mode:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
@@ -1352,19 +1425,21 @@ pub fn set_switch_function_panel_pulse(port: &mut Box<dyn SerialPort>) -> Result
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
 // Pulse starting.
-pub fn set_pulse_starting(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_pulse_starting(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_EXTENDED_FUNCTION_PULSE_STARTING;
     
-    println!("\nPulse starting:\n{}", command);
+    if verbose > 0 {
+        println!("\nPulse starting:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_EXTENDED_FUNCTION_RES_LEN).collect();
@@ -1374,19 +1449,21 @@ pub fn set_pulse_starting(port: &mut Box<dyn SerialPort>) -> Result<String, clap
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
 
-pub fn set_switch_function_panel_bursting(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_switch_function_panel_bursting(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_SWITCH_FUNCTION_PANEL_BURST;
     
-    println!("\nSwitching function panel to bursting mode:\n{}", command);
+    if verbose > 0 {
+        println!("\nSwitching function panel to bursting mode:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
@@ -1396,19 +1473,21 @@ pub fn set_switch_function_panel_bursting(port: &mut Box<dyn SerialPort>) -> Res
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
 // Bursting starting.
-pub fn set_bursting_starting(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_bursting_starting(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_EXTENDED_FUNCTION_BURSTING_STARTING;
     
-    println!("\nBursting starting:\n{}", command);
+    if verbose > 0 {
+        println!("\nBursting starting:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_EXTENDED_FUNCTION_RES_LEN).collect();
@@ -1418,19 +1497,21 @@ pub fn set_bursting_starting(port: &mut Box<dyn SerialPort>) -> Result<String, c
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
 // set measurement coupling to AC.
-pub fn set_measurement_coupling_ac(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_measurement_coupling_ac(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_MEASUREMENT_COUPLING_AC;
     
-    println!("\nSetting measurement coupling to AC:\n{}", command);
+    if verbose > 0 {
+        println!("\nSetting measurement coupling to AC:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_MEASUREMENT_COUPLING_RES_LEN).collect();
@@ -1440,19 +1521,21 @@ pub fn set_measurement_coupling_ac(port: &mut Box<dyn SerialPort>) -> Result<Str
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
 // set measurement coupling to DC.
-pub fn set_measurement_coupling_dc(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_measurement_coupling_dc(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_MEASUREMENT_COUPLING_DC;
     
-    println!("\nSetting measurement coupling to DC:\n{}", command);
+    if verbose > 0 {
+        println!("\nSetting measurement coupling to DC:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_MEASUREMENT_COUPLING_RES_LEN).collect();
@@ -1462,16 +1545,16 @@ pub fn set_measurement_coupling_dc(port: &mut Box<dyn SerialPort>) -> Result<Str
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
 
-pub fn set_measurement_gate_time(port: &mut Box<dyn SerialPort>, amount: f64) -> Result<String, clap::Error> {
+pub fn set_measurement_gate_time(port: &mut Box<dyn SerialPort>, amount: f64, verbose: u64) -> Result<String, clap::Error> {
     let command: String;
 
     if amount < 1.0 || amount > 1000.0 {
@@ -1487,7 +1570,9 @@ pub fn set_measurement_gate_time(port: &mut Box<dyn SerialPort>, amount: f64) ->
         COMMAND_END,
     );
     
-    println!("\nSetting measurement gate time: {}:\n{}", amount, command);
+    if verbose > 0 {
+        println!("\nSetting measurement gate time: {}:\n{}", amount, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_MEASUREMENT_GATE_TIME_RES_LEN).collect();
@@ -1497,15 +1582,15 @@ pub fn set_measurement_gate_time(port: &mut Box<dyn SerialPort>, amount: f64) ->
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn match_set_measurement_gate_time_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> Result<String, clap::Error> {
+pub fn match_set_measurement_gate_time_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, verbose: u64) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
@@ -1520,7 +1605,7 @@ pub fn match_set_measurement_gate_time_arg(mut port: &mut Box<dyn SerialPort>, a
                 _y if amount >= 0.01 && amount <= 10.0 => {
                     let amount_rounded = ((amount * 100.0 * 100.0).round() / 100.0).round();
                     
-                    res = set_measurement_gate_time(&mut port, amount_rounded);
+                    res = set_measurement_gate_time(&mut port, amount_rounded, verbose);
                 },
 
                 _ => {
@@ -1539,10 +1624,12 @@ pub fn match_set_measurement_gate_time_arg(mut port: &mut Box<dyn SerialPort>, a
 
 
 // set measurement mode to count frequency.
-pub fn set_measurement_mode_count_frequency(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_measurement_mode_count_frequency(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_MEASUREMENT_MODE_COUNT_FREQUENCY;
     
-    println!("\nSetting measurement mode to count frequency:\n{}", command);
+    if verbose > 0 {
+        println!("\nSetting measurement mode to count frequency:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_MEASUREMENT_MODE_RES_LEN).collect();
@@ -1552,19 +1639,21 @@ pub fn set_measurement_mode_count_frequency(port: &mut Box<dyn SerialPort>) -> R
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
 // set measurement mode to counting period.
-pub fn set_measurement_mode_counting_period(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_measurement_mode_counting_period(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_MEASUREMENT_MODE_COUNTING_PERIOD;
     
-    println!("\nSetting measurement mode to counting period:\n{}", command);
+    if verbose > 0 {
+        println!("\nSetting measurement mode to counting period:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_MEASUREMENT_MODE_RES_LEN).collect();
@@ -1574,20 +1663,22 @@ pub fn set_measurement_mode_counting_period(port: &mut Box<dyn SerialPort>) -> R
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
 
 // set measurement count clear.
-pub fn set_measurement_count_clear(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_measurement_count_clear(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command: &'static str = WRITE_MEASUREMENT_COUNT_CLEAR;
     
-    println!("\nSetting measurement count clear:\n{}", command);
+    if verbose > 0 {
+        println!("\nSetting measurement count clear:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_MEASUREMENT_COUNT_CLEAR_RES_LEN).collect();
@@ -1597,16 +1688,16 @@ pub fn set_measurement_count_clear(port: &mut Box<dyn SerialPort>) -> Result<Str
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
 
-pub fn set_burst_pulse_number(port: &mut Box<dyn SerialPort>, amount: f64) -> Result<String, clap::Error> {
+pub fn set_burst_pulse_number(port: &mut Box<dyn SerialPort>, amount: f64, verbose: u64) -> Result<String, clap::Error> {
     let command: String;
 
     if amount < 1.0 || amount > 1048575.0 {
@@ -1622,7 +1713,9 @@ pub fn set_burst_pulse_number(port: &mut Box<dyn SerialPort>, amount: f64) -> Re
         COMMAND_END,
     );
     
-    println!("\nSetting burst pulse number: {}:\n{}", amount, command);
+    if verbose > 0 {
+        println!("\nSetting burst pulse number: {}:\n{}", amount, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_BURST_PULSE_NUMBER_RES_LEN).collect();
@@ -1632,15 +1725,15 @@ pub fn set_burst_pulse_number(port: &mut Box<dyn SerialPort>, amount: f64) -> Re
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn match_set_burst_pulse_number_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> Result<String, clap::Error> {
+pub fn match_set_burst_pulse_number_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, verbose: u64) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1] != "0" {
@@ -1653,7 +1746,7 @@ pub fn match_set_burst_pulse_number_arg(mut port: &mut Box<dyn SerialPort>, amou
         Ok(amount) => {
             match amount {
                 _y if amount >= 1.0 && amount <= 1048575.0 => {
-                    res = set_burst_pulse_number(&mut port, amount);
+                    res = set_burst_pulse_number(&mut port, amount, verbose);
                 },
 
                 _ => {
@@ -1671,10 +1764,12 @@ pub fn match_set_burst_pulse_number_arg(mut port: &mut Box<dyn SerialPort>, amou
 }
 
 
-pub fn set_burst_pulse_once(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_burst_pulse_once(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command = WRITE_BURST_PULSE_ONCE;
     
-    println!("\nBurst pulse once:\n{}", command);
+    if verbose > 0 {
+        println!("\nBurst pulse once:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_BURST_PULSE_ONCE_RES_LEN).collect();
@@ -1684,19 +1779,21 @@ pub fn set_burst_pulse_once(port: &mut Box<dyn SerialPort>) -> Result<String, cl
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
 
-pub fn set_burst_mode_manual_trigger(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_burst_mode_manual_trigger(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command = WRITE_BURST_MODE_MANUAL_TRIGGER;
     
-    println!("\nSetting burst mode to manual trigger:\n{}", command);
+    if verbose > 0 {
+        println!("\nSetting burst mode to manual trigger:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_BURST_MODE_RES_LEN).collect();
@@ -1706,18 +1803,20 @@ pub fn set_burst_mode_manual_trigger(port: &mut Box<dyn SerialPort>) -> Result<S
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn set_burst_mode_ch2_burst(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_burst_mode_ch2_burst(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command = WRITE_BURST_MODE_CH2_BURST;
     
-    println!("\nSetting burst mode to CH2 burst:\n{}", command);
+    if verbose > 0 {
+        println!("\nSetting burst mode to CH2 burst:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_BURST_MODE_RES_LEN).collect();
@@ -1727,18 +1826,20 @@ pub fn set_burst_mode_ch2_burst(port: &mut Box<dyn SerialPort>) -> Result<String
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn set_burst_mode_external_burst_ac(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_burst_mode_external_burst_ac(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command = WRITE_BURST_MODE_EXTERNAL_BURST_AC;
     
-    println!("\nSetting burst mode to external burst AC:\n{}", command);
+    if verbose > 0 {
+        println!("\nSetting burst mode to external burst AC:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_BURST_MODE_RES_LEN).collect();
@@ -1748,18 +1849,20 @@ pub fn set_burst_mode_external_burst_ac(port: &mut Box<dyn SerialPort>) -> Resul
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn set_burst_mode_external_burst_dc(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_burst_mode_external_burst_dc(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command = WRITE_BURST_MODE_EXTERNAL_BURST_DC;
     
-    println!("\nSetting burst mode to external burst DC:\n{}", command);
+    if verbose > 0 {
+        println!("\nSetting burst mode to external burst DC:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_BURST_MODE_RES_LEN).collect();
@@ -1769,16 +1872,16 @@ pub fn set_burst_mode_external_burst_dc(port: &mut Box<dyn SerialPort>) -> Resul
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
 
-pub fn set_sweep_starting_frequency(port: &mut Box<dyn SerialPort>, amount: f64) -> Result<String, clap::Error> {
+pub fn set_sweep_starting_frequency(port: &mut Box<dyn SerialPort>, amount: f64, verbose: u64) -> Result<String, clap::Error> {
     let command: String;
 
     if amount < 1.0 || amount > 6000000000.0 {
@@ -1794,7 +1897,9 @@ pub fn set_sweep_starting_frequency(port: &mut Box<dyn SerialPort>, amount: f64)
         COMMAND_END,
     );
     
-    println!("\nSetting sweep starting frequency: {}:\n{}", amount, command);
+    if verbose > 0 {
+        println!("\nSetting sweep starting frequency: {}:\n{}", amount, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_STARTING_FREQUENCY_RES_LEN).collect();
@@ -1804,15 +1909,15 @@ pub fn set_sweep_starting_frequency(port: &mut Box<dyn SerialPort>, amount: f64)
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn match_set_sweep_starting_frequency_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> Result<String, clap::Error> {
+pub fn match_set_sweep_starting_frequency_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, verbose: u64) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
@@ -1827,7 +1932,7 @@ pub fn match_set_sweep_starting_frequency_arg(mut port: &mut Box<dyn SerialPort>
                 _y if amount >= 0.01 && amount <= 60000000.0 => {
                     let amount_rounded = ((amount * 100.0 * 10.0).round() / 10.0).round();
                     
-                    res = set_sweep_starting_frequency(&mut port, amount_rounded);
+                    res = set_sweep_starting_frequency(&mut port, amount_rounded, verbose);
                 },
 
                 _ => {
@@ -1845,7 +1950,7 @@ pub fn match_set_sweep_starting_frequency_arg(mut port: &mut Box<dyn SerialPort>
 }
 
 
-pub fn set_sweep_termination_frequency(port: &mut Box<dyn SerialPort>, amount: f64) -> Result<String, clap::Error> {
+pub fn set_sweep_termination_frequency(port: &mut Box<dyn SerialPort>, amount: f64, verbose: u64) -> Result<String, clap::Error> {
     let command: String;
 
     if amount < 1.0 || amount > 6000000000.0 {
@@ -1861,7 +1966,9 @@ pub fn set_sweep_termination_frequency(port: &mut Box<dyn SerialPort>, amount: f
         COMMAND_END,
     );
     
-    println!("\nSetting sweep termination frequency: {}:\n{}", amount, command);
+    if verbose > 0 {
+        println!("\nSetting sweep termination frequency: {}:\n{}", amount, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_TERMINATION_FREQUENCY_RES_LEN).collect();
@@ -1871,15 +1978,15 @@ pub fn set_sweep_termination_frequency(port: &mut Box<dyn SerialPort>, amount: f
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn match_set_sweep_termination_frequency_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> Result<String, clap::Error> {
+pub fn match_set_sweep_termination_frequency_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, verbose: u64) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
@@ -1894,7 +2001,7 @@ pub fn match_set_sweep_termination_frequency_arg(mut port: &mut Box<dyn SerialPo
                 _y if amount >= 0.01 && amount <= 60000000.0 => {
                     let amount_rounded = ((amount * 100.0 * 10.0).round() / 10.0).round();
                     
-                    res = set_sweep_termination_frequency(&mut port, amount_rounded);
+                    res = set_sweep_termination_frequency(&mut port, amount_rounded, verbose);
                 },
 
                 _ => {
@@ -1912,7 +2019,7 @@ pub fn match_set_sweep_termination_frequency_arg(mut port: &mut Box<dyn SerialPo
 }
 
 
-pub fn set_sweep_time(port: &mut Box<dyn SerialPort>, amount: f64) -> Result<String, clap::Error> {
+pub fn set_sweep_time(port: &mut Box<dyn SerialPort>, amount: f64, verbose: u64) -> Result<String, clap::Error> {
     let command: String;
 
     if amount < 1.0 || amount > 6000000000.0 {
@@ -1928,7 +2035,9 @@ pub fn set_sweep_time(port: &mut Box<dyn SerialPort>, amount: f64) -> Result<Str
         COMMAND_END,
     );
     
-    println!("\nSetting sweep time: {}:\n{}", amount, command);
+    if verbose > 0 {
+        println!("\nSetting sweep time: {}:\n{}", amount, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_TIME_RES_LEN).collect();
@@ -1938,15 +2047,15 @@ pub fn set_sweep_time(port: &mut Box<dyn SerialPort>, amount: f64) -> Result<Str
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn match_set_sweep_time_arg(mut port: &mut Box<dyn SerialPort>, amount: &str) -> Result<String, clap::Error> {
+pub fn match_set_sweep_time_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, verbose: u64) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 1 {
@@ -1961,7 +2070,7 @@ pub fn match_set_sweep_time_arg(mut port: &mut Box<dyn SerialPort>, amount: &str
                 _y if amount >= 0.1 && amount <= 999.9 => {
                     let amount_rounded = (amount * 10.0).round();
                     
-                    res = set_sweep_time(&mut port, amount_rounded);
+                    res = set_sweep_time(&mut port, amount_rounded, verbose);
                 },
 
                 _ => {
@@ -1979,10 +2088,12 @@ pub fn match_set_sweep_time_arg(mut port: &mut Box<dyn SerialPort>, amount: &str
 }
 
 
-pub fn set_sweep_direction_normal(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_sweep_direction_normal(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command = WRITE_SWEEP_DIRECTION_NORMAL;
     
-    println!("\nSetting sweep direction to normal:\n{}", command);
+    if verbose > 0 {
+        println!("\nSetting sweep direction to normal:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_DIRECTION_RES_LEN).collect();
@@ -1992,18 +2103,20 @@ pub fn set_sweep_direction_normal(port: &mut Box<dyn SerialPort>) -> Result<Stri
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn set_sweep_direction_reverse(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_sweep_direction_reverse(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command = WRITE_SWEEP_DIRECTION_REVERSE;
     
-    println!("\nSetting sweep direction to reverse:\n{}", command);
+    if verbose > 0 {
+        println!("\nSetting sweep direction to reverse:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_DIRECTION_RES_LEN).collect();
@@ -2013,18 +2126,20 @@ pub fn set_sweep_direction_reverse(port: &mut Box<dyn SerialPort>) -> Result<Str
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn set_sweep_direction_round_trip(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_sweep_direction_round_trip(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command = WRITE_SWEEP_DIRECTION_ROUND_TRIP;
     
-    println!("\nSetting sweep direction to round trip:\n{}", command);
+    if verbose > 0 {
+        println!("\nSetting sweep direction to round trip:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_DIRECTION_RES_LEN).collect();
@@ -2034,19 +2149,21 @@ pub fn set_sweep_direction_round_trip(port: &mut Box<dyn SerialPort>) -> Result<
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
 
-pub fn set_sweep_mode_linear(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_sweep_mode_linear(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command = WRITE_SWEEP_MODE_LINEAR;
     
-    println!("\nSetting sweep mode to linear:\n{}", command);
+    if verbose > 0 {
+        println!("\nSetting sweep mode to linear:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_MODE_RES_LEN).collect();
@@ -2056,18 +2173,20 @@ pub fn set_sweep_mode_linear(port: &mut Box<dyn SerialPort>) -> Result<String, c
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn set_sweep_mode_logarithm(port: &mut Box<dyn SerialPort>) -> Result<String, clap::Error> {
+pub fn set_sweep_mode_logarithm(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     let command = WRITE_SWEEP_MODE_LOGARITHM;
     
-    println!("\nSetting sweep mode to logarithm:\n{}", command);
+    if verbose > 0 {
+        println!("\nSetting sweep mode to logarithm:\n{}", command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_MODE_RES_LEN).collect();
@@ -2077,13 +2196,14 @@ pub fn set_sweep_mode_logarithm(port: &mut Box<dyn SerialPort>) -> Result<String
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
+
 
 // Set the modulation pulse width. It is in nanosecond units unless 
 // the microseconds parameter is true.
@@ -2097,7 +2217,7 @@ pub fn set_sweep_mode_logarithm(port: &mut Box<dyn SerialPort>) -> Result<String
 // serial-interface-only command. If you save the device state while in 
 // microseconds mode, this could be a problem, because then you need to 
 // use this serial program to get back to the default nanoseconds mode.
-pub fn set_pulse_width(port: &mut Box<dyn SerialPort>, amount: f64, microseconds: bool) -> Result<String, clap::Error> {
+pub fn set_pulse_width(port: &mut Box<dyn SerialPort>, amount: f64, microseconds: bool, verbose: u64) -> Result<String, clap::Error> {
     let units: &'static str;
     let arg_min: f64;
     let arg_max: f64;
@@ -2140,7 +2260,9 @@ pub fn set_pulse_width(port: &mut Box<dyn SerialPort>, amount: f64, microseconds
         return Err(Error::with_description(&format!("Unsupported pulse width ({}). Must be {}-{}.", units, arg_min, arg_max), ErrorKind::InvalidValue));
     }
     
-    println!("\nSetting pulse width: {} {}:\n{}", amount, units, command);
+    if verbose > 0 {
+        println!("\nSetting pulse width: {} {}:\n{}", amount, units, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
     let mut outbuf: Vec<u8> = (0..WRITE_PULSE_WIDTH_RES_LEN).collect();
@@ -2150,15 +2272,15 @@ pub fn set_pulse_width(port: &mut Box<dyn SerialPort>, amount: f64, microseconds
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn match_set_pulse_width_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, microseconds: bool) -> Result<String, clap::Error> {
+pub fn match_set_pulse_width_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, microseconds: bool, verbose: u64) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     let units: &'static str;
     let arg_min: f64;
@@ -2188,7 +2310,7 @@ pub fn match_set_pulse_width_arg(mut port: &mut Box<dyn SerialPort>, amount: &st
                         return Err(Error::with_description(&format!("unsupported value passed to \"set pulse width ({})\" argument (must be {}-{}): {}: if nanoseconds, it must be a multiple of 5", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
                     }
 
-                    res = set_pulse_width(&mut port, amount, microseconds);
+                    res = set_pulse_width(&mut port, amount, microseconds, verbose);
                 },
 
                 _ => {
@@ -2206,7 +2328,7 @@ pub fn match_set_pulse_width_arg(mut port: &mut Box<dyn SerialPort>, amount: &st
 }
 
 
-// Set the modulation period. It is in nanosecond units unless 
+// Set the modulation pulse period. It is in nanosecond units unless 
 // the microseconds parameter is true.
 // 
 // IMPORTANT NOTE: There seems to be no option on the device's physical 
@@ -2218,7 +2340,7 @@ pub fn match_set_pulse_width_arg(mut port: &mut Box<dyn SerialPort>, amount: &st
 // serial-interface-only command. If you save the device state while in 
 // microseconds mode, this could be a problem, because then you need to 
 // use this serial program to get back to the default nanoseconds mode.
-pub fn set_period(port: &mut Box<dyn SerialPort>, amount: f64, microseconds: bool) -> Result<String, clap::Error> {
+pub fn set_pulse_period(port: &mut Box<dyn SerialPort>, amount: f64, microseconds: bool, verbose: u64) -> Result<String, clap::Error> {
     let units: &'static str;
     let arg_min: f64;
     let arg_max: f64;
@@ -2226,60 +2348,62 @@ pub fn set_period(port: &mut Box<dyn SerialPort>, amount: f64, microseconds: boo
     
     if microseconds {
         units = "us";
-        arg_min = WRITE_PERIOD_ARG_MICROSECONDS_MIN;
-        arg_max = WRITE_PERIOD_ARG_MICROSECONDS_MAX;
+        arg_min = WRITE_PULSE_PERIOD_ARG_MICROSECONDS_MIN;
+        arg_max = WRITE_PULSE_PERIOD_ARG_MICROSECONDS_MAX;
 
         command = format!("{}{}{}{}{}{}{}{}",
             COMMAND_BEGIN,
             COMMAND_WRITE,
-            WRITE_PERIOD_COMMAND,
+            WRITE_PULSE_PERIOD_COMMAND,
             COMMAND_SEPARATOR,
             amount,
             COMMAND_ARG_SEPARATOR,
-            WRITE_PERIOD_ARG_MICROSECONDS,
+            WRITE_PULSE_PERIOD_ARG_MICROSECONDS,
             COMMAND_END,
         );
 
     } else {
         units = "ns";
-        arg_min = WRITE_PERIOD_ARG_NANOSECONDS_MIN;
-        arg_max = WRITE_PERIOD_ARG_NANOSECONDS_MAX;
+        arg_min = WRITE_PULSE_PERIOD_ARG_NANOSECONDS_MIN;
+        arg_max = WRITE_PULSE_PERIOD_ARG_NANOSECONDS_MAX;
 
         command = format!("{}{}{}{}{}{}{}{}",
             COMMAND_BEGIN,
             COMMAND_WRITE,
-            WRITE_PERIOD_COMMAND,
+            WRITE_PULSE_PERIOD_COMMAND,
             COMMAND_SEPARATOR,
             amount,
             COMMAND_ARG_SEPARATOR,
-            WRITE_PERIOD_ARG_NANOSECONDS,
+            WRITE_PULSE_PERIOD_ARG_NANOSECONDS,
             COMMAND_END,
         );
     }
 
     if amount < arg_min || amount > arg_max {
-        return Err(Error::with_description(&format!("Unsupported period ({}). Must be {}-{}.", units, arg_min, arg_max), ErrorKind::InvalidValue));
+        return Err(Error::with_description(&format!("Unsupported pulse period ({}). Must be {}-{}.", units, arg_min, arg_max), ErrorKind::InvalidValue));
     }
     
-    println!("\nSetting period: {} {}:\n{}", amount, units, command);
+    if verbose > 0 {
+        println!("\nSetting pulse period: {} {}:\n{}", amount, units, command);
+    }
 
     let inbuf: Vec<u8> = command.as_bytes().to_vec();
-    let mut outbuf: Vec<u8> = (0..WRITE_PERIOD_RES_LEN).collect();
+    let mut outbuf: Vec<u8> = (0..WRITE_PULSE_PERIOD_RES_LEN).collect();
 
     port.write(&inbuf[..])?;
     port.read(&mut outbuf[..])?;
 
     let res = str::from_utf8(&outbuf).unwrap();
 
-    println!("Response:");
-    println!("{}", res);
-
-    thread::sleep(Duration::from_millis(COMMAND_DELAY_MS));
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
 
     Ok(res.to_string())
 }
 
-pub fn match_set_period_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, microseconds: bool) -> Result<String, clap::Error> {
+pub fn match_set_pulse_period_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, microseconds: bool, verbose: u64) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     let units: &'static str;
     let arg_min: f64;
@@ -2287,16 +2411,16 @@ pub fn match_set_period_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, mi
 
     if microseconds {
         units = "us";
-        arg_min = WRITE_PERIOD_ARG_MICROSECONDS_MIN;
-        arg_max = WRITE_PERIOD_ARG_MICROSECONDS_MAX;
+        arg_min = WRITE_PULSE_PERIOD_ARG_MICROSECONDS_MIN;
+        arg_max = WRITE_PULSE_PERIOD_ARG_MICROSECONDS_MAX;
     } else {
         units = "ns";
-        arg_min = WRITE_PERIOD_ARG_NANOSECONDS_MIN;
-        arg_max = WRITE_PERIOD_ARG_NANOSECONDS_MAX;
+        arg_min = WRITE_PULSE_PERIOD_ARG_NANOSECONDS_MIN;
+        arg_max = WRITE_PULSE_PERIOD_ARG_NANOSECONDS_MAX;
     }
     
     if amount_parts.len() > 1 {
-        return Err(Error::with_description(&format!("unsupported value passed to \"set period ({})\" argument (must be {}-{}): {}: too many decimal places (0 max)", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
+        return Err(Error::with_description(&format!("unsupported value passed to \"set pulse period ({})\" argument (must be {}-{}): {}: too many decimal places (0 max)", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
     }
     
     let res: Result<String, clap::Error>;
@@ -2306,20 +2430,88 @@ pub fn match_set_period_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, mi
             match amount {
                 _y if amount >= arg_min && amount <= arg_max => {
                     if units == "ns" && amount as i64 % 5 != 0 {
-                        return Err(Error::with_description(&format!("unsupported value passed to \"set period ({})\" argument (must be {}-{}): {}: if nanoseconds, it must be a multiple of 5", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
+                        return Err(Error::with_description(&format!("unsupported value passed to \"set pulse period ({})\" argument (must be {}-{}): {}: if nanoseconds, it must be a multiple of 5", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
                     }
 
-                    res = set_period(&mut port, amount, microseconds);
+                    res = set_pulse_period(&mut port, amount, microseconds, verbose);
                 },
 
                 _ => {
-                    res = Err(Error::with_description(&format!("unsupported value passed to \"set period ({})\" argument (must be {}-{}): {}", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse period ({})\" argument (must be {}-{}): {}", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
                 },
             }
         },
 
         Err(e) => {
-            res = Err(Error::with_description(&format!("unsupported value passed to \"set period ({})\" argument (must be {}-{}): {}: {}", units, arg_min, arg_max, amount, e), ErrorKind::InvalidValue));
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse period ({})\" argument (must be {}-{}): {}: {}", units, arg_min, arg_max, amount, e), ErrorKind::InvalidValue));
+        },
+    }
+
+    res
+}
+
+
+// Set the pulse offset in percent.
+pub fn set_pulse_offset(port: &mut Box<dyn SerialPort>, amount: f64, verbose: u64) -> Result<String, clap::Error> {
+    let command: String;
+
+    if amount < WRITE_PULSE_OFFSET_ARG_PERCENT_MIN || amount > WRITE_PULSE_OFFSET_ARG_PERCENT_MAX {
+        return Err(Error::with_description(&format!("Unsupported pulse offset. Must be {}-{}.", WRITE_PULSE_OFFSET_ARG_PERCENT_MIN, WRITE_PULSE_OFFSET_ARG_PERCENT_MAX), ErrorKind::InvalidValue));
+    }
+
+    command = format!("{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        COMMAND_WRITE,
+        WRITE_PULSE_OFFSET_COMMAND,
+        COMMAND_SEPARATOR,
+        amount,
+        COMMAND_END,
+    );
+    
+    if verbose > 0 {
+        println!("\nSetting pulse offset: {}:\n{}", amount, command);
+    }
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_PULSE_OFFSET_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
+
+    Ok(res.to_string())
+}
+
+pub fn match_set_pulse_offset_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, verbose: u64) -> Result<String, clap::Error> {
+    let amount_parts: Vec<&str> = amount.split(".").collect();
+    
+    if amount_parts.len() > 1 {
+        return Err(Error::with_description(&format!("unsupported value passed to \"set pulse offset\" argument (must be {}-{}): {}: too many decimal places (0 max)", WRITE_PULSE_OFFSET_ARG_PERCENT_MIN, WRITE_PULSE_OFFSET_ARG_PERCENT_MAX, amount), ErrorKind::InvalidValue));
+    }
+    
+    let res: Result<String, clap::Error>;
+    
+    match amount.parse::<f64>() {
+        Ok(amount) => {
+            match amount {
+                _y if amount >= WRITE_PULSE_OFFSET_ARG_PERCENT_MIN && amount <= WRITE_PULSE_OFFSET_ARG_PERCENT_MAX => {
+                    res = set_pulse_offset(&mut port, amount, verbose);
+                },
+
+                _ => {
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse offset\" argument (must be {}-{}): {}", WRITE_PULSE_OFFSET_ARG_PERCENT_MIN, WRITE_PULSE_OFFSET_ARG_PERCENT_MAX, amount), ErrorKind::InvalidValue));
+                },
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse offset\" argument (must be {}-{}): {}: {}", WRITE_PULSE_OFFSET_ARG_PERCENT_MIN, WRITE_PULSE_OFFSET_ARG_PERCENT_MAX, amount, e), ErrorKind::InvalidValue));
         },
     }
 

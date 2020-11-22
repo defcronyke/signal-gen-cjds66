@@ -10,9 +10,6 @@ about: |
 
   See: https://bit.ly/2J07i6X
 
-settings:
-  - ArgRequiredElseHelp
-
 template: |
   {bin} {version}
   Copyright © 2020 {author}
@@ -64,6 +61,25 @@ template: |
 
   
 args:
+
+  # ----- Command that sets the verbosity 
+  #       level.                          -----
+
+  - verbose:
+      short: v
+      long: verbose
+      takes_value: true
+      value_name: verbosity_level
+      default_value: "1"
+      help: Set the verbosity for the output of this command (Ex. 0-1). The verbosity defaults to 1 if specified with no value.
+
+  # ----- END Command that sets the verbosity 
+  #       level.                              -----
+
+
+  # ----- Command that selects the devices 
+  #       to use.                          -----
+
   - devices:
       short: d
       long: device
@@ -71,6 +87,26 @@ args:
       value_name: path
       multiple: true
       help: The device(s) to communicate with.
+
+  # ----- END Command that selects the devices 
+  #       to use.                              -----
+
+
+  # ----- Commands which retrieve values from 
+  #       the device.                         -----
+
+  - get_model:
+      short: m
+      long: model
+      help: Get the device's model number.
+
+  - get_serial:
+      short: s
+      long: serial
+      help: Get the device's serial number.
+
+  # ----- END Commands which retrieve values from 
+  #       the device.                             -----
 
 
   # ----- Commands which navigate to a different 
@@ -97,12 +133,10 @@ args:
       help: Switch the function panel to counting mode.
 
   - switch_sweep_ch1:
-      short: V
       long: sweep1
       help: Switch the function panel to sweep channel 1 mode.
 
   - switch_sweep_ch2:
-      short: W
       long: sweep2
       help: Switch the function panel to sweep channel 2 mode.
 
@@ -424,17 +458,23 @@ args:
       value_name: pulse_width_microseconds
       help: Set the pulse width for the pulse function in microseconds.
 
-  - set_period_nanoseconds:
+  - set_pulse_period_nanoseconds:
       long: pdn
       takes_value: true
-      value_name: pulse_width_nanoseconds
+      value_name: pulse_period_nanoseconds
       help: Set the period for the pulse function in nanoseconds.
 
-  - set_period_microseconds:
+  - set_pulse_period_microseconds:
       long: pdu
       takes_value: true
-      value_name: pulse_width_microseconds
+      value_name: pulse_period_microseconds
       help: Set the period for the pulse function in microseconds.
+  
+  - set_pulse_offset:
+      long: po
+      takes_value: true
+      value_name: pulse_offset_percent
+      help: Set the offset for the pulse function in percent.
     
   - clear_measurement_count:
       long: cc
@@ -443,23 +483,6 @@ args:
   # ----- END Commands which change the device's 
   #       settings or state, but don't 
   #       activate the channels.                 -----
-      
-
-  # ----- Commands which retrieve values from 
-  #       the device.                         -----
-
-  - get_model:
-      short: m
-      long: model
-      help: Get the device's model number.
-
-  - get_serial:
-      short: s
-      long: serial
-      help: Get the device's serial number.
-
-  # ----- END Commands which retrieve values from 
-  #       the device.                             -----
 
   
   # ----- Commands which set one or both of the 
