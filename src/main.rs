@@ -1060,7 +1060,29 @@ fn real_main() -> Result<i32, error::Error> {
 
                 /* ----- END Commands which set one or both of the 
                          device's channels ON.                     ----- */
+
+                         
                 
+                /* ----- Utility commands ----- */
+
+                // If wave to txt is requested.
+                if matches.is_present("wav_to_txt") {
+                    let path = matches.value_of("wav_to_txt").unwrap_or_default();
+
+                    match wav_to_txt(path, verbose) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            if e.kind != ErrorKind::Io {
+                                println!("{}", e);
+                            }
+
+                            err = Some(error::Error::from_clap_error(e));
+                        },
+                    }
+                }
+
+                /* ----- END Utility commands ----- */
 
                 err.map_or_else(|| { Ok(0) }, |v| { Err(v) })
             },

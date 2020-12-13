@@ -5,6 +5,7 @@ use crate::protocol::*;
 use std::io::prelude::*;
 use serial::prelude::*;
 use std::str;
+use std::fs;
 
 use clap::{Error, ErrorKind};
 
@@ -2792,6 +2793,78 @@ pub fn match_clear_preset_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, 
         Err(e) => {
             res = Err(Error::with_description(&format!("unsupported value passed to \"clear preset\" argument (must be {}-{}): {}: {}", WRITE_CLEAR_PRESET_ARG_NUM_MIN, WRITE_CLEAR_PRESET_ARG_NUM_MAX, amount, e), ErrorKind::InvalidValue));
         },
+    }
+
+    res
+}
+
+
+// Convert a WaveCAD file to the device's arbitrary waveform text format.
+pub fn wav_to_txt(path: &str, verbose: u64) -> Result<String, clap::Error> {
+    let mut res: Result<String, clap::Error>;
+
+    if path == "" {
+        res = Err(Error::with_description(&format!("unsupported path passed as \"wav_to_txt\" argument (must not be blank): {}", path), ErrorKind::InvalidValue));
+        return res;
+    }
+    
+    match fs::File::open(path) {
+        Ok(mut file) => {
+            let mut buf = [0u8; 2048];
+            res = file.read(&mut buf).map_or_else(
+                |e| {
+                    Err(Error::with_description(&format!("failed reading file: {}: {}", path, e), ErrorKind::Io))
+                },
+                |_res| {
+                    Ok("".to_string())
+                }
+            );
+
+            if res.is_err() {
+                return res;
+            }
+
+            let mut out = String::new();
+
+            for (i, val) in buf.iter().enumerate() {
+                out += &(*val as u32 + 2048).to_string();
+
+                if i < buf.len() - 1 {
+                    out += ",";
+                }
+            }
+
+            match fs::File::create(&format!("{}.txt", path)) {
+                Ok(mut outfile) => {
+                    res = outfile.write_all(out.as_bytes()).map_or_else(
+                        |e| {
+                            Err(Error::with_description(&format!("failed writing to file: {}.txt: {}", path, e), ErrorKind::Io))
+                        },
+                        |_res| {
+                            Ok("".to_string())
+                        }
+                    );
+
+                    if res.is_err() {
+                        return res;
+                    }
+
+                    if verbose > 0 {
+                        println!("WaveCAD file converted to text and saved: {} -> {}.txt:\n\n{}\n", path, path, out);
+                    }
+                },
+
+                Err(e) => {
+                    res = Err(Error::with_description(&format!("failed creating file: {}.txt: {}", path, e), ErrorKind::Io));
+                    return res;
+                }
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::with_description(&format!("failed opening file: {}: {}", path, e), ErrorKind::Io));
+            return res;
+        }
     }
 
     res

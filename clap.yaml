@@ -555,3 +555,14 @@ args:
 
   # ----- END Commands which set one or both of the 
   #       device's channels ON or OFF.              -----
+
+
+  # ----- Utility commands -----
+
+  - wav_to_txt:
+      long: wav
+      takes_value: true
+      value_name: wav_file_path
+      help: Convert a WaveCAD file to the device's arbitrary waveform text format.
+
+  # ----- END Utility commands -----
