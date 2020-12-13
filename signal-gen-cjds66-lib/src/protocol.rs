@@ -1274,6 +1274,8 @@ pub const WRITE_RECALL_PRESET_RES_LEN: u8 = WRITE_RECALL_PRESET_RES_LEN!();
 
 // -----
 // Clear a numbered preset.
+//
+// NOTE: It doesn't work. The spec must be wrong.
 macro_rules! WRITE_CLEAR_PRESET_COMMAND {() => {"72"}}
 pub const WRITE_CLEAR_PRESET_COMMAND: &'static str = WRITE_CLEAR_PRESET_COMMAND!();
 
@@ -1288,4 +1290,24 @@ pub const WRITE_CLEAR_PRESET_ARG_NUM_MAX: f64 = WRITE_CLEAR_PRESET_ARG_NUM_MAX!(
 
 macro_rules! WRITE_CLEAR_PRESET_RES_LEN {() => {6}}
 pub const WRITE_CLEAR_PRESET_RES_LEN: u8 = WRITE_CLEAR_PRESET_RES_LEN!();
+// -----
+
+
+// -----
+// Write an arbitrary wave to the device from text 
+// input on stdin.
+macro_rules! WRITE_ARBITRARY_WAVE_COMMAND {() => {"a"}}
+pub const WRITE_ARBITRARY_WAVE_COMMAND: &'static str = WRITE_ARBITRARY_WAVE_COMMAND!();
+
+// command example:
+// write arbitrary wave to slot 1:
+//   ":a01=2048,2048,...2048.\r\n"
+macro_rules! WRITE_ARBITRARY_WAVE_ARG_NUM_MIN {() => {1.0}}
+pub const WRITE_ARBITRARY_WAVE_ARG_NUM_MIN: f64 = WRITE_ARBITRARY_WAVE_ARG_NUM_MIN!();
+
+macro_rules! WRITE_ARBITRARY_WAVE_ARG_NUM_MAX {() => {60.0}}
+pub const WRITE_ARBITRARY_WAVE_ARG_NUM_MAX: f64 = WRITE_ARBITRARY_WAVE_ARG_NUM_MAX!();
+
+macro_rules! WRITE_ARBITRARY_WAVE_RES_LEN {() => {6}}
+pub const WRITE_ARBITRARY_WAVE_RES_LEN: u8 = WRITE_ARBITRARY_WAVE_RES_LEN!();
 // -----

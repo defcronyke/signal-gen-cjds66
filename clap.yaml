@@ -502,7 +502,19 @@ args:
       long: cpr
       takes_value: true
       value_name: preset_number
-      help: Clear a numbered preset. Any values saved to it will be permanently lost.
+      help: Clear a numbered preset. Any values saved to it will be permanently lost. This doesn't seem to work though.
+
+  - write_arbitrary_wave_stdin:
+      long: wws
+      takes_value: true
+      value_name: slot_number
+      help: "Write an arbitrary waveform to the device from stdin, and save it in one of the 60 slots.\nEx (using file redirection to stdin): --wws 5 < file.wav.txt"
+
+  - write_arbitrary_wavecad:
+      long: wwc
+      takes_value: true
+      value_name: slot_number
+      help: "Write an arbitrary waveform to the device from a WaveCAD (.wav) file, and save it in one of the 60 slots.\nEx: --wwc 5,file.wav"
   
   # ----- END Commands which change the device's 
   #       settings or state, but don't 
@@ -563,6 +575,6 @@ args:
       long: wav
       takes_value: true
       value_name: wav_file_path
-      help: Convert a WaveCAD file to the device's arbitrary waveform text format.
+      help: "Convert a WaveCAD file to the device's arbitrary waveform text format. It will be output in the same directory as the input file, with a .txt extension. This file can be used as stdin input with the --wws flag.\nEx: --wav file.wav"
 
   # ----- END Utility commands -----

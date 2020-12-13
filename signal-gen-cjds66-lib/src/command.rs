@@ -1,4 +1,5 @@
 extern crate serial;
+extern crate byteorder;
 
 use crate::protocol::*;
 
@@ -6,8 +7,10 @@ use std::io::prelude::*;
 use serial::prelude::*;
 use std::str;
 use std::fs;
+use std::io::{self, BufRead};
 
 use clap::{Error, ErrorKind};
+use byteorder::{ByteOrder, NativeEndian};
 
 pub fn read_machine_model(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     if verbose > 0 {
@@ -2810,7 +2813,7 @@ pub fn wav_to_txt(path: &str, verbose: u64) -> Result<String, clap::Error> {
     
     match fs::File::open(path) {
         Ok(mut file) => {
-            let mut buf = [0u8; 2048];
+            let mut buf = [0u8; 4096];
             res = file.read(&mut buf).map_or_else(
                 |e| {
                     Err(Error::with_description(&format!("failed reading file: {}: {}", path, e), ErrorKind::Io))
@@ -2826,11 +2829,15 @@ pub fn wav_to_txt(path: &str, verbose: u64) -> Result<String, clap::Error> {
 
             let mut out = String::new();
 
-            for (i, val) in buf.iter().enumerate() {
-                out += &(*val as u32 + 2048).to_string();
+            let mut outbuf = [0i16; 2048];
+
+            NativeEndian::read_i16_into(&buf, &mut outbuf);
+
+            for (i, val) in outbuf.iter().enumerate() {
+                out += &(*val + 2048).to_string();
 
                 if i < buf.len() - 1 {
-                    out += ",";
+                    out += "\n";
                 }
             }
 
@@ -2841,7 +2848,8 @@ pub fn wav_to_txt(path: &str, verbose: u64) -> Result<String, clap::Error> {
                             Err(Error::with_description(&format!("failed writing to file: {}.txt: {}", path, e), ErrorKind::Io))
                         },
                         |_res| {
-                            Ok("".to_string())
+                            // TODO: handle possible error
+                            Ok(fs::read_to_string(&format!("{}.txt", path)).unwrap())
                         }
                     );
 
@@ -2850,7 +2858,7 @@ pub fn wav_to_txt(path: &str, verbose: u64) -> Result<String, clap::Error> {
                     }
 
                     if verbose > 0 {
-                        println!("WaveCAD file converted to text and saved: {} -> {}.txt:\n\n{}\n", path, path, out);
+                        println!("\nWaveCAD file converted to text and saved: {} -> {}.txt", path, path);
                     }
                 },
 
@@ -2865,6 +2873,185 @@ pub fn wav_to_txt(path: &str, verbose: u64) -> Result<String, clap::Error> {
             res = Err(Error::with_description(&format!("failed opening file: {}: {}", path, e), ErrorKind::Io));
             return res;
         }
+    }
+
+    res
+}
+
+
+// Write an arbitrary wave to the device.
+pub fn write_arbitrary_wave(port: &mut Box<dyn SerialPort>, amount: f64, data: &[String], verbose: u64) -> Result<String, clap::Error> {
+    let command: String;
+
+    if amount < WRITE_ARBITRARY_WAVE_ARG_NUM_MIN || amount > WRITE_ARBITRARY_WAVE_ARG_NUM_MAX {
+        return Err(Error::with_description(&format!("Unsupported slot number. Must be {}-{}.", WRITE_ARBITRARY_WAVE_ARG_NUM_MIN, WRITE_ARBITRARY_WAVE_ARG_NUM_MAX), ErrorKind::InvalidValue));
+    }
+
+    if verbose > 0 {
+        println!("\nInput arbitrary waveform data (one integer from 0-4095 per line, and 2048 lines total):\n");
+    }
+
+    let amount_str = format!("{:02}", amount);
+
+    let mut arg = String::new();
+
+    let mut i = 0;
+    for line in data {
+        let line_len = line.chars().collect::<Vec<char>>().len();
+        i += 1;
+
+        if line_len < 1 {
+            break;
+        }
+
+        match line.parse::<u32>() {
+            Ok(num) => {
+                if num > 4095 {
+                    return Err(Error::with_description(&format!("Invalid arbitrary wave data. Must be 2048 lines of integers in the range of 0 - 4095: Number out of range: {}: on line: {}", line, i), ErrorKind::InvalidValue));
+                }
+
+                arg += &(line.chars().collect::<String>() + ",");
+            },
+
+            Err(e) => {
+                return Err(Error::with_description(&format!("Invalid arbitrary wave data. Must be 2048 lines of integers in the range of 0 - 4095: Invalid number: {}: on line: {}: {}", line, i, e), ErrorKind::InvalidValue));
+            }
+        }
+    }
+
+    // 2048 for stdin, 2049 for wavecad
+    if i != 2048 && i != 2049 {
+        return Err(Error::with_description(&format!("Invalid arbitrary wave data. Must be 2048 lines of integers in the range of 0 - 4095: Incorrect number of lines: {}", i), ErrorKind::InvalidValue));
+    }
+
+    arg = arg.chars().take(arg.chars().collect::<Vec<char>>().len() - 1).collect::<String>().to_string();
+
+    command = format!("{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        WRITE_ARBITRARY_WAVE_COMMAND,
+        amount_str,
+        COMMAND_SEPARATOR,
+        arg,
+        COMMAND_END,
+    );
+    
+    if verbose > 0 {
+        println!("\nWriting arbitrary wave to slot {}:\n\n{}", amount, command);
+    }
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_ARBITRARY_WAVE_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
+
+    Ok(res.to_string())
+}
+
+
+// Write an arbitrary wave to the device from a WaveCAD file.
+pub fn match_write_arbitrary_wavecad_arg(mut port: &mut Box<dyn SerialPort>, arg: &str, verbose: u64) -> Result<String, clap::Error> {
+    let arg_parts: Vec<&str> = arg.split(",").collect();
+
+    if arg_parts.len() < 2 {
+        return Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wavecad\" argument (must be {}-{},<file_path>): slot number and file path must be present and separated with a comma but no space: {}", WRITE_ARBITRARY_WAVE_ARG_NUM_MIN, WRITE_ARBITRARY_WAVE_ARG_NUM_MAX, arg), ErrorKind::InvalidValue));
+    }
+    
+    let amount = arg_parts[0];
+
+    let amount_parts: Vec<&str> = amount.split(".").collect();
+    
+    if amount_parts.len() > 1 {
+        return Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wavecad\" argument (must be {}-{}): {}: too many decimal places (0 max)", WRITE_ARBITRARY_WAVE_ARG_NUM_MIN, WRITE_ARBITRARY_WAVE_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+    }
+
+    let path = arg_parts[1];
+    
+    let res: Result<String, clap::Error>;
+    
+    match amount.parse::<f64>() {
+        Ok(amount) => {
+            match amount {
+                _y if amount >= WRITE_ARBITRARY_WAVE_ARG_NUM_MIN && amount <= WRITE_ARBITRARY_WAVE_ARG_NUM_MAX => {                    
+                    let data = wav_to_txt(path, verbose);
+
+                    if data.is_err() {
+                        return data;
+                    }
+
+                    let data: Vec<String> = data.unwrap().split("\n").map(|res| { res.to_string() }).collect();
+
+                    res = write_arbitrary_wave(&mut port, amount, &data, verbose);
+                },
+
+                _ => {
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wavecad\" argument (must be {}-{}): {}", WRITE_ARBITRARY_WAVE_ARG_NUM_MIN, WRITE_ARBITRARY_WAVE_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+                },
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wavecad\" argument (must be {}-{}): {}: {}", WRITE_ARBITRARY_WAVE_ARG_NUM_MIN, WRITE_ARBITRARY_WAVE_ARG_NUM_MAX, amount, e), ErrorKind::InvalidValue));
+        },
+    }
+
+    res
+}
+
+
+// Write an arbitrary wave to the device from stdin.
+pub fn write_arbitrary_wave_stdin(port: &mut Box<dyn SerialPort>, amount: f64, verbose: u64) -> Result<String, clap::Error> {
+    let data: Vec<String> = io::stdin().lock().lines().collect::<Result<_, _>>().map_or_else(
+        |_e| {
+            Vec::new()
+        },
+
+        |res| {
+            res
+        }
+    );
+
+    let data_len = data.len();
+
+    if data_len != 2048 {
+        return Err(Error::with_description(&format!("Invalid arbitrary wave data from stdin. Must be 2048 lines of integers in the range of 0 - 4095: Incorrect number of lines: {}", data_len), ErrorKind::InvalidValue));
+    }
+    
+    return write_arbitrary_wave(port, amount, &data[0..2048], verbose);
+}
+
+pub fn match_write_arbitrary_wave_stdin_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, verbose: u64) -> Result<String, clap::Error> {
+    let amount_parts: Vec<&str> = amount.split(".").collect();
+    
+    if amount_parts.len() > 1 {
+        return Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wave\" argument (must be {}-{}): {}: too many decimal places (0 max)", WRITE_ARBITRARY_WAVE_ARG_NUM_MIN, WRITE_ARBITRARY_WAVE_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+    }
+    
+    let res: Result<String, clap::Error>;
+    
+    match amount.parse::<f64>() {
+        Ok(amount) => {
+            match amount {
+                _y if amount >= WRITE_ARBITRARY_WAVE_ARG_NUM_MIN && amount <= WRITE_ARBITRARY_WAVE_ARG_NUM_MAX => {                    
+                    res = write_arbitrary_wave_stdin(&mut port, amount, verbose);
+                },
+
+                _ => {
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wave\" argument (must be {}-{}): {}", WRITE_ARBITRARY_WAVE_ARG_NUM_MIN, WRITE_ARBITRARY_WAVE_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+                },
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wave\" argument (must be {}-{}): {}: {}", WRITE_ARBITRARY_WAVE_ARG_NUM_MIN, WRITE_ARBITRARY_WAVE_ARG_NUM_MAX, amount, e), ErrorKind::InvalidValue));
+        },
     }
 
     res

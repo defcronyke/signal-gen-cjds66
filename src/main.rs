@@ -73,7 +73,29 @@ fn real_main() -> Result<i32, error::Error> {
 
     /* ----- END Command that sets the verbosity 
              level.                              ----- */
+
+
     
+    /* ----- Utility commands ----- */
+
+    // If wave to txt is requested.
+    if matches.is_present("wav_to_txt") {
+        let path = matches.value_of("wav_to_txt").unwrap_or_default();
+
+        match wav_to_txt(path, verbose) {
+            Ok(_res) => {
+            },
+            Err(e) => {
+                if e.kind != ErrorKind::Io {
+                    println!("{}", e);
+                }
+
+                err = Some(error::Error::from_clap_error(e));
+            },
+        }
+    }
+
+    /* ----- END Utility commands ----- */    
 
 
 
@@ -940,6 +962,36 @@ fn real_main() -> Result<i32, error::Error> {
                 }
 
 
+                // If write arbitrary wave stdin is requested.
+                if matches.is_present("write_arbitrary_wave_stdin") {
+                    let arg = matches.value_of("write_arbitrary_wave_stdin").unwrap_or_default();
+
+                    match match_write_arbitrary_wave_stdin_arg(&mut port, arg, verbose) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            println!("{}", err.as_ref().unwrap());
+                        },
+                    }
+                }
+
+
+                // If write arbitrary wavecad is requested.
+                if matches.is_present("write_arbitrary_wavecad") {
+                    let arg = matches.value_of("write_arbitrary_wavecad").unwrap_or_default();
+
+                    match match_write_arbitrary_wavecad_arg(&mut port, arg, verbose) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            println!("{}", err.as_ref().unwrap());
+                        },
+                    }
+                }
+
+
                 /* ----- END Commands which change the device's 
                          settings or state, but don't  
                          activate the channels.                 ----- */
@@ -1060,29 +1112,6 @@ fn real_main() -> Result<i32, error::Error> {
 
                 /* ----- END Commands which set one or both of the 
                          device's channels ON.                     ----- */
-
-                         
-                
-                /* ----- Utility commands ----- */
-
-                // If wave to txt is requested.
-                if matches.is_present("wav_to_txt") {
-                    let path = matches.value_of("wav_to_txt").unwrap_or_default();
-
-                    match wav_to_txt(path, verbose) {
-                        Ok(_res) => {
-                        },
-                        Err(e) => {
-                            if e.kind != ErrorKind::Io {
-                                println!("{}", e);
-                            }
-
-                            err = Some(error::Error::from_clap_error(e));
-                        },
-                    }
-                }
-
-                /* ----- END Utility commands ----- */
 
                 err.map_or_else(|| { Ok(0) }, |v| { Err(v) })
             },
