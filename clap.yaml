@@ -475,10 +475,34 @@ args:
       takes_value: true
       value_name: pulse_offset_percent
       help: Set the offset for the pulse function in percent.
+
+  - set_pulse_amplitude:
+      long: pa
+      takes_value: true
+      value_name: pulse_amplitude_volts
+      help: Set the amplitude for the pulse function in volts.
     
   - clear_measurement_count:
       long: cc
       help: Clear the count on measurement mode.
+
+  - save_preset:
+      long: spr
+      takes_value: true
+      value_name: preset_number
+      help: Save all the current values on the device as a numbered preset.
+
+  - recall_preset:
+      long: rpr
+      takes_value: true
+      value_name: preset_number
+      help: Recall all the values on the device from a numbered preset.
+
+  - clear_preset:
+      long: cpr
+      takes_value: true
+      value_name: preset_number
+      help: Clear a numbered preset. Any values saved to it will be permanently lost.
   
   # ----- END Commands which change the device's 
   #       settings or state, but don't 

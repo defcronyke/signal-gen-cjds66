@@ -2517,3 +2517,282 @@ pub fn match_set_pulse_offset_arg(mut port: &mut Box<dyn SerialPort>, amount: &s
 
     res
 }
+
+
+// Set the pulse amplitude in volts.
+pub fn set_pulse_amplitude(port: &mut Box<dyn SerialPort>, amount: f64, verbose: u64) -> Result<String, clap::Error> {
+    let command: String;
+
+    if amount < WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MIN * 100.0 || amount > WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MAX * 100.0 {
+        return Err(Error::with_description(&format!("Unsupported pulse amplitude. Must be {}-{}.", WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MIN, WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MAX), ErrorKind::InvalidValue));
+    }
+
+    command = format!("{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        COMMAND_WRITE,
+        WRITE_PULSE_AMPLITUDE_COMMAND,
+        COMMAND_SEPARATOR,
+        amount,
+        COMMAND_END,
+    );
+    
+    if verbose > 0 {
+        println!("\nSetting pulse amplitude: {}:\n{}", amount, command);
+    }
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_PULSE_AMPLITUDE_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
+
+    Ok(res.to_string())
+}
+
+pub fn match_set_pulse_amplitude_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, verbose: u64) -> Result<String, clap::Error> {
+    let amount_parts: Vec<&str> = amount.split(".").collect();
+    
+    if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
+        return Err(Error::with_description(&format!("unsupported value passed to \"set pulse amplitude\" argument (must be {}-{}): {}: too many decimal places (2 max)", WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MIN, WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MAX, amount), ErrorKind::InvalidValue));
+    }
+    
+    let res: Result<String, clap::Error>;
+    
+    match amount.parse::<f64>() {
+        Ok(amount) => {
+            match amount {
+                _y if amount >= WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MIN && amount <= WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MAX => {
+                    let amount_rounded = ((amount * 100.0 * 100.0).round() / 100.0).round();
+                    
+                    res = set_pulse_amplitude(&mut port, amount_rounded, verbose);
+                },
+
+                _ => {
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse amplitude\" argument (must be {}-{}): {}", WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MIN, WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MAX, amount), ErrorKind::InvalidValue));
+                },
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse amplitude\" argument (must be {}-{}): {}: {}", WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MIN, WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MAX, amount, e), ErrorKind::InvalidValue));
+        },
+    }
+
+    res
+}
+
+
+// Save all values as a numbered preset.
+pub fn save_preset(port: &mut Box<dyn SerialPort>, amount: f64, verbose: u64) -> Result<String, clap::Error> {
+    let command: String;
+
+    if amount < WRITE_SAVE_PRESET_ARG_NUM_MIN || amount > WRITE_SAVE_PRESET_ARG_NUM_MAX {
+        return Err(Error::with_description(&format!("Unsupported preset number. Must be {}-{}.", WRITE_SAVE_PRESET_ARG_NUM_MIN, WRITE_SAVE_PRESET_ARG_NUM_MAX), ErrorKind::InvalidValue));
+    }
+
+    command = format!("{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        COMMAND_WRITE,
+        WRITE_SAVE_PRESET_COMMAND,
+        COMMAND_SEPARATOR,
+        amount,
+        COMMAND_END,
+    );
+    
+    if verbose > 0 {
+        println!("\nSaving values as preset number: {}:\n{}", amount, command);
+    }
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_SAVE_PRESET_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
+
+    Ok(res.to_string())
+}
+
+pub fn match_save_preset_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, verbose: u64) -> Result<String, clap::Error> {
+    let amount_parts: Vec<&str> = amount.split(".").collect();
+    
+    if amount_parts.len() > 1 {
+        return Err(Error::with_description(&format!("unsupported value passed to \"save preset\" argument (must be {}-{}): {}: too many decimal places (0 max)", WRITE_SAVE_PRESET_ARG_NUM_MIN, WRITE_SAVE_PRESET_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+    }
+    
+    let res: Result<String, clap::Error>;
+    
+    match amount.parse::<f64>() {
+        Ok(amount) => {
+            match amount {
+                _y if amount >= WRITE_SAVE_PRESET_ARG_NUM_MIN && amount <= WRITE_SAVE_PRESET_ARG_NUM_MAX => {                    
+                    res = save_preset(&mut port, amount, verbose);
+                },
+
+                _ => {
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"save preset\" argument (must be {}-{}): {}", WRITE_SAVE_PRESET_ARG_NUM_MIN, WRITE_SAVE_PRESET_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+                },
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::with_description(&format!("unsupported value passed to \"save preset\" argument (must be {}-{}): {}: {}", WRITE_SAVE_PRESET_ARG_NUM_MIN, WRITE_SAVE_PRESET_ARG_NUM_MAX, amount, e), ErrorKind::InvalidValue));
+        },
+    }
+
+    res
+}
+
+
+// Recall all values from a numbered preset.
+pub fn recall_preset(port: &mut Box<dyn SerialPort>, amount: f64, verbose: u64) -> Result<String, clap::Error> {
+    let command: String;
+
+    if amount < WRITE_RECALL_PRESET_ARG_NUM_MIN || amount > WRITE_RECALL_PRESET_ARG_NUM_MAX {
+        return Err(Error::with_description(&format!("Unsupported preset number. Must be {}-{}.", WRITE_RECALL_PRESET_ARG_NUM_MIN, WRITE_RECALL_PRESET_ARG_NUM_MAX), ErrorKind::InvalidValue));
+    }
+
+    command = format!("{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        COMMAND_WRITE,
+        WRITE_RECALL_PRESET_COMMAND,
+        COMMAND_SEPARATOR,
+        amount,
+        COMMAND_END,
+    );
+    
+    if verbose > 0 {
+        println!("\nRecalling values from preset number: {}:\n{}", amount, command);
+    }
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_RECALL_PRESET_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
+
+    Ok(res.to_string())
+}
+
+pub fn match_recall_preset_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, verbose: u64) -> Result<String, clap::Error> {
+    let amount_parts: Vec<&str> = amount.split(".").collect();
+    
+    if amount_parts.len() > 1 {
+        return Err(Error::with_description(&format!("unsupported value passed to \"recall preset\" argument (must be {}-{}): {}: too many decimal places (0 max)", WRITE_RECALL_PRESET_ARG_NUM_MIN, WRITE_RECALL_PRESET_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+    }
+    
+    let res: Result<String, clap::Error>;
+    
+    match amount.parse::<f64>() {
+        Ok(amount) => {
+            match amount {
+                _y if amount >= WRITE_RECALL_PRESET_ARG_NUM_MIN && amount <= WRITE_RECALL_PRESET_ARG_NUM_MAX => {                    
+                    res = recall_preset(&mut port, amount, verbose);
+                },
+
+                _ => {
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"recall preset\" argument (must be {}-{}): {}", WRITE_RECALL_PRESET_ARG_NUM_MIN, WRITE_RECALL_PRESET_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+                },
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::with_description(&format!("unsupported value passed to \"recall preset\" argument (must be {}-{}): {}: {}", WRITE_RECALL_PRESET_ARG_NUM_MIN, WRITE_RECALL_PRESET_ARG_NUM_MAX, amount, e), ErrorKind::InvalidValue));
+        },
+    }
+
+    res
+}
+
+
+// Clear a numbered preset.
+//
+// NOTE: This doesn't seem to work. It seems to do nothing even though 
+// it returns ok. This feature on the device's panel does work however.
+// It doesn't work in the official software either, so the spec must be
+// wrong.
+pub fn clear_preset(port: &mut Box<dyn SerialPort>, amount: f64, verbose: u64) -> Result<String, clap::Error> {
+    let command: String;
+
+    if amount < WRITE_CLEAR_PRESET_ARG_NUM_MIN || amount > WRITE_CLEAR_PRESET_ARG_NUM_MAX {
+        return Err(Error::with_description(&format!("Unsupported preset number. Must be {}-{}.", WRITE_CLEAR_PRESET_ARG_NUM_MIN, WRITE_CLEAR_PRESET_ARG_NUM_MAX), ErrorKind::InvalidValue));
+    }
+
+    command = format!("{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        COMMAND_WRITE,
+        WRITE_CLEAR_PRESET_COMMAND,
+        COMMAND_SEPARATOR,
+        amount,
+        COMMAND_END,
+    );
+    
+    if verbose > 0 {
+        println!("\nClearing preset number: {}:\n{}", amount, command);
+    }
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..WRITE_CLEAR_PRESET_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    }
+
+    Ok(res.to_string())
+}
+
+pub fn match_clear_preset_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, verbose: u64) -> Result<String, clap::Error> {
+    let amount_parts: Vec<&str> = amount.split(".").collect();
+    
+    if amount_parts.len() > 1 {
+        return Err(Error::with_description(&format!("unsupported value passed to \"clear preset\" argument (must be {}-{}): {}: too many decimal places (0 max)", WRITE_CLEAR_PRESET_ARG_NUM_MIN, WRITE_CLEAR_PRESET_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+    }
+    
+    let res: Result<String, clap::Error>;
+    
+    match amount.parse::<f64>() {
+        Ok(amount) => {
+            match amount {
+                _y if amount >= WRITE_CLEAR_PRESET_ARG_NUM_MIN && amount <= WRITE_CLEAR_PRESET_ARG_NUM_MAX => {                    
+                    res = clear_preset(&mut port, amount, verbose);
+                },
+
+                _ => {
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"clear preset\" argument (must be {}-{}): {}", WRITE_CLEAR_PRESET_ARG_NUM_MIN, WRITE_CLEAR_PRESET_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+                },
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::with_description(&format!("unsupported value passed to \"clear preset\" argument (must be {}-{}): {}: {}", WRITE_CLEAR_PRESET_ARG_NUM_MIN, WRITE_CLEAR_PRESET_ARG_NUM_MAX, amount, e), ErrorKind::InvalidValue));
+        },
+    }
+
+    res
+}

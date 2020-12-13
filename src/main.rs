@@ -134,7 +134,6 @@ fn real_main() -> Result<i32, error::Error> {
                     read_machine_number(&mut port, verbose).unwrap();
                 }
 
-
                 /* ----- END Commands which retrieve values from 
                          the device.                             ----- */
 
@@ -868,9 +867,69 @@ fn real_main() -> Result<i32, error::Error> {
                 }
 
 
+                // If set pulse amplitude is requested.
+                if matches.is_present("set_pulse_amplitude") {
+                    let amount = matches.value_of("set_pulse_amplitude").unwrap_or_default();
+
+                    match match_set_pulse_amplitude_arg(&mut port, amount, verbose) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            println!("{}", err.as_ref().unwrap());
+                        },
+                    }
+                }
+
+
                 // If set measurement count clear is requested.
                 if matches.is_present("clear_measurement_count") {
                     match set_measurement_count_clear(&mut port, verbose) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            println!("{}", err.as_ref().unwrap());
+                        },
+                    }
+                }
+
+
+                // If save preset is requested.
+                if matches.is_present("save_preset") {
+                    let amount = matches.value_of("save_preset").unwrap_or_default();
+
+                    match match_save_preset_arg(&mut port, amount, verbose) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            println!("{}", err.as_ref().unwrap());
+                        },
+                    }
+                }
+
+
+                // If recall preset is requested.
+                if matches.is_present("recall_preset") {
+                    let amount = matches.value_of("recall_preset").unwrap_or_default();
+
+                    match match_recall_preset_arg(&mut port, amount, verbose) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            println!("{}", err.as_ref().unwrap());
+                        },
+                    }
+                }
+
+
+                // If clear preset is requested.
+                if matches.is_present("clear_preset") {
+                    let amount = matches.value_of("clear_preset").unwrap_or_default();
+
+                    match match_clear_preset_arg(&mut port, amount, verbose) {
                         Ok(_res) => {
                         },
                         Err(e) => {

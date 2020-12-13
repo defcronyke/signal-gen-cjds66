@@ -1213,3 +1213,79 @@ pub const WRITE_PULSE_OFFSET_ARG_PERCENT_MAX: f64 = WRITE_PULSE_OFFSET_ARG_PERCE
 macro_rules! WRITE_PULSE_OFFSET_RES_LEN {() => {6}}
 pub const WRITE_PULSE_OFFSET_RES_LEN: u8 = WRITE_PULSE_OFFSET_RES_LEN!();
 // -----
+
+
+// -----
+// Set pulse amplitude in volts.
+macro_rules! WRITE_PULSE_AMPLITUDE_COMMAND {() => {"48"}}
+pub const WRITE_PULSE_AMPLITUDE_COMMAND: &'static str = WRITE_PULSE_AMPLITUDE_COMMAND!();
+
+// command example:
+// 5 volts:
+//   ":w48=500.\r\n"
+macro_rules! WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MIN {() => {0.0}}
+pub const WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MIN: f64 = WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MIN!();
+
+macro_rules! WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MAX {() => {10.0}}
+pub const WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MAX: f64 = WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MAX!();
+
+macro_rules! WRITE_PULSE_AMPLITUDE_RES_LEN {() => {6}}
+pub const WRITE_PULSE_AMPLITUDE_RES_LEN: u8 = WRITE_PULSE_AMPLITUDE_RES_LEN!();
+// -----
+
+
+// -----
+// Save all values as a numbered preset.
+macro_rules! WRITE_SAVE_PRESET_COMMAND {() => {"70"}}
+pub const WRITE_SAVE_PRESET_COMMAND: &'static str = WRITE_SAVE_PRESET_COMMAND!();
+
+// command example:
+// save as preset 5:
+//   ":w70=5.\r\n"
+macro_rules! WRITE_SAVE_PRESET_ARG_NUM_MIN {() => {0.0}}
+pub const WRITE_SAVE_PRESET_ARG_NUM_MIN: f64 = WRITE_SAVE_PRESET_ARG_NUM_MIN!();
+
+macro_rules! WRITE_SAVE_PRESET_ARG_NUM_MAX {() => {99.0}}
+pub const WRITE_SAVE_PRESET_ARG_NUM_MAX: f64 = WRITE_SAVE_PRESET_ARG_NUM_MAX!();
+
+macro_rules! WRITE_SAVE_PRESET_RES_LEN {() => {6}}
+pub const WRITE_SAVE_PRESET_RES_LEN: u8 = WRITE_SAVE_PRESET_RES_LEN!();
+// -----
+
+
+// -----
+// Recall all values from a numbered preset.
+macro_rules! WRITE_RECALL_PRESET_COMMAND {() => {"71"}}
+pub const WRITE_RECALL_PRESET_COMMAND: &'static str = WRITE_RECALL_PRESET_COMMAND!();
+
+// command example:
+// recall preset 5:
+//   ":w71=5.\r\n"
+macro_rules! WRITE_RECALL_PRESET_ARG_NUM_MIN {() => {0.0}}
+pub const WRITE_RECALL_PRESET_ARG_NUM_MIN: f64 = WRITE_RECALL_PRESET_ARG_NUM_MIN!();
+
+macro_rules! WRITE_RECALL_PRESET_ARG_NUM_MAX {() => {99.0}}
+pub const WRITE_RECALL_PRESET_ARG_NUM_MAX: f64 = WRITE_RECALL_PRESET_ARG_NUM_MAX!();
+
+macro_rules! WRITE_RECALL_PRESET_RES_LEN {() => {6}}
+pub const WRITE_RECALL_PRESET_RES_LEN: u8 = WRITE_RECALL_PRESET_RES_LEN!();
+// -----
+
+
+// -----
+// Clear a numbered preset.
+macro_rules! WRITE_CLEAR_PRESET_COMMAND {() => {"72"}}
+pub const WRITE_CLEAR_PRESET_COMMAND: &'static str = WRITE_CLEAR_PRESET_COMMAND!();
+
+// command example:
+// clear preset 5:
+//   ":w72=5.\r\n"
+macro_rules! WRITE_CLEAR_PRESET_ARG_NUM_MIN {() => {0.0}}
+pub const WRITE_CLEAR_PRESET_ARG_NUM_MIN: f64 = WRITE_CLEAR_PRESET_ARG_NUM_MIN!();
+
+macro_rules! WRITE_CLEAR_PRESET_ARG_NUM_MAX {() => {99.0}}
+pub const WRITE_CLEAR_PRESET_ARG_NUM_MAX: f64 = WRITE_CLEAR_PRESET_ARG_NUM_MAX!();
+
+macro_rules! WRITE_CLEAR_PRESET_RES_LEN {() => {6}}
+pub const WRITE_CLEAR_PRESET_RES_LEN: u8 = WRITE_CLEAR_PRESET_RES_LEN!();
+// -----
