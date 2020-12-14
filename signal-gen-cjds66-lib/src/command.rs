@@ -3097,10 +3097,8 @@ pub fn match_write_arbitrary_wavecad_arg(mut port: &mut Box<dyn SerialPort>, arg
     match amount.parse::<f64>() {
         Ok(amount) => {
             match amount {
-                _y if amount >= WRITE_ARBITRARY_WAVE_ARG_NUM_MIN && amount <= WRITE_ARBITRARY_WAVE_ARG_NUM_MAX => {                    
-                    let output_binary = false;
-                    
-                    let data = txt_to_wav(path, output_binary, verbose);
+                _y if amount >= WRITE_ARBITRARY_WAVE_ARG_NUM_MIN && amount <= WRITE_ARBITRARY_WAVE_ARG_NUM_MAX => {
+                    let data = wav_to_txt(path, verbose);
 
                     if data.is_err() {
                         return data;
