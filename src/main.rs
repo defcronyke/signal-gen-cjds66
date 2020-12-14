@@ -78,12 +78,33 @@ fn real_main() -> Result<i32, error::Error> {
     
     /* ----- Utility commands ----- */
 
-    // If wave to txt is requested.
+    // If wav to txt is requested.
     if matches.is_present("wav_to_txt") {
         let path = matches.value_of("wav_to_txt").unwrap_or_default();
 
         match wav_to_txt(path, verbose) {
             Ok(_res) => {
+                return Ok(0);
+            },
+            Err(e) => {
+                if e.kind != ErrorKind::Io {
+                    println!("{}", e);
+                }
+
+                err = Some(error::Error::from_clap_error(e));
+            },
+        }
+    }
+
+    // If txt to wav is requested.
+    if matches.is_present("txt_to_wav") {
+        let path = matches.value_of("txt_to_wav").unwrap_or_default();
+
+        let output_binary = matches.is_present("output_binary");
+
+        match txt_to_wav(path, output_binary, verbose) {
+            Ok(_res) => {
+                return Ok(0);
             },
             Err(e) => {
                 if e.kind != ErrorKind::Io {

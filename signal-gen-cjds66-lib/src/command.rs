@@ -1,6 +1,7 @@
 extern crate serial;
 extern crate byteorder;
 
+use crate::util::*;
 use crate::protocol::*;
 
 use std::io::prelude::*;
@@ -10,7 +11,7 @@ use std::fs;
 use std::io::{self, BufRead};
 
 use clap::{Error, ErrorKind};
-use byteorder::{ByteOrder, NativeEndian};
+use byteorder::{ByteOrder, LittleEndian};
 
 pub fn read_machine_model(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
     if verbose > 0 {
@@ -2802,7 +2803,8 @@ pub fn match_clear_preset_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, 
 }
 
 
-// Convert a WaveCAD file to the device's arbitrary waveform text format.
+// Convert a WaveCAD file to the device's arbitrary 
+// waveform text file format.
 pub fn wav_to_txt(path: &str, verbose: u64) -> Result<String, clap::Error> {
     let mut res: Result<String, clap::Error>;
 
@@ -2810,6 +2812,8 @@ pub fn wav_to_txt(path: &str, verbose: u64) -> Result<String, clap::Error> {
         res = Err(Error::with_description(&format!("unsupported path passed as \"wav_to_txt\" argument (must not be blank): {}", path), ErrorKind::InvalidValue));
         return res;
     }
+
+    let new_path: &str = &change_file_extension(path, ".txt");
     
     match fs::File::open(path) {
         Ok(mut file) => {
@@ -2831,7 +2835,7 @@ pub fn wav_to_txt(path: &str, verbose: u64) -> Result<String, clap::Error> {
 
             let mut outbuf = [0i16; 2048];
 
-            NativeEndian::read_i16_into(&buf, &mut outbuf);
+            LittleEndian::read_i16_into(&buf, &mut outbuf);
 
             for (i, val) in outbuf.iter().enumerate() {
                 out += &(*val + 2048).to_string();
@@ -2841,15 +2845,14 @@ pub fn wav_to_txt(path: &str, verbose: u64) -> Result<String, clap::Error> {
                 }
             }
 
-            match fs::File::create(&format!("{}.txt", path)) {
+            match fs::File::create(&format!("{}", new_path)) {
                 Ok(mut outfile) => {
                     res = outfile.write_all(out.as_bytes()).map_or_else(
                         |e| {
-                            Err(Error::with_description(&format!("failed writing to file: {}.txt: {}", path, e), ErrorKind::Io))
+                            Err(Error::with_description(&format!("failed writing to file: {}: {}", new_path, e), ErrorKind::Io))
                         },
                         |_res| {
-                            // TODO: handle possible error
-                            Ok(fs::read_to_string(&format!("{}.txt", path)).unwrap())
+                            Ok(fs::read_to_string(&format!("{}", new_path)).unwrap())
                         }
                     );
 
@@ -2858,12 +2861,127 @@ pub fn wav_to_txt(path: &str, verbose: u64) -> Result<String, clap::Error> {
                     }
 
                     if verbose > 0 {
-                        println!("\nWaveCAD file converted to text and saved: {} -> {}.txt", path, path);
+                        println!("\nWaveCAD file converted to text and saved: {} -> {}", path, new_path);
                     }
                 },
 
                 Err(e) => {
-                    res = Err(Error::with_description(&format!("failed creating file: {}.txt: {}", path, e), ErrorKind::Io));
+                    res = Err(Error::with_description(&format!("failed creating file: {}: {}", new_path, e), ErrorKind::Io));
+                    return res;
+                }
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::with_description(&format!("failed opening file: {}: {}", path, e), ErrorKind::Io));
+            return res;
+        }
+    }
+
+    res
+}
+
+
+// Convert the device's arbitrary waveform text file format 
+// to a WaveCAD file.
+pub fn txt_to_wav(path: &str, output_binary: bool, verbose: u64) -> Result<String, clap::Error> {
+    let mut res: Result<String, clap::Error>;
+
+    if path == "" {
+        return Err(Error::with_description(&format!("unsupported path passed as \"txt_to_wav\" argument (must not be blank): {}", path), ErrorKind::InvalidValue));
+    }
+
+    let new_path: &str = &change_file_extension(path, ".wav");
+    
+    match fs::File::open(path) {
+        Ok(mut file) => {
+            // Buffer to hold the input file contents.
+            let mut stringbuf = String::new();
+            res = file.read_to_string(&mut stringbuf).map_or_else(
+                |e| {
+                    Err(Error::with_description(&format!("failed reading file: {}: {}", path, e), ErrorKind::Io))
+                },
+                |_res| {
+                    Ok("".to_string())
+                }
+            );
+
+            if res.is_err() {
+                return res;
+            }
+
+            // Split the input file buffer on newlines.
+            let stringbuf: Vec<&str> = stringbuf.split("\n").collect();
+            
+            // Convert the input file to WaveCAD format.
+            let buf: Vec<i16> = stringbuf.iter().map(
+                |val| { 
+                    val.chars()
+                    .map(
+                        |c| {
+                            // Convert number characters to integers.
+                            c.to_digit(10).unwrap() as i16 
+                        }
+                    )
+                    .fold(
+                        // Join individual digits into full numbers.
+                        0, 
+                        |acc, elem| { 
+                            acc * 10 + elem 
+                        }) 
+                    }
+                )
+                .map(
+                    // Adjust the numbers so they're in the correct 
+                    // range for the WaveCAD format.
+                    |n| { 
+                        n - 2048 
+                    }
+                )
+                .collect();
+            
+            // Remove trailing 0 because of newline.
+            let buf = &buf[..buf.len() - 1];
+
+            // Buffer to hold the final WaveCAD format bytes.
+            let mut outbuf = [0u8; 4096];
+
+            // Write to the WaveCAD buffer.
+            LittleEndian::write_i16_into(&buf, &mut outbuf);
+
+            // Save the new WaveCAD file.
+            match fs::File::create(&format!("{}", new_path)) {
+                Ok(mut outfile) => {
+                    res = outfile.write_all(&outbuf).map_or_else(
+                        |e| {
+                            Err(Error::with_description(&format!("failed writing to file: {}: {}", new_path, e), ErrorKind::Io))
+                        },
+                        |_res| {
+                            if output_binary {
+                                if verbose > 0 {
+                                    return Err(Error::with_description(&format!("failed outputting binary to stdout: you can't do this when the verbosity level is greater than 0"), ErrorKind::InvalidValue));
+                                }
+
+                                let mut out = std::io::stdout();
+                                out.write_all(&outbuf).unwrap();
+                                out.flush().unwrap();
+                            }
+
+                            Ok("".to_string())
+                        }
+                    );
+
+                    if res.is_err() {
+                        return res;
+                    }
+
+                    if verbose > 0 {
+                        println!("\nText file converted to WaveCAD and saved: {} -> {}", path, new_path);
+                    }
+                },
+
+                Err(e) => {
+                    res = Err(Error::with_description(&format!("failed creating file: {}: {}", new_path, e), ErrorKind::Io));
                     return res;
                 }
             }
@@ -2980,7 +3098,9 @@ pub fn match_write_arbitrary_wavecad_arg(mut port: &mut Box<dyn SerialPort>, arg
         Ok(amount) => {
             match amount {
                 _y if amount >= WRITE_ARBITRARY_WAVE_ARG_NUM_MIN && amount <= WRITE_ARBITRARY_WAVE_ARG_NUM_MAX => {                    
-                    let data = wav_to_txt(path, verbose);
+                    let output_binary = false;
+                    
+                    let data = txt_to_wav(path, output_binary, verbose);
 
                     if data.is_err() {
                         return data;

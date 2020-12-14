@@ -77,6 +77,27 @@ args:
   #       level.                              -----
 
 
+  # ----- Utility commands -----
+
+  - wav_to_txt:
+      long: wav-to-txt
+      takes_value: true
+      value_name: wav_file_path
+      help: "Convert a WaveCAD file to the device's arbitrary waveform text file format. It will be output in the same directory as the input file, with a .txt extension. This file can be used as stdin input to upload a wave to the device with the --wws flag.\nEx: --wav-to-txt file.wav"
+
+  - txt_to_wav:
+      long: txt-to-wav
+      takes_value: true
+      value_name: txt_file_path
+      help: "Convert the device's arbitrary waveform text file format to a WaveCAD file. It will be output in the same directory as the input file, with the .txt extension removed, leaving it with just a .wav extension. This file can be used as input to upload a wave to the device with the --wwc flag.\nEx: --txt-to-wav file.wav.txt"
+
+  - output_binary:
+      long: bin
+      help: "Send binary output to stdout. Currently only works with the --txt-to-wav flag. You should probably pipe this to another command or redirect it to a file, otherwise it might break your terminal session."
+
+  # ----- END Utility commands -----
+
+
   # ----- Command that selects the devices 
   #       to use.                          -----
 
@@ -573,14 +594,3 @@ args:
 
   # ----- END Commands which set one or both of the 
   #       device's channels ON or OFF.              -----
-
-
-  # ----- Utility commands -----
-
-  - wav_to_txt:
-      long: wav
-      takes_value: true
-      value_name: wav_file_path
-      help: "Convert a WaveCAD file to the device's arbitrary waveform text format. It will be output in the same directory as the input file, with a .txt extension. This file can be used as stdin input with the --wws flag.\nEx: --wav file.wav"
-
-  # ----- END Utility commands -----

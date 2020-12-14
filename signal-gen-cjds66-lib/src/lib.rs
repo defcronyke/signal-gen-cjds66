@@ -2,6 +2,7 @@
 extern crate bitflags;
 extern crate clap;
 
+pub mod util;
 pub mod serial;
 pub mod protocol;
 pub mod command;
