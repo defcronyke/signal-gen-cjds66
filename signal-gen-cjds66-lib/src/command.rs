@@ -3056,3 +3056,120 @@ pub fn match_write_arbitrary_wave_stdin_arg(mut port: &mut Box<dyn SerialPort>, 
 
     res
 }
+
+
+// Read an arbitrary wave from the device.
+pub fn read_arbitrary_wave(port: &mut Box<dyn SerialPort>, amount: f64, verbose: u64) -> Result<String, clap::Error> {
+    let command: String;
+
+    if amount < READ_ARBITRARY_WAVE_ARG_NUM_MIN || amount > READ_ARBITRARY_WAVE_ARG_NUM_MAX {
+        return Err(Error::with_description(&format!("Unsupported slot number. Must be {}-{}.", READ_ARBITRARY_WAVE_ARG_NUM_MIN, READ_ARBITRARY_WAVE_ARG_NUM_MAX), ErrorKind::InvalidValue));
+    }
+
+    let amount_str = format!("{:02}", amount);
+
+    command = format!("{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        READ_ARBITRARY_WAVE_COMMAND,
+        amount_str,
+        COMMAND_SEPARATOR,
+        READ_ARBITRARY_WAVE_ARG2,
+        COMMAND_END,
+    );
+    
+    if verbose > 0 {
+        println!("\nReading arbitrary wave from slot: {}:\n{}", amount, command);
+    }
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..READ_ARBITRARY_WAVE_RES_LEN).map(|_val| { 0u8 }).collect();
+
+    port.write(&inbuf[..])?;
+    let mut n = 0;
+    let mut chunk: &str;
+
+    while n < READ_ARBITRARY_WAVE_RES_LEN as usize {
+        match port.read(&mut outbuf[n..]) {
+            Ok(val) => {
+                // Track buffer position.
+                n += val;
+                
+                // Count number of commas to detect end of buffer.
+                chunk = str::from_utf8(&outbuf[..]).unwrap();
+                let num_commas = chunk.matches(',').count();
+                if num_commas == 2048 {
+                    if verbose > 0 {
+                        println!("\nReached end of buffer: Detected all expected commas\n");
+                    }
+
+                    break;
+                }
+            },
+
+            Err(e) => {
+                return Err(Error::with_description(&format!("Reached end of buffer unexpectedly: {}.", e), ErrorKind::InvalidValue));
+            }
+        }
+    }
+
+    let res = str::from_utf8(&outbuf[..n]).unwrap();
+
+    if verbose > 0 {
+        println!("Response size: {} bytes\n", n);
+        println!("Response:");
+        println!("{}\n", res);
+    }
+
+    let res_parts: Vec<&str> = res.split("=").collect();
+    
+    if res_parts.len() < 2 {
+        return Err(Error::with_description(&format!("Invalid response from device: {}", res), ErrorKind::Io));
+    }
+
+    let res_data: Vec<&str> = res_parts[1].split(",").collect();
+    let res_data = &res_data[..res_data.len() - 1];
+
+    let res_str = res_data.join("\n");
+
+    if verbose > 0 {
+        println!("\nResponse in .txt file format:\n");
+    }
+
+    println!("{}", res_str);
+
+    if verbose > 0 {
+        println!("");
+    }
+
+    Ok(res_str)
+}
+
+pub fn match_read_arbitrary_wave_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, verbose: u64) -> Result<String, clap::Error> {
+    let amount_parts: Vec<&str> = amount.split(".").collect();
+    
+    if amount_parts.len() > 1 {
+        return Err(Error::with_description(&format!("unsupported value passed to \"read arbitrary wave\" argument (must be {}-{}): {}: too many decimal places (0 max)", WRITE_ARBITRARY_WAVE_ARG_NUM_MIN, WRITE_ARBITRARY_WAVE_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+    }
+    
+    let res: Result<String, clap::Error>;
+    
+    match amount.parse::<f64>() {
+        Ok(amount) => {
+            match amount {
+                _y if amount >= READ_ARBITRARY_WAVE_ARG_NUM_MIN && amount <= READ_ARBITRARY_WAVE_ARG_NUM_MAX => {                    
+                    res = read_arbitrary_wave(&mut port, amount, verbose);
+                },
+
+                _ => {
+                    res = Err(Error::with_description(&format!("unsupported value passed to \"read arbitrary wave\" argument (must be {}-{}): {}", READ_ARBITRARY_WAVE_ARG_NUM_MIN, READ_ARBITRARY_WAVE_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+                },
+            }
+        },
+
+        Err(e) => {
+            res = Err(Error::with_description(&format!("unsupported value passed to \"read arbitrary wave\" argument (must be {}-{}): {}: {}", READ_ARBITRARY_WAVE_ARG_NUM_MIN, READ_ARBITRARY_WAVE_ARG_NUM_MAX, amount, e), ErrorKind::InvalidValue));
+        },
+    }
+
+    res
+}

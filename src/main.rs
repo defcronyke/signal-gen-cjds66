@@ -156,6 +156,22 @@ fn real_main() -> Result<i32, error::Error> {
                     read_machine_number(&mut port, verbose).unwrap();
                 }
 
+
+                // If read arbitrary wave is requested.
+                if matches.is_present("read_arbitrary_wave") {
+                    let arg = matches.value_of("read_arbitrary_wave").unwrap_or_default();
+
+                    match match_read_arbitrary_wave_arg(&mut port, arg, verbose) {
+                        Ok(_res) => {
+                        },
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            println!("{}", err.as_ref().unwrap());
+                        },
+                    }
+                }
+
+
                 /* ----- END Commands which retrieve values from 
                          the device.                             ----- */
 

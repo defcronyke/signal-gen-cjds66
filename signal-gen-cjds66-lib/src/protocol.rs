@@ -1294,8 +1294,7 @@ pub const WRITE_CLEAR_PRESET_RES_LEN: u8 = WRITE_CLEAR_PRESET_RES_LEN!();
 
 
 // -----
-// Write an arbitrary wave to the device from text 
-// input on stdin.
+// Write an arbitrary wave to the device.
 macro_rules! WRITE_ARBITRARY_WAVE_COMMAND {() => {"a"}}
 pub const WRITE_ARBITRARY_WAVE_COMMAND: &'static str = WRITE_ARBITRARY_WAVE_COMMAND!();
 
@@ -1310,4 +1309,26 @@ pub const WRITE_ARBITRARY_WAVE_ARG_NUM_MAX: f64 = WRITE_ARBITRARY_WAVE_ARG_NUM_M
 
 macro_rules! WRITE_ARBITRARY_WAVE_RES_LEN {() => {6}}
 pub const WRITE_ARBITRARY_WAVE_RES_LEN: u8 = WRITE_ARBITRARY_WAVE_RES_LEN!();
+// -----
+
+
+// -----
+// Read an arbitrary wave from the device.
+macro_rules! READ_ARBITRARY_WAVE_COMMAND {() => {"b"}}
+pub const READ_ARBITRARY_WAVE_COMMAND: &'static str = READ_ARBITRARY_WAVE_COMMAND!();
+
+// command example:
+// read arbitrary wave from slot 1:
+//   ":b01=0.\r\n"
+macro_rules! READ_ARBITRARY_WAVE_ARG_NUM_MIN {() => {1.0}}
+pub const READ_ARBITRARY_WAVE_ARG_NUM_MIN: f64 = READ_ARBITRARY_WAVE_ARG_NUM_MIN!();
+
+macro_rules! READ_ARBITRARY_WAVE_ARG_NUM_MAX {() => {60.0}}
+pub const READ_ARBITRARY_WAVE_ARG_NUM_MAX: f64 = READ_ARBITRARY_WAVE_ARG_NUM_MAX!();
+
+macro_rules! READ_ARBITRARY_WAVE_ARG2 {() => {0}}
+pub const READ_ARBITRARY_WAVE_ARG2: u8 = READ_ARBITRARY_WAVE_ARG2!();
+
+macro_rules! READ_ARBITRARY_WAVE_RES_LEN {() => {10247}}
+pub const READ_ARBITRARY_WAVE_RES_LEN: u32 = READ_ARBITRARY_WAVE_RES_LEN!();
 // -----
