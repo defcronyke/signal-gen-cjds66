@@ -5,6 +5,17 @@
 # from the beginning of the audio file into the correctly 
 # formatted .txt and .wav files.
 #
+# You can already use regular audio .wav files as input for the 
+# Rust program anyway, however, this script has the benefit of
+# outputting a cleaned-up version of the .wav file, of just the 
+# correct length, in the correct WaveCAD format for the device, 
+# with values in the supported range. So if you use this first, 
+# you can avoid some warnings being output to the terminal, and
+# have a smaller WaveCAD .wav file with just the data you need 
+# in it. These features will probably be implemented in the Rust
+# program at some point, so this is really just a 
+# proof-of-concept script.
+#
 # With this method, you can design WaveCAD files using a DAW or
 # other audio production software, and then generate the .txt
 # file that's needed if you want to upload your wave to the
@@ -19,13 +30,13 @@
 #
 #   cargo run --release -- --wav-to-txt examples/defcronyke-sunlink-16bit-wavecad.wav
 #
-# To upload your wave to the first save slot on the device, you 
-# can run this command from the project root:
+# To upload your wave from the .txt file to the first save slot 
+# on the device, you can run this command from the project root:
 #
 #   cargo run --release -- --wws 1 < examples/defcronyke-sunlink-16bit-wavecad.txt
 #
-# Or you can upload using the WaveCAD file instead, but it's
-# less efficient. Run this command from the project root:
+# Or you can upload using the WaveCAD .wav file instead, but 
+# it's less efficient. Run this command from the project root:
 #
 #   cargo run --release -- --wwc 1,examples/defcronyke-sunlink-16bit-wavecad.wav
 #
@@ -42,7 +53,7 @@ audio_to_wavecad() {
 
     # Default input file. Pass a different one as the 
     # first argument to the script if you want.
-    IN_FILE="../examples/defcronyke-sunlink-16bit.wav"
+    IN_FILE="../examples/defcronyke-sunlink-16bit-8000hz.wav"
     if [ $# -eq 2 ]; then
         IN_FILE="$1"
     fi
@@ -64,7 +75,7 @@ audio_to_wavecad() {
 
     # Default output file. Pass a different one as the 
     # second argument to the script if you want.
-    OUT_FILE="../examples/defcronyke-sunlink-16bit-wavecad.wav"
+    OUT_FILE="../examples/defcronyke-sunlink-16bit-8000hz-wavecad.wav"
     if [ $# -eq 2 ]; then
         OUT_FILE="$2"
     fi

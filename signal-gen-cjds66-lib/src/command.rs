@@ -2837,12 +2837,58 @@ pub fn wav_to_txt(path: &str, verbose: u64) -> Result<String, clap::Error> {
 
             LittleEndian::read_i16_into(&buf, &mut outbuf);
 
+            let clamp_min = 0;
+            let clamp_max = 4095;
+
+            let mut clamp_min_count = 0u64;
+            let mut clamp_max_count = 0u64;
+
+            let mut clamp_min_adjustment_total = 0i64;
+            let mut clamp_max_adjustment_total = 0i64;
+
             for (i, val) in outbuf.iter().enumerate() {
-                out += &(*val + 2048).to_string();
+                let mut new_val = *val as i64 + 2048;
+
+                if new_val < clamp_min {
+                    clamp_min_count += 1;
+                    let clamp_min_adjustment = clamp_min - new_val;
+                    clamp_min_adjustment_total += clamp_min_adjustment;
+                    
+                    println!("warning: wave data below min supported value, clamping to {}:\tline: {}:\tvalue lost: {}:\tadjustment: +{}", clamp_min, i + 1, new_val, clamp_min_adjustment);
+                    
+                    new_val = clamp_min;
+
+                } else if new_val > clamp_max {
+                    clamp_max_count += 1;
+                    let clamp_max_adjustment = clamp_max - new_val;
+                    clamp_max_adjustment_total += clamp_max_adjustment;
+
+                    println!("warning: wave data above max supported value, clamping to {}:\tline: {}:\tvalue lost: {}:\tadjustment: {}", clamp_max, i + 1, new_val, clamp_max_adjustment);
+                    
+                    new_val = clamp_max;
+                }
+
+                out += &new_val.to_string();
 
                 if i < buf.len() - 1 {
                     out += "\n";
                 }
+            }
+
+            if clamp_min_count > 0 || clamp_max_count > 0 {
+                println!("");
+            }
+
+            if clamp_min_count > 0 {
+                println!("warning: wave data was min clamped to {}:\ttimes min clamped: {}:\tsummed min clamp adjustments: +{}", clamp_min, clamp_min_count, clamp_min_adjustment_total);
+            }
+
+            if clamp_max_count > 0 {
+                println!("warning: wave data was max clamped to {}:\ttimes max clamped: {}:\tsummed max clamp adjustments: {}", clamp_max, clamp_max_count, clamp_max_adjustment_total);
+            }
+
+            if clamp_min_count > 0 || clamp_max_count > 0 {
+                println!("warning: some of the wave data was clamped:\ttotal times clamped: {}:\ttotal summed clamp adjustments: {}\n", clamp_min_count + clamp_max_count, clamp_min_adjustment_total - clamp_max_adjustment_total);
             }
 
             match fs::File::create(&format!("{}", new_path)) {
@@ -2920,14 +2966,14 @@ pub fn txt_to_wav(path: &str, output_binary: bool, verbose: u64) -> Result<Strin
                     .map(
                         |c| {
                             // Convert number characters to integers.
-                            c.to_digit(10).unwrap() as i16 
+                            c.to_digit(10).unwrap() as i16
                         }
                     )
                     .fold(
                         // Join individual digits into full numbers.
                         0, 
                         |acc, elem| { 
-                            acc * 10 + elem 
+                            acc * 10 + elem
                         }) 
                     }
                 )
