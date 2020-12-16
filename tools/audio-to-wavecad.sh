@@ -3,18 +3,18 @@
 # to a compatible WaveCAD file. This clamps all values to the
 # supported range of 0 - 4095, and saves a chunk of 2048 values
 # from the beginning of the audio file into the correctly 
-# formatted .txt and .wav files.
+# formatted .txt file. It also saves a new WaveCAD .wav file,
+# which is just the original audio .wav file's first 4096 bytes.
 #
 # You can already use regular audio .wav files as input for the 
 # Rust program anyway, however, this script has the benefit of
-# outputting a cleaned-up version of the .wav file, of just the 
-# correct length, in the correct WaveCAD format for the device, 
-# with values in the supported range. So if you use this first, 
-# you can avoid some warnings being output to the terminal, and
-# have a smaller WaveCAD .wav file with just the data you need 
-# in it. These features will probably be implemented in the Rust
-# program at some point, so this is really just a 
-# proof-of-concept script.
+# outputting a new WaveCAD .wav file of the correct length to be
+# able to be edited in some waveform editing software that 
+# WaveCAD .wav files. So if you use this first, you can have a 
+# smaller WaveCAD .wav file with just the data you need in it. 
+# This feature will probably be implemented in the Rust program 
+# at some point, so this is mostly just a proof-of-concept bash 
+# script version of some things the Rust program already does.
 #
 # With this method, you can design WaveCAD files using a DAW or
 # other audio production software, and then generate the .txt
@@ -28,17 +28,17 @@
 # Just go one directory up so you're in the project root, and
 # then run this command:
 #
-#   cargo run --release -- --wav-to-txt examples/defcronyke-sunlink-16bit-wavecad.wav
+#   cargo run --release -- --wav-to-txt examples/defcronyke-sunlink-16bit-8000hz-wavecad.wav
 #
 # To upload your wave from the .txt file to the first save slot 
 # on the device, you can run this command from the project root:
 #
-#   cargo run --release -- --wws 1 < examples/defcronyke-sunlink-16bit-wavecad.txt
+#   cargo run --release -- --wws 1 < examples/defcronyke-sunlink-16bit-8000hz-wavecad.txt
 #
 # Or you can upload using the WaveCAD .wav file instead, but 
 # it's less efficient. Run this command from the project root:
 #
-#   cargo run --release -- --wwc 1,examples/defcronyke-sunlink-16bit-wavecad.wav
+#   cargo run --release -- --wwc 1,examples/defcronyke-sunlink-16bit-8000hz-wavecad.wav
 #
 
 # The main function of this script.
@@ -92,7 +92,6 @@ audio_to_wavecad() {
     fi
 
     OUT_FILE_TXT="$OUT_FILE_TXT_DIR$OUT_FILE_TXT_NO_EXT$OUT_FILE_TXT_EXT"
-    OUT_FILE_TXT2="${OUT_FILE_TXT#*/}"
 
     # Create a text file from the audio file, containing the first
     # 2048 numbers, one on each line, adjusting the offset to make
@@ -112,16 +111,12 @@ audio_to_wavecad() {
 
     echo "output text file: \"$OUT_FILE_TXT\""
 
-    pwd="$PWD"
-    cd ..
-
-    # Run the text file through our Rust program to generate the
-    # binary WaveCAD file.
-    cargo run --release -- --txt-to-wav "$OUT_FILE_TXT2"
+    # Truncate the audio .wav file to the correct length
+    # for a WaveCAD file for the device (2048 signed 
+    # 16-bit integers, which is 4096 bytes).
+    cat "$IN_FILE" | head -c 4096 > "$OUT_FILE"
 
     RETURN_CODE=$?
-
-    cd "$pwd"
 
     echo "output WaveCAD file: \"$OUT_FILE\""
 
