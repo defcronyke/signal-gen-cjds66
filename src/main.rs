@@ -193,6 +193,41 @@ fn real_main() -> Result<i32, error::Error> {
                 }
 
 
+                // If set channel output is requested.
+                if matches.is_present("get_channel_output") {
+                    match get_channel_output(&mut port, verbose) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            println!("{}", err.as_ref().unwrap());
+                        },
+                    }
+                }
+
+
+                // If get waveform for channel1 is requested.
+                if matches.is_present("get_waveform_channel1") {
+                    match get_waveform_preset(&mut port, 1, verbose) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            println!("{}", err.as_ref().unwrap());
+                        },
+                    }
+                }
+
+                // If get waveform for channel2 is requested.
+                if matches.is_present("get_waveform_channel2") {
+                    match get_waveform_preset(&mut port, 2, verbose) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            println!("{}", err.as_ref().unwrap());
+                        },
+                    }
+                }
+
+
                 /* ----- END Commands which retrieve values from 
                          the device.                             ----- */
 

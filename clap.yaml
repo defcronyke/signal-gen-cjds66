@@ -132,6 +132,18 @@ args:
       value_name: slot_number
       help: "Read an arbitrary waveform from the device, from one of the 60 save slots. It displays on stdout an output format which is suitable for saving to a .txt file, which can later be loaded back onto the device using the --wws flag.\nEx: --rw 5 > file.wav.txt"
 
+  - get_channel_output:
+      long: go
+      help: "Get the output state of on or off for channels 1 and 2. For example, ch1 on, ch 2 off: 1,0"
+
+  - get_waveform_channel1:
+      long: gw
+      help: Get the waveform preset for channel 1.
+
+  - get_waveform_channel2:
+      long: gx
+      help: Get the waveform preset for channel 2.
+
   # ----- END Commands which retrieve values from 
   #       the device.                             -----
 

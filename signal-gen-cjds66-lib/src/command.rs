@@ -149,6 +149,49 @@ pub fn match_set_channel_output_arg(mut port: &mut Box<dyn SerialPort>, sco: &st
 }
 
 
+pub fn get_channel_output(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
+    let command = READ_CHANNEL_OUTPUT;
+    
+    if verbose > 0 {
+        println!("\nGetting channel output:\n{}", command);
+    }
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..READ_CHANNEL_OUTPUT_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    let res2_parts: Vec<&str> = res.split("=").collect();
+
+    if res2_parts.len() < 2 {
+        return Err(Error::with_description(&format!("unexpected response from device: missing equals (=): {}", res), ErrorKind::Io));
+    }
+
+    let res2 = res2_parts[1];
+
+    let res3_parts: Vec<&str> = res2.split(".").collect();
+
+    if res3_parts.len() < 2 {
+        return Err(Error::with_description(&format!("unexpected response from device: missing period (.): {}", res), ErrorKind::Io));
+    }
+
+    let res3 = res3_parts[0];
+
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    
+    } else {
+        println!("{}", res3);
+    }
+
+    Ok(res3.to_string())
+}
+
+
 pub fn set_waveform_preset(port: &mut Box<dyn SerialPort>, chan: u64, preset: u64, verbose: u64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
@@ -310,6 +353,67 @@ pub fn match_set_waveform_preset_arg(mut port: &mut Box<dyn SerialPort>, chan: u
     }
 
     res
+}
+
+
+pub fn get_waveform_preset(port: &mut Box<dyn SerialPort>, chan: u64, verbose: u64) -> Result<String, clap::Error> {
+    let command: String;
+    let chan_out: &str;
+
+    if chan == 1 {
+        chan_out = READ_WAVEFORM_PRESET_COMMAND_CH1;
+    } else if chan == 2 {
+        chan_out = READ_WAVEFORM_PRESET_COMMAND_CH2;
+    } else {
+        return Err(Error::with_description("Unsupported channel number. Must be 1 or 2.", ErrorKind::InvalidValue));
+    }
+
+    command = format!("{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        COMMAND_READ,
+        chan_out,
+        COMMAND_SEPARATOR,
+        READ_WAVEFORM_PRESET_ARG,
+        COMMAND_END,
+    );
+    
+    if verbose > 0 {
+        println!("\nGetting waveform preset: ch{}:\n{}", chan, command);
+    }
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..READ_WAVEFORM_PRESET_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    let res2_parts: Vec<&str> = res.split("=").collect();
+
+    if res2_parts.len() < 2 {
+        return Err(Error::with_description(&format!("unexpected response from device: missing equals (=): {}", res), ErrorKind::Io));
+    }
+
+    let res2 = res2_parts[1];
+
+    let res3_parts: Vec<&str> = res2.split(".").collect();
+
+    if res3_parts.len() < 2 {
+        return Err(Error::with_description(&format!("unexpected response from device: missing period (.): {}", res), ErrorKind::Io));
+    }
+
+    let res3 = res3_parts[0];
+
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    
+    } else {
+        println!("{}", res3);
+    }
+
+    Ok(res3.to_string())
 }
 
 

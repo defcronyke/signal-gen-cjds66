@@ -172,6 +172,31 @@ pub const WRITE_CHANNEL_OUTPUT_CH1_OFF_CH2_ON: &str = WRITE_CHANNEL_OUTPUT_CH1_O
 
 
 // -----
+// Read output channels on or off state.
+macro_rules! READ_CHANNEL_OUTPUT_COMMAND {() => {"20"}}
+pub const READ_CHANNEL_OUTPUT_COMMAND: &'static str = READ_CHANNEL_OUTPUT_COMMAND!();
+
+macro_rules! READ_CHANNEL_OUTPUT_ARG {() => {"0"}}
+pub const READ_CHANNEL_OUTPUT_ARG: &'static str = READ_CHANNEL_OUTPUT_ARG!();
+
+macro_rules! READ_CHANNEL_OUTPUT_RES_LEN {() => {11}}
+pub const READ_CHANNEL_OUTPUT_RES_LEN: u8 = READ_CHANNEL_OUTPUT_RES_LEN!();
+
+// command example:
+// ":r20=0.\r\n"
+macro_rules! READ_CHANNEL_OUTPUT {() => {concat!(
+    COMMAND_BEGIN!(),
+    COMMAND_READ!(),
+    READ_CHANNEL_OUTPUT_COMMAND!(),
+    COMMAND_SEPARATOR!(),
+    READ_CHANNEL_OUTPUT_ARG!(),
+    COMMAND_END!(),
+)}}
+pub const READ_CHANNEL_OUTPUT: &str = READ_CHANNEL_OUTPUT!();
+// -----
+
+
+// -----
 // Set waveform preset for each channel.
 // Ex:
 //   ch1 preset0 (sine wave) = ":w21=00.\r\n"
@@ -196,25 +221,32 @@ pub const WRITE_WAVEFORM_PRESET_COMMAND_CH2: &'static str = WRITE_WAVEFORM_PRESE
 macro_rules! WRITE_WAVEFORM_PRESET_RES_LEN {() => {6}}
 pub const WRITE_WAVEFORM_PRESET_RES_LEN: u8 = WRITE_WAVEFORM_PRESET_RES_LEN!();
 
-// macro_rules! WAVEFORM_PRESET_NAMES {() => {"0:  sine || sin
-// 1:  square || sq
-// 2:  pulse || pul
-// 3:  triangle || tri
-// 4:  partialsine || partial-sine || parsine || par-sine || parsin || par-sin || psine || p-sine || psin || p-sin
-// 5:  cmos || cm
-// 6:  dc
-// 7:  halfwave || half-wave || hw || h-w
-// 8:  fullwave || full-wave || fw || f-w
-// 9:  pos-ladder || posladder || pos-lad || poslad || positive-ladder || positiveladder || pl
-// 10: neg-ladder || negladder || neg-lad || neglad || negative-ladder || negativeladder || nl
-// 11: noise || nois || noi || no || n
-// 12: exp-rise || exprise || e-r || er || e-rise || erise || e-ris || eris
-// 13: exp-decay || expdecay || e-d || ed || e-decay || edecay || e-dec || edec
-// 14: multi-tone || multitone || m-t || mt || m-tone || mtone
-// 15: sinc || sc
-// 16: lorenz || loren || lor || lz"}}
-// pub const WAVEFORM_PRESET_NAMES: &'static str = WAVEFORM_PRESET_NAMES!();
+
 // -----
+// Get waveform preset for each channel.
+// Ex:
+//   ch1 preset = ":r21=0.\r\n"
+//   ch2 preset = ":r22=0.\r\n"
+macro_rules! READ_WAVEFORM_PRESET_COMMAND_PREFIX {() => {"2"}}
+pub const READ_WAVEFORM_PRESET_COMMAND_PREFIX: &'static str = READ_WAVEFORM_PRESET_COMMAND_PREFIX!();
+
+macro_rules! READ_WAVEFORM_PRESET_COMMAND_CH1 {() => {concat!(
+    READ_WAVEFORM_PRESET_COMMAND_PREFIX!(),
+    "1",
+)}}
+pub const READ_WAVEFORM_PRESET_COMMAND_CH1: &'static str = READ_WAVEFORM_PRESET_COMMAND_CH1!();
+
+macro_rules! READ_WAVEFORM_PRESET_COMMAND_CH2 {() => {concat!(
+    READ_WAVEFORM_PRESET_COMMAND_PREFIX!(),
+    "2",
+)}}
+pub const READ_WAVEFORM_PRESET_COMMAND_CH2: &'static str = READ_WAVEFORM_PRESET_COMMAND_CH2!();
+
+macro_rules! READ_WAVEFORM_PRESET_ARG {() => {0}}
+pub const READ_WAVEFORM_PRESET_ARG: u8 = READ_WAVEFORM_PRESET_ARG!();
+
+macro_rules! READ_WAVEFORM_PRESET_RES_LEN {() => {11}}
+pub const READ_WAVEFORM_PRESET_RES_LEN: u8 = READ_WAVEFORM_PRESET_RES_LEN!();
 
 
 // -----
