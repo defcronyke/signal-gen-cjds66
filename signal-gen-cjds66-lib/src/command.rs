@@ -3382,11 +3382,7 @@ pub fn read_arbitrary_wave(port: &mut Box<dyn SerialPort>, amount: f64, verbose:
 
     let res = str::from_utf8(&outbuf[..n]).unwrap();
 
-    if verbose > 0 {
-        println!("Response size: {} bytes\n", n);
-        println!("Response:");
-        println!("{}\n", res);
-    }
+    
 
     let res_parts: Vec<&str> = res.split("=").collect();
     
@@ -3400,13 +3396,12 @@ pub fn read_arbitrary_wave(port: &mut Box<dyn SerialPort>, amount: f64, verbose:
     let res_str = res_data.join("\n");
 
     if verbose > 0 {
-        println!("\nResponse in .txt file format:\n");
-    }
-
-    println!("{}", res_str);
-
-    if verbose > 0 {
-        println!("");
+        println!("Response size: {} bytes\n", n);
+        println!("Response:");
+        println!("{}\n", res);
+    
+    } else {
+        println!("{}", res_str);
     }
 
     Ok(res_str)
