@@ -252,6 +252,29 @@ fn real_main() -> Result<i32, error::Error> {
                 }
 
 
+                // If get amplitude for channel1 in volts is requested.
+                if matches.is_present("get_amplitude_volts_channel1") {
+                    match get_amplitude(&mut port, 1, verbose) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            println!("{}", err.as_ref().unwrap());
+                        },
+                    }
+                }
+
+                // If get frequency for channel2 in MHz is requested.
+                if matches.is_present("get_amplitude_volts_channel2") {
+                    match get_amplitude(&mut port, 2, verbose) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            println!("{}", err.as_ref().unwrap());
+                        },
+                    }
+                }
+
+
                 /* ----- END Commands which retrieve values from 
                          the device.                             ----- */
 

@@ -343,6 +343,34 @@ pub const WRITE_AMPLITUDE_RES_LEN: u8 = WRITE_AMPLITUDE_RES_LEN!();
 
 
 // -----
+// Get the signal amplitude.
+// Ex:
+//   ch1 = ":w25=0.\r\n"
+//   ch2 = ":w26=0.\r\n"
+macro_rules! READ_AMPLITUDE_COMMAND_PREFIX {() => {"2"}}
+pub const READ_AMPLITUDE_COMMAND_PREFIX: &'static str = READ_AMPLITUDE_COMMAND_PREFIX!();
+
+macro_rules! READ_AMPLITUDE_COMMAND_CH1 {() => {concat!(
+    READ_AMPLITUDE_COMMAND_PREFIX!(),
+    "5",
+)}}
+pub const READ_AMPLITUDE_COMMAND_CH1: &'static str = READ_AMPLITUDE_COMMAND_CH1!();
+
+macro_rules! READ_AMPLITUDE_COMMAND_CH2 {() => {concat!(
+    READ_AMPLITUDE_COMMAND_PREFIX!(),
+    "6",
+)}}
+pub const READ_AMPLITUDE_COMMAND_CH2: &'static str = READ_AMPLITUDE_COMMAND_CH2!();
+
+macro_rules! READ_AMPLITUDE_ARG {() => {0}}
+pub const READ_AMPLITUDE_ARG: u8 = READ_AMPLITUDE_ARG!();
+
+macro_rules! READ_AMPLITUDE_RES_LEN {() => {13}}
+pub const READ_AMPLITUDE_RES_LEN: u8 = READ_AMPLITUDE_RES_LEN!();
+// -----
+
+
+// -----
 // Set the duty cycle.
 // Ex:
 //   ch1 (40.1%) = ":w29=401.\r\n"

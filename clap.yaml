@@ -146,11 +146,19 @@ args:
 
   - get_frequency_hz_channel1:
       long: ge
-      help: Get the waveform frequency for channel 1 in Hz.
+      help: Get the signal frequency for channel 1 in Hz.
 
   - get_frequency_hz_channel2:
       long: gf
-      help: Get the waveform frequency for channel 2 in Hz.
+      help: Get the signal frequency for channel 2 in Hz.
+  
+  - get_amplitude_volts_channel1:
+      long: gp
+      help: Get the signal amplitude for channel 1 in volts.
+
+  - get_amplitude_volts_channel2:
+      long: gq
+      help: Get the signal amplitude for channel 2 in volts.
 
   # ----- END Commands which retrieve values from 
   #       the device.                             -----
