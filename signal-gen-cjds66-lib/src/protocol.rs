@@ -345,8 +345,8 @@ pub const WRITE_AMPLITUDE_RES_LEN: u8 = WRITE_AMPLITUDE_RES_LEN!();
 // -----
 // Get the signal amplitude.
 // Ex:
-//   ch1 = ":w25=0.\r\n"
-//   ch2 = ":w26=0.\r\n"
+//   ch1 = ":r25=0.\r\n"
+//   ch2 = ":r26=0.\r\n"
 macro_rules! READ_AMPLITUDE_COMMAND_PREFIX {() => {"2"}}
 pub const READ_AMPLITUDE_COMMAND_PREFIX: &'static str = READ_AMPLITUDE_COMMAND_PREFIX!();
 
