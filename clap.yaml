@@ -144,6 +144,14 @@ args:
       long: gx
       help: Get the waveform preset for channel 2.
 
+  - get_frequency_hz_channel1:
+      long: ge
+      help: Get the waveform frequency for channel 1 in Hz.
+
+  - get_frequency_hz_channel2:
+      long: gf
+      help: Get the waveform frequency for channel 2 in Hz.
+
   # ----- END Commands which retrieve values from 
   #       the device.                             -----
 

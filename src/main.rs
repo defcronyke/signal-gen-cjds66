@@ -228,6 +228,30 @@ fn real_main() -> Result<i32, error::Error> {
                 }
 
 
+                // If get frequency for channel1 in Hz is requested.
+                if matches.is_present("get_frequency_hz_channel1") {
+                    match get_frequency_hertz(&mut port, 1, verbose) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            println!("{}", err.as_ref().unwrap());
+                        },
+                    }
+                }
+
+
+                // If get frequency for channel1 in Hz is requested.
+                if matches.is_present("get_frequency_hz_channel2") {
+                    match get_frequency_hertz(&mut port, 2, verbose) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            println!("{}", err.as_ref().unwrap());
+                        },
+                    }
+                }
+
+
                 /* ----- END Commands which retrieve values from 
                          the device.                             ----- */
 
@@ -431,7 +455,7 @@ fn real_main() -> Result<i32, error::Error> {
                 if matches.is_present("set_frequency_uhz_channel1") {
                     let amount = matches.value_of("set_frequency_uhz_channel1").unwrap_or_default();
                     
-                    match match_set_frequency_microherz_arg(&mut port, 1, amount, verbose) {
+                    match match_set_frequency_microhertz_arg(&mut port, 1, amount, verbose) {
                         Ok(_res) => {},
                         Err(e) => {
                             err = Some(error::Error::from_clap_error(e));
@@ -444,7 +468,7 @@ fn real_main() -> Result<i32, error::Error> {
                 if matches.is_present("set_frequency_uhz_channel2") {
                     let amount = matches.value_of("set_frequency_uhz_channel2").unwrap_or_default();
                     
-                    match match_set_frequency_microherz_arg(&mut port, 2, amount, verbose) {
+                    match match_set_frequency_microhertz_arg(&mut port, 2, amount, verbose) {
                         Ok(_res) => {},
                         Err(e) => {
                             err = Some(error::Error::from_clap_error(e));
@@ -457,7 +481,7 @@ fn real_main() -> Result<i32, error::Error> {
                 if matches.is_present("set_frequency_millihz_channel1") {
                     let amount = matches.value_of("set_frequency_millihz_channel1").unwrap_or_default();
                     
-                    match match_set_frequency_milliherz_arg(&mut port, 1, amount, verbose) {
+                    match match_set_frequency_millihertz_arg(&mut port, 1, amount, verbose) {
                         Ok(_res) => {},
                         Err(e) => {
                             err = Some(error::Error::from_clap_error(e));
@@ -470,7 +494,7 @@ fn real_main() -> Result<i32, error::Error> {
                 if matches.is_present("set_frequency_millihz_channel2") {
                     let amount = matches.value_of("set_frequency_millihz_channel2").unwrap_or_default();
                     
-                    match match_set_frequency_milliherz_arg(&mut port, 2, amount, verbose) {
+                    match match_set_frequency_millihertz_arg(&mut port, 2, amount, verbose) {
                         Ok(_res) => {},
                         Err(e) => {
                             err = Some(error::Error::from_clap_error(e));

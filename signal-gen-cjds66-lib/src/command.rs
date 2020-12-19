@@ -356,6 +356,25 @@ pub fn match_set_waveform_preset_arg(mut port: &mut Box<dyn SerialPort>, chan: u
 }
 
 
+// Waveform names:
+// 0:  sine
+// 1:  square
+// 2:  pulse
+// 3:  triangle
+// 4:  partialsine
+// 5:  cmos
+// 6:  dc
+// 7:  halfwave
+// 8:  fullwave
+// 9:  pos-ladder
+// 10: neg-ladder
+// 11: noise
+// 12: exp-rise
+// 13: exp-decay
+// 14: multi-tone
+// 15: sinc
+// 16: lorenz
+// 101..160: arbitrary01 - arbitrary60
 pub fn get_waveform_preset(port: &mut Box<dyn SerialPort>, chan: u64, verbose: u64) -> Result<String, clap::Error> {
     let command: String;
     let chan_out: &str;
@@ -534,7 +553,7 @@ pub fn set_frequency_microhertz(port: &mut Box<dyn SerialPort>, chan: u64, amoun
     Ok(res.to_string())
 }
 
-pub fn match_set_frequency_microherz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str, verbose: u64) -> Result<String, clap::Error> {    
+pub fn match_set_frequency_microhertz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str, verbose: u64) -> Result<String, clap::Error> {    
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
@@ -612,7 +631,7 @@ pub fn set_frequency_millihertz(port: &mut Box<dyn SerialPort>, chan: u64, amoun
     Ok(res.to_string())
 }
 
-pub fn match_set_frequency_milliherz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str, verbose: u64) -> Result<String, clap::Error> {
+pub fn match_set_frequency_millihertz_arg(mut port: &mut Box<dyn SerialPort>, chan: u64, amount: &str, verbose: u64) -> Result<String, clap::Error> {
     let amount_parts: Vec<&str> = amount.split(".").collect();
     
     if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
@@ -878,6 +897,77 @@ pub fn match_set_frequency_megahertz_arg(mut port: &mut Box<dyn SerialPort>, cha
     }
 
     res
+}
+
+
+pub fn get_frequency_hertz(port: &mut Box<dyn SerialPort>, chan: u64, verbose: u64) -> Result<String, clap::Error> {
+    let command: String;
+    let chan_out: &str;
+
+    if chan == 1 {
+        chan_out = READ_FREQUENCY_COMMAND_CH1;
+    } else if chan == 2 {
+        chan_out = READ_FREQUENCY_COMMAND_CH2;
+    } else {
+        return Err(Error::with_description("Unsupported channel number. Must be 1 or 2.", ErrorKind::InvalidValue));
+    }
+
+    command = format!("{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        COMMAND_READ,
+        chan_out,
+        COMMAND_SEPARATOR,
+        READ_FREQUENCY_ARG,
+        COMMAND_END,
+    );
+    
+    if verbose > 0 {
+        println!("\nGetting frequency in Hz: ch{}:\n{}", chan, command);
+    }
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..READ_FREQUENCY_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    let res2_parts: Vec<&str> = res.split("=").collect();
+
+    if res2_parts.len() < 2 {
+        return Err(Error::with_description(&format!("unexpected response from device: missing equals (=): {}", res), ErrorKind::Io));
+    }
+
+    let res2 = res2_parts[1];
+
+    let res3_parts: Vec<&str> = res2.split(".").collect();
+
+    if res3_parts.len() < 2 {
+        return Err(Error::with_description(&format!("unexpected response from device: missing period (.): {}", res), ErrorKind::Io));
+    }
+
+    let res3 = res3_parts[0];
+
+    let res4_parts: Vec<&str> = res3.split(",").collect();
+
+    if res4_parts.len() < 2 {
+        return Err(Error::with_description(&format!("unexpected response from device: missing comma (,): {}", res), ErrorKind::Io));
+    }
+
+    let res4_str = res4_parts[0];
+
+    let res4 = res4_str.parse::<f64>().unwrap() / 100.0;
+
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    
+    } else {
+        println!("{}", res4);
+    }
+
+    Ok(res4.to_string())
 }
 
 

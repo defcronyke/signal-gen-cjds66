@@ -252,8 +252,8 @@ pub const READ_WAVEFORM_PRESET_RES_LEN: u8 = READ_WAVEFORM_PRESET_RES_LEN!();
 // -----
 // Set waveform frequency for each channel.
 // Ex:
-//   ch1 = ":w23=0.01,0.\r\n"
-//   ch2 = ":w24=0.01,0.\r\n"
+//   ch1 = ":w23=1,0.\r\n"
+//   ch2 = ":w24=1,0.\r\n"
 macro_rules! WRITE_FREQUENCY_COMMAND_PREFIX {() => {"2"}}
 pub const WRITE_FREQUENCY_COMMAND_PREFIX: &'static str = WRITE_FREQUENCY_COMMAND_PREFIX!();
 
@@ -286,6 +286,34 @@ pub const WRITE_FREQUENCY_COMMAND_UNIT_MEGAHERTZ: &'static str = WRITE_FREQUENCY
 
 macro_rules! WRITE_FREQUENCY_RES_LEN {() => {6}}
 pub const WRITE_FREQUENCY_RES_LEN: u8 = WRITE_FREQUENCY_RES_LEN!();
+// -----
+
+
+// -----
+// Get waveform frequency for each channel.
+// Ex:
+//   ch1 = ":r23=0.\r\n"
+//   ch2 = ":r24=0.\r\n"
+macro_rules! READ_FREQUENCY_COMMAND_PREFIX {() => {"2"}}
+pub const READ_FREQUENCY_COMMAND_PREFIX: &'static str = READ_FREQUENCY_COMMAND_PREFIX!();
+
+macro_rules! READ_FREQUENCY_COMMAND_CH1 {() => {concat!(
+    READ_FREQUENCY_COMMAND_PREFIX!(),
+    "3",
+)}}
+pub const READ_FREQUENCY_COMMAND_CH1: &'static str = READ_FREQUENCY_COMMAND_CH1!();
+
+macro_rules! READ_FREQUENCY_COMMAND_CH2 {() => {concat!(
+    READ_FREQUENCY_COMMAND_PREFIX!(),
+    "4",
+)}}
+pub const READ_FREQUENCY_COMMAND_CH2: &'static str = READ_FREQUENCY_COMMAND_CH2!();
+
+macro_rules! READ_FREQUENCY_ARG {() => {"0"}}
+pub const READ_FREQUENCY_ARG: &'static str = READ_FREQUENCY_ARG!();
+
+macro_rules! READ_FREQUENCY_RES_LEN {() => {21}}
+pub const READ_FREQUENCY_RES_LEN: u8 = READ_FREQUENCY_RES_LEN!();
 // -----
 
 
