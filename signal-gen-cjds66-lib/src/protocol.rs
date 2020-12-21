@@ -701,6 +701,28 @@ pub const WRITE_TRACKING_RES_LEN: u8 = WRITE_TRACKING_RES_LEN!();
 
 
 // -----
+// Get the tracking mode.
+// Ex:
+//   frequency and amplitude sync = ":r54=0.\r\n"
+//
+// Argument index position meanings:
+//   0: frequency
+//   1: waveform
+//   2: amplitude
+//   3: dutycycle
+//   4: offset
+macro_rules! READ_TRACKING_COMMAND {() => {"54"}}
+pub const READ_TRACKING_COMMAND: &'static str = READ_TRACKING_COMMAND!();
+
+macro_rules! READ_TRACKING_ARG {() => {0}}
+pub const READ_TRACKING_ARG: u8 = READ_TRACKING_ARG!();
+
+macro_rules! READ_TRACKING_RES_LEN {() => {17}}
+pub const READ_TRACKING_RES_LEN: u8 = READ_TRACKING_RES_LEN!();
+// -----
+
+
+// -----
 // Set the extended function.
 macro_rules! WRITE_EXTENDED_FUNCTION_COMMAND {() => {"32"}}
 pub const WRITE_EXTENDED_FUNCTION_COMMAND: &'static str = WRITE_EXTENDED_FUNCTION_COMMAND!();

@@ -180,6 +180,20 @@ args:
       long: gr
       help: Get the phase in ° (degrees).
 
+  - get_tracking:
+      long: gT
+      help: |
+        Get the tracking mode. The response will be a comma-separated set of zeros and ones, such as 0,1,0,1,1, each corresponding to a feature which has tracking set on or off (1 being on and 0 being off). For example: track frequency and amplitude: 1,0,1,0,0
+        
+        The bit position meanings are as follows:
+        0: frequency
+        1: waveform
+        2: amplitude
+        3: dutycycle
+        4: offset
+
+        tracking off: 0
+
   # ----- END Commands which retrieve values from 
   #       the device.                             -----
 
