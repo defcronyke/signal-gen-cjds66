@@ -176,6 +176,10 @@ args:
       long: gn
       help: Get the voltage offset for channel 2 in volts.
 
+  - get_phase:
+      long: gr
+      help: Get the phase in ° (degrees).
+
   # ----- END Commands which retrieve values from 
   #       the device.                             -----
 

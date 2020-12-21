@@ -495,6 +495,21 @@ pub const WRITE_PHASE_RES_LEN: u8 = WRITE_PHASE_RES_LEN!();
 
 
 // -----
+// Get the phase in degrees.
+// Ex:
+//   ":r31=0.\r\n"
+macro_rules! READ_PHASE_COMMAND {() => {"31"}}
+pub const READ_PHASE_COMMAND: &'static str = READ_PHASE_COMMAND!();
+
+macro_rules! READ_PHASE_ARG {() => {0}}
+pub const READ_PHASE_ARG: u8 = READ_PHASE_ARG!();
+
+macro_rules! READ_PHASE_RES_LEN {() => {12}}
+pub const READ_PHASE_RES_LEN: u8 = READ_PHASE_RES_LEN!();
+// -----
+
+
+// -----
 // Set the tracking mode.
 // Ex:
 //   frequency and amplitude sync = ":w54=1,0,1,0,0.\r\n"

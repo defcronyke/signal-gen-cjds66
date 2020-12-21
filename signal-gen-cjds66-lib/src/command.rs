@@ -1459,6 +1459,59 @@ pub fn match_set_phase_arg(mut port: &mut Box<dyn SerialPort>, amount: &str, ver
     res
 }
 
+pub fn get_phase(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
+    let command: String;
+
+    command = format!("{}{}{}{}{}{}",
+        COMMAND_BEGIN,
+        COMMAND_READ,
+        READ_PHASE_COMMAND,
+        COMMAND_SEPARATOR,
+        READ_PHASE_ARG,
+        COMMAND_END,
+    );
+    
+    if verbose > 0 {
+        println!("\nSetting phase:\n{}", command);
+    }
+
+    let inbuf: Vec<u8> = command.as_bytes().to_vec();
+    let mut outbuf: Vec<u8> = (0..READ_PHASE_RES_LEN).collect();
+
+    port.write(&inbuf[..])?;
+    port.read(&mut outbuf[..])?;
+
+    let res = str::from_utf8(&outbuf).unwrap();
+
+    let res2_parts: Vec<&str> = res.split("=").collect();
+
+    if res2_parts.len() < 2 {
+        return Err(Error::with_description(&format!("unexpected response from device: missing equals (=): {}", res), ErrorKind::Io));
+    }
+
+    let res2 = res2_parts[1];
+
+    let res3_parts: Vec<&str> = res2.split(".").collect();
+
+    if res3_parts.len() < 2 {
+        return Err(Error::with_description(&format!("unexpected response from device: missing period (.): {}", res), ErrorKind::Io));
+    }
+
+    let res3_str = res3_parts[0];
+
+    let res3 = res3_str.parse::<f64>().unwrap() / 10.0;
+
+    if verbose > 0 {
+        println!("Response:");
+        println!("{}", res);
+    
+    } else {
+        println!("{}", res3);
+    }
+
+    Ok(res.to_string())
+}
+
 
 pub fn set_tracking(port: &mut Box<dyn SerialPort>, track: TrackingArg, verbose: u64) -> Result<String, clap::Error> {
     let command: String;

@@ -321,6 +321,18 @@ fn real_main() -> Result<i32, error::Error> {
                 }
 
 
+                // If get phase in degrees is requested.
+                if matches.is_present("get_phase") {
+                    match get_phase(&mut port, verbose) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            println!("{}", err.as_ref().unwrap());
+                        },
+                    }
+                }
+
+
                 /* ----- END Commands which retrieve values from 
                          the device.                             ----- */
 
