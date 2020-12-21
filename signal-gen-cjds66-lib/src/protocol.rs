@@ -399,6 +399,37 @@ pub const WRITE_DUTY_CYCLE_RES_LEN: u8 = WRITE_DUTY_CYCLE_RES_LEN!();
 
 
 // -----
+// Get the duty cycle.
+// Ex:
+//   ch1 = ":w29=0.\r\n"
+//   ch2 = ":w30=0.\r\n"
+macro_rules! READ_DUTY_CYCLE_COMMAND_PREFIX_CH1 {() => {"2"}}
+pub const READ_DUTY_CYCLE_COMMAND_PREFIX_CH1: &'static str = READ_DUTY_CYCLE_COMMAND_PREFIX_CH1!();
+
+macro_rules! READ_DUTY_CYCLE_COMMAND_PREFIX_CH2 {() => {"3"}}
+pub const READ_DUTY_CYCLE_COMMAND_PREFIX_CH2: &'static str = READ_DUTY_CYCLE_COMMAND_PREFIX_CH2!();
+
+macro_rules! READ_DUTY_CYCLE_COMMAND_CH1 {() => {concat!(
+    READ_DUTY_CYCLE_COMMAND_PREFIX_CH1!(),
+    "9",
+)}}
+pub const READ_DUTY_CYCLE_COMMAND_CH1: &'static str = READ_DUTY_CYCLE_COMMAND_CH1!();
+
+macro_rules! READ_DUTY_CYCLE_COMMAND_CH2 {() => {concat!(
+    READ_DUTY_CYCLE_COMMAND_PREFIX_CH2!(),
+    "0",
+)}}
+pub const READ_DUTY_CYCLE_COMMAND_CH2: &'static str = READ_DUTY_CYCLE_COMMAND_CH2!();
+
+macro_rules! READ_DUTY_CYCLE_ARG {() => {0}}
+pub const READ_DUTY_CYCLE_ARG: u8 = READ_DUTY_CYCLE_ARG!();
+
+macro_rules! READ_DUTY_CYCLE_RES_LEN {() => {11}}
+pub const READ_DUTY_CYCLE_RES_LEN: u8 = READ_DUTY_CYCLE_RES_LEN!();
+// -----
+
+
+// -----
 // Set the voltage offset in volts.
 // Ex:
 //   ch1 (-1.23%) = ":w27=877.\r\n"

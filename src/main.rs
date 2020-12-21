@@ -193,7 +193,7 @@ fn real_main() -> Result<i32, error::Error> {
                 }
 
 
-                // If set channel output is requested.
+                // If get channel output is requested.
                 if matches.is_present("get_channel_output") {
                     match get_channel_output(&mut port, verbose) {
                         Ok(_res) => {},
@@ -266,6 +266,29 @@ fn real_main() -> Result<i32, error::Error> {
                 // If get frequency for channel2 in MHz is requested.
                 if matches.is_present("get_amplitude_volts_channel2") {
                     match get_amplitude(&mut port, 2, verbose) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            println!("{}", err.as_ref().unwrap());
+                        },
+                    }
+                }
+
+
+                // If get duty cycle for channel1 in percent is requested.
+                if matches.is_present("get_duty_cycle_channel1") {
+                    match get_duty_cycle(&mut port, 1, verbose) {
+                        Ok(_res) => {},
+                        Err(e) => {
+                            err = Some(error::Error::from_clap_error(e));
+                            println!("{}", err.as_ref().unwrap());
+                        },
+                    }
+                }
+
+                // If get duty cycle for channel2 in percent is requested.
+                if matches.is_present("get_duty_cycle_channel2") {
+                    match get_duty_cycle(&mut port, 2, verbose) {
                         Ok(_res) => {},
                         Err(e) => {
                             err = Some(error::Error::from_clap_error(e));

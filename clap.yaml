@@ -160,6 +160,14 @@ args:
       long: gq
       help: Get the signal amplitude for channel 2 in volts.
 
+  - get_duty_cycle_channel1:
+      long: gty
+      help: Get the duty cycle for channel 1 in percent.
+
+  - get_duty_cycle_channel2:
+      long: gcy
+      help: Get the duty cycle for channel 2 in percent.
+
   # ----- END Commands which retrieve values from 
   #       the device.                             -----
 
