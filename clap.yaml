@@ -168,6 +168,14 @@ args:
       long: gcy
       help: Get the duty cycle for channel 2 in percent.
 
+  - get_voltage_offset_channel1:
+      long: gg
+      help: Get the voltage offset for channel 1 in volts.
+
+  - get_voltage_offset_channel2:
+      long: gn
+      help: Get the voltage offset for channel 2 in volts.
+
   # ----- END Commands which retrieve values from 
   #       the device.                             -----
 

@@ -401,8 +401,8 @@ pub const WRITE_DUTY_CYCLE_RES_LEN: u8 = WRITE_DUTY_CYCLE_RES_LEN!();
 // -----
 // Get the duty cycle.
 // Ex:
-//   ch1 = ":w29=0.\r\n"
-//   ch2 = ":w30=0.\r\n"
+//   ch1 = ":r29=0.\r\n"
+//   ch2 = ":r30=0.\r\n"
 macro_rules! READ_DUTY_CYCLE_COMMAND_PREFIX_CH1 {() => {"2"}}
 pub const READ_DUTY_CYCLE_COMMAND_PREFIX_CH1: &'static str = READ_DUTY_CYCLE_COMMAND_PREFIX_CH1!();
 
@@ -451,6 +451,34 @@ pub const WRITE_VOLTAGE_OFFSET_COMMAND_CH2: &'static str = WRITE_VOLTAGE_OFFSET_
 
 macro_rules! WRITE_VOLTAGE_OFFSET_RES_LEN {() => {6}}
 pub const WRITE_VOLTAGE_OFFSET_RES_LEN: u8 = WRITE_VOLTAGE_OFFSET_RES_LEN!();
+// -----
+
+
+// -----
+// Get the voltage offset in volts.
+// Ex:
+//   ch1 = ":r27=0.\r\n"
+//   ch2 = ":r28=0.\r\n"
+macro_rules! READ_VOLTAGE_OFFSET_COMMAND_PREFIX {() => {"2"}}
+pub const READ_VOLTAGE_OFFSET_COMMAND_PREFIX: &'static str = READ_VOLTAGE_OFFSET_COMMAND_PREFIX!();
+
+macro_rules! READ_VOLTAGE_OFFSET_COMMAND_CH1 {() => {concat!(
+    READ_VOLTAGE_OFFSET_COMMAND_PREFIX!(),
+    "7",
+)}}
+pub const READ_VOLTAGE_OFFSET_COMMAND_CH1: &'static str = READ_VOLTAGE_OFFSET_COMMAND_CH1!();
+
+macro_rules! READ_VOLTAGE_OFFSET_COMMAND_CH2 {() => {concat!(
+    READ_VOLTAGE_OFFSET_COMMAND_PREFIX!(),
+    "8",
+)}}
+pub const READ_VOLTAGE_OFFSET_COMMAND_CH2: &'static str = READ_VOLTAGE_OFFSET_COMMAND_CH2!();
+
+macro_rules! READ_VOLTAGE_OFFSET_ARG {() => {0}}
+pub const READ_VOLTAGE_OFFSET_ARG: u8 = READ_VOLTAGE_OFFSET_ARG!();
+
+macro_rules! READ_VOLTAGE_OFFSET_RES_LEN {() => {11}}
+pub const READ_VOLTAGE_OFFSET_RES_LEN: u8 = READ_VOLTAGE_OFFSET_RES_LEN!();
 // -----
 
 
