@@ -5,7 +5,7 @@ author: Jeremy Carter <jeremy@jeremycarter.ca>
 version: "0.0.1"
 
 about: |
-  An unofficial program to control the CJDS66 60MHz DDS 
+  An unofficial program to control the CJDS66 60MHz DDS
   Signal Generator/Counter (hardware by Koolertron).
 
   See: https://bit.ly/2J07i6X
@@ -18,35 +18,35 @@ template: |
 
   LICENSE
   -------
-  By using this software, you agree to the following 
-  LICENSE TERMS (if you don't agree, you aren't allowed 
-  to use this software, and you must not use it from now 
+  By using this software, you agree to the following
+  LICENSE TERMS (if you don't agree, you aren't allowed
+  to use this software, and you must not use it from now
   on):
 
   MIT License
 
-  Permission is hereby granted, free of charge, to any 
-  person obtaining a copy of this software and 
-  associated documentation files (the \"Software\"), to 
-  deal in the Software without restriction, including 
-  without limitation the rights to use, copy, modify, 
-  merge, publish, distribute, sublicense, and/or sell 
-  copies of the Software, and to permit persons to whom 
-  the Software is furnished to do so, subject to the 
+  Permission is hereby granted, free of charge, to any
+  person obtaining a copy of this software and
+  associated documentation files (the \"Software\"), to
+  deal in the Software without restriction, including
+  without limitation the rights to use, copy, modify,
+  merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom
+  the Software is furnished to do so, subject to the
   following conditions:
 
-  The above copyright notice and this permission notice 
-  shall be included in all copies or substantial 
+  The above copyright notice and this permission notice
+  shall be included in all copies or substantial
   portions of the Software.
 
-  THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY 
-  OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT 
-  LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
-  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO 
-  EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
-  FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN 
-  AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+  THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY
+  OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+  LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
+  EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+  FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+  AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
   USE OR OTHER DEALINGS IN THE SOFTWARE.
   -------
 
@@ -59,10 +59,8 @@ template: |
 
   {all-args}
 
-  
 args:
-
-  # ----- Command that sets the verbosity 
+  # ----- Command that sets the verbosity
   #       level.                          -----
 
   - verbose:
@@ -73,9 +71,8 @@ args:
       default_value: "1"
       help: Set the verbosity for the output of this command (Ex. 0-1). The verbosity defaults to 1 if specified with no value.
 
-  # ----- END Command that sets the verbosity 
+  # ----- END Command that sets the verbosity
   #       level.                              -----
-
 
   # ----- Utility commands -----
 
@@ -97,8 +94,7 @@ args:
 
   # ----- END Utility commands -----
 
-
-  # ----- Command that selects the devices 
+  # ----- Command that selects the devices
   #       to use.                          -----
 
   - devices:
@@ -109,11 +105,10 @@ args:
       multiple: true
       help: The device(s) to communicate with.
 
-  # ----- END Command that selects the devices 
+  # ----- END Command that selects the devices
   #       to use.                              -----
 
-
-  # ----- Commands which retrieve values from 
+  # ----- Commands which retrieve values from
   #       the device.                         -----
 
   - get_model:
@@ -151,7 +146,7 @@ args:
   - get_frequency_hz_channel2:
       long: gf
       help: Get the signal frequency for channel 2 in Hz.
-  
+
   - get_amplitude_volts_channel1:
       long: gp
       help: Get the signal amplitude for channel 1 in volts.
@@ -180,32 +175,17 @@ args:
       long: gr
       help: Get the phase in ° (degrees).
 
-  - get_tracking:
-      long: gT
-      help: |
-        Get the tracking mode. The response will be a comma-separated set of zeros and ones, such as 0,1,0,1,1, each corresponding to a feature which has tracking set on or off (1 being on and 0 being off). For example: track frequency and amplitude: 1,0,1,0,0
-        
-        The bit position meanings are as follows:
-        0: frequency
-        1: waveform
-        2: amplitude
-        3: dutycycle
-        4: offset
-
-        tracking off: 0
-
-  # ----- END Commands which retrieve values from 
+  # ----- END Commands which retrieve values from
   #       the device.                             -----
 
-
-  # ----- Commands which navigate to a different 
+  # ----- Commands which navigate to a different
   #       view on the device's display panel         -----
 
   - switch_main_ch1:
       short: A
       long: main1
       help: Switch the function panel to main channel 1 mode.
-      
+
   - switch_main_ch2:
       short: B
       long: main2
@@ -243,13 +223,12 @@ args:
       short: M
       long: measure
       help: Switch the function panel to measurement mode.
-  
-  # ----- END Commands which navigate to a different 
+
+  # ----- END Commands which navigate to a different
   #       view on the device's display panel         -----
 
-  
-  # ----- Commands which change the device's 
-  #       settings or state, but don't 
+  # ----- Commands which change the device's
+  #       settings or state, but don't
   #       activate the channels.             -----
 
   - set_tracking:
@@ -259,7 +238,7 @@ args:
       value_name: track_features
       help: |
         Set the tracking mode. The value must be either a set of comma-separated setting names (see below), or a set of zeros and ones in the range of 0-11111, each bit corresponding to a feature you want to toggle tracking on/off for (1 being on and 0 being off). For example: track frequency and amplitude: -T 101
-        
+
         The bit position meanings are as follows:
         0: frequency | freq | fq | fr | f
         1: waveform | wave | wav | wv | w
@@ -279,7 +258,7 @@ args:
         frequency and amplitude sync: -T fa
 
         Turn tracking off like this: -T n
-        
+
         Note that a value of zero (or no value) in the bit position will turn off tracking for the corresponding feature, so to turn tracking off for all features, you can do: -T 0
         You can also separate the values with commas if you prefer: -T 1,0,1
 
@@ -289,9 +268,9 @@ args:
       takes_value: true
       value_name: ch1_preset
       help: |
-        Set the waveform preset for channel 1. The value must be either the name of the waveform preset (see below), or a number 0-16, for example, 
+        Set the waveform preset for channel 1. The value must be either the name of the waveform preset (see below), or a number 0-16, for example,
         sine wave: -w 0
-        
+
         Accepted preset names:
         0:  sine || sin
         1:  square || sq
@@ -331,7 +310,7 @@ args:
       takes_value: true
       value_name: ch2_arb_preset
       help: "Set the arbitrary waveform preset for channel 2. The value must be a number 1-60. For example: -b 1"
-  
+
   - set_frequency_uhz_channel1:
       short: u
       long: freq-micro-ch1
@@ -415,7 +394,7 @@ args:
       takes_value: true
       value_name: ch2_ampli_v
       help: "Set the signal amplitude for channel 2 in volts. The value must be a number 0.000-20.0. For example: -q 0.001"
-  
+
   - set_duty_cycle_channel1:
       short: t
       long: duty-ch1
@@ -452,7 +431,7 @@ args:
       takes_value: true
       value_name: phase_deg
       help: "Set the phase in ° (degrees). The value must be a number 0.0-360.0, and 360.0 wraps around to 0.0. For example: -r 180.7"
-  
+
   - set_measurement_coupling_ac:
       long: ac
       help: Set the measurement mode coupling option to AC.
@@ -474,13 +453,13 @@ args:
   - set_measurement_counting_period:
       long: cp
       help: Set the measurement mode to counting period.
-  
+
   - set_burst_pulse_number:
       long: bn
       takes_value: true
       value_name: num_pulses
       help: Burst pulse number. Set the number of burst pulses.
-  
+
   - set_burst_manual_trigger:
       long: bm
       help: Set the burst mode to manual trigger.
@@ -558,7 +537,7 @@ args:
       takes_value: true
       value_name: pulse_period_microseconds
       help: Set the period for the pulse function in microseconds.
-  
+
   - set_pulse_offset:
       long: po
       takes_value: true
@@ -570,7 +549,7 @@ args:
       takes_value: true
       value_name: pulse_amplitude_volts
       help: Set the amplitude for the pulse function in volts.
-    
+
   - clear_measurement_count:
       long: cc
       help: Clear the count on measurement mode.
@@ -604,13 +583,12 @@ args:
       takes_value: true
       value_name: slot_number
       help: "Write an arbitrary waveform to the device from a WaveCAD (.wav) file, and save it in one of the 60 slots.\nEx: --wwc 5,file.wav"
-  
-  # ----- END Commands which change the device's 
-  #       settings or state, but don't 
+
+  # ----- END Commands which change the device's
+  #       settings or state, but don't
   #       activate the channels.                 -----
 
-  
-  # ----- Commands which set one or both of the 
+  # ----- Commands which set one or both of the
   #       device's channels ON or OFF.          -----
 
   - start_counting:
@@ -653,6 +631,5 @@ args:
       takes_value: true
       value_name: ch1_on,ch2_on
       help: "Set the output state to on or off for channels 1 and 2. For example, ch1 on, ch 2 off: -o 1,0"
-
-  # ----- END Commands which set one or both of the 
+  # ----- END Commands which set one or both of the
   #       device's channels ON or OFF.              -----
