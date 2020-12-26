@@ -1544,8 +1544,8 @@ pub const WRITE_MEASUREMENT_MODE_RES_LEN: u8 = WRITE_MEASUREMENT_MODE_RES_LEN!()
 // -----
 
 // -----
-// Get measurement mode (count value, frequency value in frequency mode,
-// or frequency value in period mode).
+// Get measurement count value, frequency value in frequency mode,
+// or frequency value in period mode.
 //
 // Count value
 macro_rules! READ_MEASUREMENT_COUNT_COMMAND {
@@ -1624,45 +1624,45 @@ macro_rules! READ_MEASUREMENT_FREQUENCY_RES_LEN {
 pub const READ_MEASUREMENT_FREQUENCY_RES_LEN: u8 = READ_MEASUREMENT_FREQUENCY_RES_LEN!();
 
 // Frequency value in period mode.
-macro_rules! READ_MEASUREMENT_FREQUENCY_PERIOD_COMMAND {
+macro_rules! READ_MEASUREMENT_PERIOD_COMMAND {
 	() => {
 		"82"
 	};
 }
-pub const READ_MEASUREMENT_FREQUENCY_PERIOD_COMMAND: &'static str =
-	READ_MEASUREMENT_FREQUENCY_PERIOD_COMMAND!();
+pub const READ_MEASUREMENT_PERIOD_COMMAND: &'static str =
+	READ_MEASUREMENT_PERIOD_COMMAND!();
 
-macro_rules! READ_MEASUREMENT_FREQUENCY_PERIOD_ARG_VAL {
+macro_rules! READ_MEASUREMENT_PERIOD_ARG_VAL {
 	() => {
 			"0"
 	};
 }
-pub const READ_MEASUREMENT_FREQUENCY_PERIOD_ARG_VAL: &'static str =
-	READ_MEASUREMENT_FREQUENCY_PERIOD_ARG_VAL!();
+pub const READ_MEASUREMENT_PERIOD_ARG_VAL: &'static str =
+	READ_MEASUREMENT_PERIOD_ARG_VAL!();
 
 // command example:
 // ":r82=0.\r\n"
-macro_rules! READ_MEASUREMENT_FREQUENCY_PERIOD {
+macro_rules! READ_MEASUREMENT_PERIOD {
 	() => {
 		concat!(
 			COMMAND_BEGIN!(),
 			COMMAND_READ!(),
-			READ_MEASUREMENT_FREQUENCY_PERIOD_COMMAND!(),
+			READ_MEASUREMENT_PERIOD_COMMAND!(),
 			COMMAND_SEPARATOR!(),
-			READ_MEASUREMENT_FREQUENCY_PERIOD_ARG_VAL!(),
+			READ_MEASUREMENT_PERIOD_ARG_VAL!(),
 			COMMAND_END!(),
 			)
 	};
 }
-pub const READ_MEASUREMENT_FREQUENCY_PERIOD: &'static str = READ_MEASUREMENT_FREQUENCY_PERIOD!();
+pub const READ_MEASUREMENT_PERIOD: &'static str = READ_MEASUREMENT_PERIOD!();
 
-macro_rules! READ_MEASUREMENT_FREQUENCY_PERIOD_RES_LEN {
+macro_rules! READ_MEASUREMENT_PERIOD_RES_LEN {
 	() => {
 			16
 	};
 }
-pub const READ_MEASUREMENT_FREQUENCY_PERIOD_RES_LEN: u8 =
-	READ_MEASUREMENT_FREQUENCY_PERIOD_RES_LEN!();
+pub const READ_MEASUREMENT_PERIOD_RES_LEN: u8 =
+	READ_MEASUREMENT_PERIOD_RES_LEN!();
 // -----
 
 // -----

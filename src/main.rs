@@ -1,7 +1,7 @@
 /* Copyright © 2020 Jeremy Carter <jeremy@jeremycarter.ca>
 
-By using this software, you agree to the LICENSE TERMS 
-outlined in the file titled LICENSE.md contained in the 
+By using this software, you agree to the LICENSE TERMS
+outlined in the file titled LICENSE.md contained in the
 top-level directory of this project. If you don't agree
 to the LICENSE TERMS, you aren't allowed to use this
 software.
@@ -311,6 +311,42 @@ fn real_main() -> Result<i32, error::Error> {
 				// If get phase in degrees is requested.
 				if matches.is_present("get_phase") {
 					match get_phase(&mut port, verbose) {
+						Ok(_res) => {},
+						Err(e) => {
+							err = Some(error::Error::from_clap_error(e));
+							println!("{}", err.as_ref().unwrap());
+						},
+					}
+				}
+
+
+				// If get measurement count is requested.
+				if matches.is_present("get_measurement_count") {
+					match get_measurement_count(&mut port, verbose) {
+						Ok(_res) => {},
+						Err(e) => {
+							err = Some(error::Error::from_clap_error(e));
+							println!("{}", err.as_ref().unwrap());
+						},
+					}
+				}
+
+
+				// If get measurement frequency is requested.
+				if matches.is_present("get_measurement_frequency") {
+					match get_measurement_frequency(&mut port, verbose) {
+						Ok(_res) => {},
+						Err(e) => {
+							err = Some(error::Error::from_clap_error(e));
+							println!("{}", err.as_ref().unwrap());
+						},
+					}
+				}
+
+
+				// If get measurement period is requested.
+				if matches.is_present("get_measurement_period") {
+					match get_measurement_period(&mut port, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));

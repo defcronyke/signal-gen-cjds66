@@ -2561,6 +2561,186 @@ pub fn set_measurement_count_clear(
 	Ok(res.to_string())
 }
 
+// Get measurement count.
+pub fn get_measurement_count(
+	port: &mut Box<dyn SerialPort>,
+	verbose: u64,
+) -> Result<String, clap::Error> {
+	let command: &'static str = READ_MEASUREMENT_COUNT;
+
+	if verbose > 0 {
+		println!(
+			"\nGetting measurement count:\n{}",
+			command
+		);
+	}
+
+	let inbuf: Vec<u8> = command.as_bytes().to_vec();
+	let mut outbuf: Vec<u8> = (0..READ_MEASUREMENT_COUNT_RES_LEN).collect();
+
+	port.write(&inbuf[..])?;
+	port.read(&mut outbuf[..])?;
+
+	let res = str::from_utf8(&outbuf).unwrap();
+
+	let res2_parts: Vec<&str> = res.split("=").collect();
+
+	if res2_parts.len() < 2 {
+		return Err(Error::with_description(
+			&format!(
+				"unexpected response from device: missing equals (=): {}",
+				res
+			),
+			ErrorKind::Io,
+		));
+	}
+
+	let res2 = res2_parts[1];
+
+	let res3_parts: Vec<&str> = res2.split(".").collect();
+
+	if res3_parts.len() < 2 {
+		return Err(Error::with_description(
+			&format!(
+				"unexpected response from device: missing period (.): {}",
+				res
+			),
+			ErrorKind::Io,
+		));
+	}
+
+	let res3 = res3_parts[0];
+
+	if verbose > 0 {
+		println!("Response:");
+		println!("{}", res);
+	} else {
+		println!("{}", res3);
+	}
+
+	Ok(res.to_string())
+}
+
+// Get measurement frequency value in frequency mode (hertz).
+pub fn get_measurement_frequency(
+	port: &mut Box<dyn SerialPort>,
+	verbose: u64,
+) -> Result<String, clap::Error> {
+	let command: &'static str = READ_MEASUREMENT_FREQUENCY;
+
+	if verbose > 0 {
+		println!(
+			"\nGetting measurement frequency value in frequency mode (hertz):\n{}",
+			command
+		);
+	}
+
+	let inbuf: Vec<u8> = command.as_bytes().to_vec();
+	let mut outbuf: Vec<u8> = (0..READ_MEASUREMENT_FREQUENCY_RES_LEN).collect();
+
+	port.write(&inbuf[..])?;
+	port.read(&mut outbuf[..])?;
+
+	let res = str::from_utf8(&outbuf).unwrap();
+
+	let res2_parts: Vec<&str> = res.split("=").collect();
+
+	if res2_parts.len() < 2 {
+		return Err(Error::with_description(
+			&format!(
+				"unexpected response from device: missing equals (=): {}",
+				res
+			),
+			ErrorKind::Io,
+		));
+	}
+
+	let res2 = res2_parts[1];
+
+	let res3_parts: Vec<&str> = res2.split(".").collect();
+
+	if res3_parts.len() < 2 {
+		return Err(Error::with_description(
+			&format!(
+				"unexpected response from device: missing period (.): {}",
+				res
+			),
+			ErrorKind::Io,
+		));
+	}
+
+	let res3 = res3_parts[0];
+
+	if verbose > 0 {
+		println!("Response:");
+		println!("{}", res);
+	} else {
+		println!("{}", res3);
+	}
+
+	Ok(res.to_string())
+}
+
+// Get measurement frequency value in period mode (hertz).
+pub fn get_measurement_period(
+	port: &mut Box<dyn SerialPort>,
+	verbose: u64,
+) -> Result<String, clap::Error> {
+	let command: &'static str = READ_MEASUREMENT_PERIOD;
+
+	if verbose > 0 {
+		println!(
+			"\nGetting measurement frequency value in period mode (hertz):\n{}",
+			command
+		);
+	}
+
+	let inbuf: Vec<u8> = command.as_bytes().to_vec();
+	let mut outbuf: Vec<u8> = (0..READ_MEASUREMENT_PERIOD_RES_LEN).collect();
+
+	port.write(&inbuf[..])?;
+	port.read(&mut outbuf[..])?;
+
+	let res = str::from_utf8(&outbuf).unwrap();
+
+	let res2_parts: Vec<&str> = res.split("=").collect();
+
+	if res2_parts.len() < 2 {
+		return Err(Error::with_description(
+			&format!(
+				"unexpected response from device: missing equals (=): {}",
+				res
+			),
+			ErrorKind::Io,
+		));
+	}
+
+	let res2 = res2_parts[1];
+
+	let res3_parts: Vec<&str> = res2.split(".").collect();
+
+	if res3_parts.len() < 2 {
+		return Err(Error::with_description(
+			&format!(
+				"unexpected response from device: missing period (.): {}",
+				res
+			),
+			ErrorKind::Io,
+		));
+	}
+
+	let res3 = res3_parts[0];
+
+	if verbose > 0 {
+		println!("Response:");
+		println!("{}", res);
+	} else {
+		println!("{}", res3);
+	}
+
+	Ok(res.to_string())
+}
+
 pub fn set_burst_pulse_number(
 	port: &mut Box<dyn SerialPort>,
 	amount: f64,

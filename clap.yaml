@@ -183,6 +183,18 @@ args:
       long: gr
       help: Get the phase in ° (degrees).
 
+  - get_measurement_count:
+      long: gmc
+      help: Get the measurement count.
+
+  - get_measurement_frequency:
+      long: gmf
+      help: Get the measurement frequency value in frequency mode (hertz).
+
+  - get_measurement_period:
+      long: gmp
+      help: Get the measurement frequency value in period mode (hertz).
+
   # ----- END Commands which retrieve values from
   #       the device.                             -----
 
