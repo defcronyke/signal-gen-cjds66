@@ -1,7 +1,14 @@
 Control the GH-CJDS66 60MHz Signal Generator  
 --------------------------------------------  
   
-Copyright 2020 Jeremy Carter <jeremy@jeremycarter.ca>  
+Copyright © 2020 Jeremy Carter <jeremy@jeremycarter.ca>  
+  
+By using this software, you agree to the LICENSE TERMS 
+outlined in the file titled LICENSE.md contained in the 
+top-level directory of this project. If you don't agree
+to the LICENSE TERMS, you aren't allowed to use this
+software.  
+  
   
 Usage: ./signal-gen-cjds66 -h  
   

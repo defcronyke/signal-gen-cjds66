@@ -1,4 +1,13 @@
 #!/bin/bash -e
+# Copyright © 2020 Jeremy Carter <jeremy@jeremycarter.ca>
+#
+# By using this software, you agree to the LICENSE TERMS 
+# outlined in the file titled LICENSE.md contained in the 
+# top-level directory of this project. If you don't agree
+# to the LICENSE TERMS, you aren't allowed to use this
+# software.
+#
+#
 # An example of how to convert part of a 16-bit .wav audio file
 # to a compatible WaveCAD file. This clamps all values to the
 # supported range of 0 - 4095, and saves a chunk of 2048 values
