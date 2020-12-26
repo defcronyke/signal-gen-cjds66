@@ -6,8 +6,7 @@ Copyright © 2020 Jeremy Carter <jeremy@jeremycarter.ca>
   
 By using this software, you agree to the following
 LICENSE TERMS (if you don't agree, you aren't allowed
-to use this software, and you must not use it from now
-on):  
+to use this software):  
   
 MIT License  
 -----------  
