@@ -1544,10 +1544,7 @@ pub const WRITE_MEASUREMENT_MODE_RES_LEN: u8 = WRITE_MEASUREMENT_MODE_RES_LEN!()
 // -----
 
 // -----
-// Get measurement count value, frequency value in frequency mode,
-// or frequency value in period mode.
-//
-// Count value
+// Get measurement count value.
 macro_rules! READ_MEASUREMENT_COUNT_COMMAND {
 	() => {
 		"80"
@@ -1584,8 +1581,10 @@ macro_rules! READ_MEASUREMENT_COUNT_RES_LEN {
 	};
 }
 pub const READ_MEASUREMENT_COUNT_RES_LEN: u8 = READ_MEASUREMENT_COUNT_RES_LEN!();
+// -----
 
-// Frequency value in frequency mode.
+// -----
+// Get frequency value in frequency mode.
 macro_rules! READ_MEASUREMENT_FREQUENCY_COMMAND {
 	() => {
 		"81"
@@ -1622,8 +1621,10 @@ macro_rules! READ_MEASUREMENT_FREQUENCY_RES_LEN {
 	};
 }
 pub const READ_MEASUREMENT_FREQUENCY_RES_LEN: u8 = READ_MEASUREMENT_FREQUENCY_RES_LEN!();
+// -----
 
-// Frequency value in period mode.
+// -----
+// Get frequency value in period mode.
 macro_rules! READ_MEASUREMENT_PERIOD_COMMAND {
 	() => {
 		"82"
@@ -1663,6 +1664,94 @@ macro_rules! READ_MEASUREMENT_PERIOD_RES_LEN {
 }
 pub const READ_MEASUREMENT_PERIOD_RES_LEN: u8 =
 	READ_MEASUREMENT_PERIOD_RES_LEN!();
+// -----
+
+// -----
+// Get pulse width (positive).
+macro_rules! READ_MEASUREMENT_PULSE_WIDTH_POSITIVE_COMMAND {
+	() => {
+		"83"
+	};
+}
+pub const READ_MEASUREMENT_PULSE_WIDTH_POSITIVE_COMMAND: &'static str =
+	READ_MEASUREMENT_PULSE_WIDTH_POSITIVE_COMMAND!();
+
+macro_rules! READ_MEASUREMENT_PULSE_WIDTH_POSITIVE_ARG_VAL {
+	() => {
+			"0"
+	};
+}
+pub const READ_MEASUREMENT_PULSE_WIDTH_POSITIVE_ARG_VAL: &'static str =
+	READ_MEASUREMENT_PULSE_WIDTH_POSITIVE_ARG_VAL!();
+
+// command example:
+// ":r83=0.\r\n"
+macro_rules! READ_MEASUREMENT_PULSE_WIDTH_POSITIVE {
+	() => {
+		concat!(
+			COMMAND_BEGIN!(),
+			COMMAND_READ!(),
+			READ_MEASUREMENT_PULSE_WIDTH_POSITIVE_COMMAND!(),
+			COMMAND_SEPARATOR!(),
+			READ_MEASUREMENT_PULSE_WIDTH_POSITIVE_ARG_VAL!(),
+			COMMAND_END!(),
+			)
+	};
+}
+pub const READ_MEASUREMENT_PULSE_WIDTH_POSITIVE: &'static str = READ_MEASUREMENT_PULSE_WIDTH_POSITIVE!();
+
+// POSSIBLE BUG: Not sure if this is the correct response length.
+macro_rules! READ_MEASUREMENT_PULSE_WIDTH_POSITIVE_RES_LEN {
+	() => {
+			12
+	};
+}
+pub const READ_MEASUREMENT_PULSE_WIDTH_POSITIVE_RES_LEN: u8 =
+	READ_MEASUREMENT_PULSE_WIDTH_POSITIVE_RES_LEN!();
+// -----
+
+// -----
+// Get pulse width (negative).
+macro_rules! READ_MEASUREMENT_PULSE_WIDTH_NEGATIVE_COMMAND {
+	() => {
+		"84"
+	};
+}
+pub const READ_MEASUREMENT_PULSE_WIDTH_NEGATIVE_COMMAND: &'static str =
+	READ_MEASUREMENT_PULSE_WIDTH_NEGATIVE_COMMAND!();
+
+macro_rules! READ_MEASUREMENT_PULSE_WIDTH_NEGATIVE_ARG_VAL {
+	() => {
+			"0"
+	};
+}
+pub const READ_MEASUREMENT_PULSE_WIDTH_NEGATIVE_ARG_VAL: &'static str =
+	READ_MEASUREMENT_PULSE_WIDTH_NEGATIVE_ARG_VAL!();
+
+// command example:
+// ":r84=0.\r\n"
+macro_rules! READ_MEASUREMENT_PULSE_WIDTH_NEGATIVE {
+	() => {
+		concat!(
+			COMMAND_BEGIN!(),
+			COMMAND_READ!(),
+			READ_MEASUREMENT_PULSE_WIDTH_NEGATIVE_COMMAND!(),
+			COMMAND_SEPARATOR!(),
+			READ_MEASUREMENT_PULSE_WIDTH_NEGATIVE_ARG_VAL!(),
+			COMMAND_END!(),
+			)
+	};
+}
+pub const READ_MEASUREMENT_PULSE_WIDTH_NEGATIVE: &'static str = READ_MEASUREMENT_PULSE_WIDTH_NEGATIVE!();
+
+// POSSIBLE BUG: Not sure if this is the correct response length.
+macro_rules! READ_MEASUREMENT_PULSE_WIDTH_NEGATIVE_RES_LEN {
+	() => {
+			12
+	};
+}
+pub const READ_MEASUREMENT_PULSE_WIDTH_NEGATIVE_RES_LEN: u8 =
+	READ_MEASUREMENT_PULSE_WIDTH_NEGATIVE_RES_LEN!();
 // -----
 
 // -----

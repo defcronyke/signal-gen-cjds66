@@ -195,6 +195,14 @@ args:
       long: gmp
       help: Get the measurement frequency value in period mode (hertz).
 
+  - get_measurement_pulse_width_positive:
+      long: gmpw
+      help: Get the measurement pulse width (positive).
+
+  - get_measurement_pulse_width_negative:
+      long: gmpwn
+      help: Get the measurement pulse width (negative).
+
   # ----- END Commands which retrieve values from
   #       the device.                             -----
 

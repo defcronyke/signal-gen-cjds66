@@ -356,6 +356,30 @@ fn real_main() -> Result<i32, error::Error> {
 				}
 
 
+				// If get measurement pulse width positive is requested.
+				if matches.is_present("get_measurement_pulse_width_positive") {
+					match get_measurement_pulse_width_positive(&mut port, verbose) {
+						Ok(_res) => {},
+						Err(e) => {
+							err = Some(error::Error::from_clap_error(e));
+							println!("{}", err.as_ref().unwrap());
+						},
+					}
+				}
+
+
+				// If get measurement pulse width negative is requested.
+				if matches.is_present("get_measurement_pulse_width_negative") {
+					match get_measurement_pulse_width_negative(&mut port, verbose) {
+						Ok(_res) => {},
+						Err(e) => {
+							err = Some(error::Error::from_clap_error(e));
+							println!("{}", err.as_ref().unwrap());
+						},
+					}
+				}
+
+
 				/* ----- END Commands which retrieve values from
 						 the device.                             ----- */
 
