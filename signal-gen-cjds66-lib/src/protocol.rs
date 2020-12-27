@@ -1584,7 +1584,7 @@ pub const READ_MEASUREMENT_COUNT_RES_LEN: u8 = READ_MEASUREMENT_COUNT_RES_LEN!()
 // -----
 
 // -----
-// Get frequency value in frequency mode.
+// Get measurement frequency value in frequency mode.
 macro_rules! READ_MEASUREMENT_FREQUENCY_COMMAND {
 	() => {
 		"81"
@@ -1624,50 +1624,50 @@ pub const READ_MEASUREMENT_FREQUENCY_RES_LEN: u8 = READ_MEASUREMENT_FREQUENCY_RE
 // -----
 
 // -----
-// Get frequency value in period mode.
-macro_rules! READ_MEASUREMENT_PERIOD_COMMAND {
+// Get measurement frequency value in period mode.
+macro_rules! READ_MEASUREMENT_FREQUENCY_PERIOD_COMMAND {
 	() => {
 		"82"
 	};
 }
-pub const READ_MEASUREMENT_PERIOD_COMMAND: &'static str =
-	READ_MEASUREMENT_PERIOD_COMMAND!();
+pub const READ_MEASUREMENT_FREQUENCY_PERIOD_COMMAND: &'static str =
+	READ_MEASUREMENT_FREQUENCY_PERIOD_COMMAND!();
 
-macro_rules! READ_MEASUREMENT_PERIOD_ARG_VAL {
+macro_rules! READ_MEASUREMENT_FREQUENCY_PERIOD_ARG_VAL {
 	() => {
 			"0"
 	};
 }
-pub const READ_MEASUREMENT_PERIOD_ARG_VAL: &'static str =
-	READ_MEASUREMENT_PERIOD_ARG_VAL!();
+pub const READ_MEASUREMENT_FREQUENCY_PERIOD_ARG_VAL: &'static str =
+	READ_MEASUREMENT_FREQUENCY_PERIOD_ARG_VAL!();
 
 // command example:
 // ":r82=0.\r\n"
-macro_rules! READ_MEASUREMENT_PERIOD {
+macro_rules! READ_MEASUREMENT_FREQUENCY_PERIOD {
 	() => {
 		concat!(
 			COMMAND_BEGIN!(),
 			COMMAND_READ!(),
-			READ_MEASUREMENT_PERIOD_COMMAND!(),
+			READ_MEASUREMENT_FREQUENCY_PERIOD_COMMAND!(),
 			COMMAND_SEPARATOR!(),
-			READ_MEASUREMENT_PERIOD_ARG_VAL!(),
+			READ_MEASUREMENT_FREQUENCY_PERIOD_ARG_VAL!(),
 			COMMAND_END!(),
 			)
 	};
 }
-pub const READ_MEASUREMENT_PERIOD: &'static str = READ_MEASUREMENT_PERIOD!();
+pub const READ_MEASUREMENT_FREQUENCY_PERIOD: &'static str = READ_MEASUREMENT_FREQUENCY_PERIOD!();
 
-macro_rules! READ_MEASUREMENT_PERIOD_RES_LEN {
+macro_rules! READ_MEASUREMENT_FREQUENCY_PERIOD_RES_LEN {
 	() => {
 			16
 	};
 }
-pub const READ_MEASUREMENT_PERIOD_RES_LEN: u8 =
-	READ_MEASUREMENT_PERIOD_RES_LEN!();
+pub const READ_MEASUREMENT_FREQUENCY_PERIOD_RES_LEN: u8 =
+	READ_MEASUREMENT_FREQUENCY_PERIOD_RES_LEN!();
 // -----
 
 // -----
-// Get pulse width (positive).
+// Get measurement pulse width (positive).
 macro_rules! READ_MEASUREMENT_PULSE_WIDTH_POSITIVE_COMMAND {
 	() => {
 		"83"
@@ -1711,7 +1711,7 @@ pub const READ_MEASUREMENT_PULSE_WIDTH_POSITIVE_RES_LEN: u8 =
 // -----
 
 // -----
-// Get pulse width (negative).
+// Get measurement pulse width (negative).
 macro_rules! READ_MEASUREMENT_PULSE_WIDTH_NEGATIVE_COMMAND {
 	() => {
 		"84"
@@ -1752,6 +1752,94 @@ macro_rules! READ_MEASUREMENT_PULSE_WIDTH_NEGATIVE_RES_LEN {
 }
 pub const READ_MEASUREMENT_PULSE_WIDTH_NEGATIVE_RES_LEN: u8 =
 	READ_MEASUREMENT_PULSE_WIDTH_NEGATIVE_RES_LEN!();
+// -----
+
+// -----
+// Get measurement period.
+macro_rules! READ_MEASUREMENT_PERIOD_COMMAND {
+	() => {
+		"85"
+	};
+}
+pub const READ_MEASUREMENT_PERIOD_COMMAND: &'static str =
+	READ_MEASUREMENT_PERIOD_COMMAND!();
+
+macro_rules! READ_MEASUREMENT_PERIOD_ARG_VAL {
+	() => {
+			"0"
+	};
+}
+pub const READ_MEASUREMENT_PERIOD_ARG_VAL: &'static str =
+	READ_MEASUREMENT_PERIOD_ARG_VAL!();
+
+// command example:
+// ":r85=0.\r\n"
+macro_rules! READ_MEASUREMENT_PERIOD {
+	() => {
+		concat!(
+			COMMAND_BEGIN!(),
+			COMMAND_READ!(),
+			READ_MEASUREMENT_PERIOD_COMMAND!(),
+			COMMAND_SEPARATOR!(),
+			READ_MEASUREMENT_PERIOD_ARG_VAL!(),
+			COMMAND_END!(),
+			)
+	};
+}
+pub const READ_MEASUREMENT_PERIOD: &'static str = READ_MEASUREMENT_PERIOD!();
+
+// POSSIBLE BUG: Not sure if this is the correct response length.
+macro_rules! READ_MEASUREMENT_PERIOD_RES_LEN {
+	() => {
+			12
+	};
+}
+pub const READ_MEASUREMENT_PERIOD_RES_LEN: u8 =
+	READ_MEASUREMENT_PERIOD_RES_LEN!();
+// -----
+
+// -----
+// Get measurement duty cycle.
+macro_rules! READ_MEASUREMENT_DUTY_CYCLE_COMMAND {
+	() => {
+		"86"
+	};
+}
+pub const READ_MEASUREMENT_DUTY_CYCLE_COMMAND: &'static str =
+	READ_MEASUREMENT_DUTY_CYCLE_COMMAND!();
+
+macro_rules! READ_MEASUREMENT_DUTY_CYCLE_ARG_VAL {
+	() => {
+			"0"
+	};
+}
+pub const READ_MEASUREMENT_DUTY_CYCLE_ARG_VAL: &'static str =
+	READ_MEASUREMENT_DUTY_CYCLE_ARG_VAL!();
+
+// command example:
+// ":r86=0.\r\n"
+macro_rules! READ_MEASUREMENT_DUTY_CYCLE {
+	() => {
+		concat!(
+			COMMAND_BEGIN!(),
+			COMMAND_READ!(),
+			READ_MEASUREMENT_DUTY_CYCLE_COMMAND!(),
+			COMMAND_SEPARATOR!(),
+			READ_MEASUREMENT_DUTY_CYCLE_ARG_VAL!(),
+			COMMAND_END!(),
+			)
+	};
+}
+pub const READ_MEASUREMENT_DUTY_CYCLE: &'static str = READ_MEASUREMENT_DUTY_CYCLE!();
+
+// POSSIBLE BUG: Not sure if this is the correct response length.
+macro_rules! READ_MEASUREMENT_DUTY_CYCLE_RES_LEN {
+	() => {
+			12
+	};
+}
+pub const READ_MEASUREMENT_DUTY_CYCLE_RES_LEN: u8 =
+	READ_MEASUREMENT_DUTY_CYCLE_RES_LEN!();
 // -----
 
 // -----
