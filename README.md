@@ -90,6 +90,54 @@ cd target\release
 signal-gen-cjds66.exe -h
 ```  
   
+6. (Optional) You can add the -v switch to the end of any command
+to get a different and more verbose style of output. Useful for
+debugging and to better understand what's happening when you run
+a command. For example, to get the verbose output while requesting
+the device's model number and serial number, run this command:  
+```shell
+cargo run --release -- --ms -v
+```  
+
+7. (Optional) You can specify the device location if the default
+isn't correct for your computer or configuration. On Linux it 
+defaults to /dev/ttyUSB0, and on Windows it defaults to COM3. You
+can change it or even specify multiple devices to control with the
+-d switch, like this:  
+```shell
+cargo run --release -- -d /dev/ttyUSB2 -d /dev/ttyUSB5
+```  
+  
+Or on Windows you would do the same, but with names like COM4 or 
+COM5, like this:  
+```shell
+cargo run --release -- -d COM4 -d COM5
+```  
+  
+When you specify multiple devices, all commands will be executed 
+on the first device first, and then on the next device immediately
+afterwards.  
+  
+IMPORTANT: You can run this program with multiple command line 
+switches all in one invocation, and when you do that, the commands
+will be executed in a predefined order, NOT the order which you add
+the switches in the command invocation. An attempt has been made to
+define execution in a reasonable order which should work for most
+use-cases, but if you need things to run in a different order,
+you'll need to run the program multiple times instead. Maybe you can
+write a script and call this program from inside there multiple times 
+if you want it automated nicely, with things happening in a custom 
+order. If you'd like to see the exact order that things will run in, 
+you can take a look in the `src/main.rs` file. The commands will run 
+top-to-bottom in the order their corresponding functions appear in 
+that source file. If you aren't sure which command line switches 
+those functions correspond with, you can cross-reference the switch 
+names with the entries of the same name listed in the file named 
+`clap.yaml`. The execution order might change in newer versions of 
+this program, if a better order is determined after receiving 
+feedback from users and using it for longer, so please don't assume 
+this execution order will never change between versions.  
+  
   
 UPDATE TO THE LATEST COMMIT OR USE A SPECIFIC NUMBERED VERSION:  
 --------------------------------------------------------------  
