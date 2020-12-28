@@ -1,6 +1,8 @@
 Control the GH-CJDS66 60MHz Signal Generator  
 --------------------------------------------  
   
+https://gitlab.com/defcronyke/signal-gen-cjds66  
+  
 Copyright © 2020 Jeremy Carter <jeremy@jeremycarter.ca>  
   
 By using this software, you agree to the LICENSE TERMS 
@@ -30,7 +32,8 @@ errata, which you can read about in a commit message here:
   
 Device and USB Interface info:  
 -----------------------------  
-Manufacturer page with info on where to buy it: [https://www.koolertron.com/koolertron-upgraded-60mhz-dds-signal-generator-counterhigh-precision-dualchannel-arbitrary-waveform-function-generator-frequency-meter-200msas-60mhz-p-867.html](https://www.koolertron.com/koolertron-upgraded-60mhz-dds-signal-generator-counterhigh-precision-dualchannel-arbitrary-waveform-function-generator-frequency-meter-200msas-60mhz-p-867.html)  
+Manufacturer page with info on where to buy it:  
+[https://www.koolertron.com/koolertron-upgraded-60mhz-dds-signal-generator-counterhigh-precision-dualchannel-arbitrary-waveform-function-generator-frequency-meter-200msas-60mhz-p-867.html](https://www.koolertron.com/koolertron-upgraded-60mhz-dds-signal-generator-counterhigh-precision-dualchannel-arbitrary-waveform-function-generator-frequency-meter-200msas-60mhz-p-867.html)  
   
 Linux `lsusb` output:  
 ```shell
@@ -68,6 +71,23 @@ like where you see the -h flag above. You can also optionally omit the
 --release switch if you'd prefer to be using a debug build of the program:  
 ```shell
 cargo run --release -- <any switches or args go here>
+```  
+  
+5. (Optional) If you prefer to run the compiled program directly, instead
+of with the Rust toolchain's "cargo" helper command, after running the 
+above cargo command for the first time, you can find the compiled binary 
+for this program in the `target/release` folder.  
+  
+You can run it like this on Linux:  
+```shell
+cd target/release
+./signal-gen-cjds66 -h
+```  
+  
+On Windows you can run it like this:  
+```shell
+cd target\release
+signal-gen-cjds66.exe -h
 ```  
   
   
@@ -154,7 +174,7 @@ cargo run --release -- -a 1
 Tutorial - Upload an Audio File to the Device  
 ---------------------------------------------  
 1. Using some program such as Audacity 
-([https://www.audacityteam.org/](https://www.audacityteam.org/)), 
+([https://www.audacityteam.org](https://www.audacityteam.org)), 
 export your desired audio as a 16-bit .wav file, and it's recommended 
 that you use a very low-quality project rate such as 8000 Hz, so you 
 can fit a longer amount of the audio onto the device.  
@@ -163,6 +183,12 @@ can fit a longer amount of the audio onto the device.
 saving it in slot 1:  
 ```shell
 cargo run --release -- --wwc 1,<the-filename-here.wav>
+```  
+  
+3. Set the device to use the custom wave you just uploaded, for channel
+1 output:  
+```shell
+cargo run --release -- -a 1
 ```  
   
 IMPORTANT: The device can only store the first 2048 numbers contained 
