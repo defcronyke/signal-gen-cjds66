@@ -14,6 +14,8 @@ software.
   
 Usage: `cargo run --release -- -h`  
   
+[Full Usage Info (from the project Wiki)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/wikis/usage)  
+  
   
 Purpose:  
 -------  
@@ -219,7 +221,7 @@ cargo run --release -- -a 1
 ```  
   
   
-Tutorial - Upload an Audio File to the Device  
+Tutorial - Upload an Audio File to the Device:  
 ---------------------------------------------  
 1. Using some program such as Audacity 
 ([https://www.audacityteam.org](https://www.audacityteam.org)), 
