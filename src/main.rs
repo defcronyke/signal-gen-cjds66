@@ -336,7 +336,6 @@ fn real_main() -> Result<i32, error::Error> {
 					}
 				}
 
-
 				// If get measurement frequency is requested.
 				if matches.is_present("get_measurement_frequency") {
 					match get_measurement_frequency(&mut port, verbose) {
@@ -347,7 +346,6 @@ fn real_main() -> Result<i32, error::Error> {
 						},
 					}
 				}
-
 
 				// If get measurement frequency period is requested.
 				if matches.is_present("get_measurement_frequency_period") {
@@ -360,7 +358,6 @@ fn real_main() -> Result<i32, error::Error> {
 					}
 				}
 
-
 				// If get measurement pulse width positive is requested.
 				if matches.is_present("get_measurement_pulse_width_positive") {
 					match get_measurement_pulse_width_positive(&mut port, verbose) {
@@ -371,7 +368,6 @@ fn real_main() -> Result<i32, error::Error> {
 						},
 					}
 				}
-
 
 				// If get measurement pulse width negative is requested.
 				if matches.is_present("get_measurement_pulse_width_negative") {
@@ -384,7 +380,6 @@ fn real_main() -> Result<i32, error::Error> {
 					}
 				}
 
-
 				// If get measurement period is requested.
 				if matches.is_present("get_measurement_period") {
 					match get_measurement_period(&mut port, verbose) {
@@ -395,7 +390,6 @@ fn real_main() -> Result<i32, error::Error> {
 						},
 					}
 				}
-
 
 				// If get measurement duty cycle is requested.
 				if matches.is_present("get_measurement_duty_cycle") {

@@ -424,6 +424,7 @@ macro_rules! READ_WAVEFORM_PRESET_RES_LEN {
 	};
 }
 pub const READ_WAVEFORM_PRESET_RES_LEN: u8 = READ_WAVEFORM_PRESET_RES_LEN!();
+// -----
 
 // -----
 // Set waveform frequency for each channel.
