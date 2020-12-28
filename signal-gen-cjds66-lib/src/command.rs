@@ -125,6 +125,73 @@ pub fn read_machine_number(
 	Ok(res.to_string())
 }
 
+pub fn read_machine_model_and_number(
+	port: &mut Box<dyn SerialPort>,
+	verbose: u64,
+) -> Result<String, clap::Error> {
+	if verbose > 0 {
+		println!("\nRequesting machine model and serial number:\n{}", READ_MACHINE_MODEL_AND_NUMBER);
+	}
+
+	let inbuf: Vec<u8> = READ_MACHINE_MODEL_AND_NUMBER.as_bytes().to_vec();
+	let mut outbuf: Vec<u8> = (0..READ_MACHINE_MODEL_AND_NUMBER_RES_LEN).collect();
+
+	port.write(&inbuf[..])?;
+	port.read(&mut outbuf[..])?;
+
+	let res = str::from_utf8(&outbuf).unwrap();
+
+	if verbose > 0 {
+		println!("Response:");
+		println!("{}", res);
+	} else {
+		let res2_parts: Vec<&str> = res.split("=").collect();
+
+		if res2_parts.len() < 3 {
+			return Err(Error::with_description(
+				&format!(
+					"unexpected response from device: missing separator ({}): {}",
+					COMMAND_SEPARATOR, res
+				),
+				ErrorKind::ValueValidation,
+			));
+		}
+
+		let res_model_parts: Vec<&str> = res2_parts[1].split(".").collect();
+
+		if res_model_parts.len() < 2 {
+			return Err(Error::with_description(
+				&format!(
+					"unexpected response from device: missing separator ({}): {}",
+					".", res
+				),
+				ErrorKind::ValueValidation,
+			));
+		}
+
+		let res_model = res_model_parts[0];
+
+		let res_number_parts: Vec<&str> = res2_parts[2].split(".").collect();
+
+		if res_number_parts.len() < 2 {
+			return Err(Error::with_description(
+				&format!(
+					"unexpected response from device: missing separator ({}): {}",
+					".", res
+				),
+				ErrorKind::ValueValidation,
+			));
+		}
+
+		let res_number = res_number_parts[0];
+
+		println!("model:\t{}", res_model);
+		println!("serial:\t{}", res_number);
+	}
+
+	Ok(res.to_string())
+}
+
 pub fn set_channel_output(
 	port: &mut Box<dyn SerialPort>,
 	ch1: bool,

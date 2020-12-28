@@ -164,6 +164,11 @@ fn real_main() -> Result<i32, error::Error> {
 					read_machine_number(&mut port, verbose).unwrap();
 				}
 
+				// If model and serial number is requested.
+				if matches.is_present("get_model_and_serial") {
+					read_machine_model_and_number(&mut port, verbose).unwrap();
+				}
+
 
 				// If read arbitrary wave is requested.
 				if matches.is_present("read_arbitrary_wave") {

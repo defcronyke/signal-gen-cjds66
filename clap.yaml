@@ -131,6 +131,10 @@ args:
       long: serial
       help: Get the device's serial number.
 
+  - get_model_and_serial:
+      long: ms
+      help: Get the device's model number and serial number.
+
   - read_arbitrary_wave:
       long: rw
       takes_value: true
@@ -669,5 +673,6 @@ args:
       takes_value: true
       value_name: ch1_on,ch2_on
       help: "Set the output state to on or off for channels 1 and 2. For example, ch1 on, ch 2 off: -o 1,0"
+
   # ----- END Commands which set one or both of the
   #       device's channels ON or OFF.              -----

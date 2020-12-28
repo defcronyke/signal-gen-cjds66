@@ -108,13 +108,6 @@ macro_rules! READ_MACHINE_MODEL_ARG1 {
 }
 pub const READ_MACHINE_MODEL_ARG1: &'static str = READ_MACHINE_MODEL_ARG1!();
 
-macro_rules! READ_MACHINE_MODEL_RES_LEN {
-	() => {
-			10
-	};
-}
-pub const READ_MACHINE_MODEL_RES_LEN: u8 = READ_MACHINE_MODEL_RES_LEN!();
-
 // command example:
 // ":r00=0.\r\n"
 macro_rules! READ_MACHINE_MODEL {
@@ -130,6 +123,13 @@ macro_rules! READ_MACHINE_MODEL {
 	};
 }
 pub const READ_MACHINE_MODEL: &'static str = READ_MACHINE_MODEL!();
+
+macro_rules! READ_MACHINE_MODEL_RES_LEN {
+	() => {
+			10
+	};
+}
+pub const READ_MACHINE_MODEL_RES_LEN: u8 = READ_MACHINE_MODEL_RES_LEN!();
 // -----
 
 // -----
@@ -170,6 +170,39 @@ macro_rules! READ_MACHINE_NUMBER {
 	};
 }
 pub const READ_MACHINE_NUMBER: &'static str = READ_MACHINE_NUMBER!();
+// -----
+
+// -----
+// Read the device's model number and serial number.
+macro_rules! READ_MACHINE_MODEL_AND_NUMBER_ARG1 {
+	() => {
+			"1"
+	};
+}
+pub const READ_MACHINE_MODEL_AND_NUMBER_ARG1: &'static str = READ_MACHINE_MODEL_AND_NUMBER_ARG1!();
+
+// command example:
+// ":r00=1.\r\n"
+macro_rules! READ_MACHINE_MODEL_AND_NUMBER {
+	() => {
+		concat!(
+			COMMAND_BEGIN!(),
+			COMMAND_READ!(),
+			READ_MACHINE_MODEL_COMMAND!(),
+			COMMAND_SEPARATOR!(),
+			READ_MACHINE_MODEL_AND_NUMBER_ARG1!(),
+			COMMAND_END!(),
+			)
+	};
+}
+pub const READ_MACHINE_MODEL_AND_NUMBER: &'static str = READ_MACHINE_MODEL_AND_NUMBER!();
+
+macro_rules! READ_MACHINE_MODEL_AND_NUMBER_RES_LEN {
+	() => {
+			28
+	};
+}
+pub const READ_MACHINE_MODEL_AND_NUMBER_RES_LEN: u8 = READ_MACHINE_MODEL_AND_NUMBER_RES_LEN!();
 // -----
 
 // -----
