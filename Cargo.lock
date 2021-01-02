@@ -267,7 +267,7 @@ dependencies = [
 
 [[package]]
 name = "signal-gen-cjds66"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "clap",
  "signal-gen-cjds66-lib",
@@ -275,7 +275,7 @@ dependencies = [
 
 [[package]]
 name = "signal-gen-cjds66-lib"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "bitflags",
  "byteorder",
