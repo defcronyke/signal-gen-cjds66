@@ -1,4 +1,4 @@
-/* Copyright © 2020 Jeremy Carter <jeremy@jeremycarter.ca>
+/* Copyright © 2020-2021 Jeremy Carter <jeremy@jeremycarter.ca>
 
 By using this software, you agree to the LICENSE TERMS
 outlined in the file titled LICENSE.md contained in the
@@ -156,25 +156,25 @@ fn real_main() -> Result<i32, error::Error> {
 
 				// If model number is requested.
 				if matches.is_present("get_model") {
-					read_machine_model(&mut port, verbose).unwrap();
+					get_model(&mut port, verbose).unwrap();
 				}
 
 				// If serial number is requested.
 				if matches.is_present("get_serial") {
-					read_machine_number(&mut port, verbose).unwrap();
+					get_serial(&mut port, verbose).unwrap();
 				}
 
 				// If model and serial number is requested.
 				if matches.is_present("get_model_and_serial") {
-					read_machine_model_and_number(&mut port, verbose).unwrap();
+					get_model_and_serial(&mut port, verbose).unwrap();
 				}
 
 
 				// If read arbitrary wave is requested.
-				if matches.is_present("read_arbitrary_wave") {
-					let arg = matches.value_of("read_arbitrary_wave").unwrap_or_default();
+				if matches.is_present("get_arbitrary_wave") {
+					let arg = matches.value_of("get_arbitrary_wave").unwrap_or_default();
 
-					match match_read_arbitrary_wave_arg(&mut port, arg, verbose) {
+					match get_arbitrary_wave(&mut port, arg, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -415,7 +415,7 @@ fn real_main() -> Result<i32, error::Error> {
 
 				// If set switch function panel main ch1 is requested.
 				if matches.is_present("switch_main_ch1") {
-					match set_switch_function_panel_main(&mut port, 1, verbose) {
+					match switch_function_panel_main(&mut port, 1, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -426,7 +426,7 @@ fn real_main() -> Result<i32, error::Error> {
 
 				// If set switch function panel main ch2 is requested.
 				if matches.is_present("switch_main_ch2") {
-					match set_switch_function_panel_main(&mut port, 2, verbose) {
+					match switch_function_panel_main(&mut port, 2, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -438,7 +438,7 @@ fn real_main() -> Result<i32, error::Error> {
 
 				// If set switch function panel system settings is requested.
 				if matches.is_present("switch_sys") {
-					match set_switch_function_panel_sys(&mut port, verbose) {
+					match switch_function_panel_sys(&mut port, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -451,7 +451,7 @@ fn real_main() -> Result<i32, error::Error> {
 
 				// If set switch function panel counting is requested.
 				if matches.is_present("switch_counting") {
-					match set_switch_function_panel_counting(&mut port, verbose) {
+					match switch_function_panel_counting(&mut port, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -464,7 +464,7 @@ fn real_main() -> Result<i32, error::Error> {
 
 				// If set switch function panel sweep ch1 is requested.
 				if matches.is_present("switch_sweep_ch1") {
-					match set_switch_function_panel_sweep(&mut port, 1, verbose) {
+					match switch_function_panel_sweep(&mut port, 1, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -475,7 +475,7 @@ fn real_main() -> Result<i32, error::Error> {
 
 				// If set switch function panel sweep ch2 is requested.
 				if matches.is_present("switch_sweep_ch2") {
-					match set_switch_function_panel_sweep(&mut port, 2, verbose) {
+					match switch_function_panel_sweep(&mut port, 2, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -487,7 +487,7 @@ fn real_main() -> Result<i32, error::Error> {
 
 				// If set switch function panel pulse is requested.
 				if matches.is_present("switch_pulse") {
-					match set_switch_function_panel_pulse(&mut port, verbose) {
+					match switch_function_panel_pulse(&mut port, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -500,7 +500,7 @@ fn real_main() -> Result<i32, error::Error> {
 
 				// If set switch function panel bursting is requested.
 				if matches.is_present("switch_burst") {
-					match set_switch_function_panel_bursting(&mut port, verbose) {
+					match switch_function_panel_bursting(&mut port, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -513,7 +513,7 @@ fn real_main() -> Result<i32, error::Error> {
 
 				// If set switch function panel measurement is requested.
 				if matches.is_present("switch_measurement") {
-					match set_switch_function_panel_measurement(&mut port, verbose) {
+					match switch_function_panel_measurement(&mut port, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -539,7 +539,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_tracking") {
 					let track = matches.value_of("set_tracking").unwrap_or_default();
 
-					match match_set_tracking_arg(&mut port, track, verbose) {
+					match set_tracking(&mut port, track, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -553,7 +553,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_waveform_channel1") {
 					let preset = matches.value_of("set_waveform_channel1").unwrap_or_default();
 
-					match match_set_waveform_preset_arg(&mut port, 1, preset, verbose) {
+					match set_waveform_preset(&mut port, 1, preset, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -566,7 +566,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_waveform_channel2") {
 					let preset = matches.value_of("set_waveform_channel2").unwrap_or_default();
 
-					match match_set_waveform_preset_arg(&mut port, 2, preset, verbose) {
+					match set_waveform_preset(&mut port, 2, preset, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -579,7 +579,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_arbitrary_waveform_channel1") {
 					let preset = matches.value_of("set_arbitrary_waveform_channel1").unwrap_or_default();
 
-					match match_set_waveform_arbitrary_arg(&mut port, 1, preset, verbose) {
+					match set_waveform_preset_arbitrary(&mut port, 1, preset, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -592,7 +592,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_arbitrary_waveform_channel2") {
 					let preset = matches.value_of("set_arbitrary_waveform_channel2").unwrap_or_default();
 
-					match match_set_waveform_arbitrary_arg(&mut port, 2, preset, verbose) {
+					match set_waveform_preset_arbitrary(&mut port, 2, preset, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -606,7 +606,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_frequency_uhz_channel1") {
 					let amount = matches.value_of("set_frequency_uhz_channel1").unwrap_or_default();
 
-					match match_set_frequency_microhertz_arg(&mut port, 1, amount, verbose) {
+					match set_frequency_microhertz(&mut port, 1, amount, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -619,7 +619,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_frequency_uhz_channel2") {
 					let amount = matches.value_of("set_frequency_uhz_channel2").unwrap_or_default();
 
-					match match_set_frequency_microhertz_arg(&mut port, 2, amount, verbose) {
+					match set_frequency_microhertz(&mut port, 2, amount, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -632,7 +632,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_frequency_millihz_channel1") {
 					let amount = matches.value_of("set_frequency_millihz_channel1").unwrap_or_default();
 
-					match match_set_frequency_millihertz_arg(&mut port, 1, amount, verbose) {
+					match set_frequency_millihertz(&mut port, 1, amount, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -645,7 +645,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_frequency_millihz_channel2") {
 					let amount = matches.value_of("set_frequency_millihz_channel2").unwrap_or_default();
 
-					match match_set_frequency_millihertz_arg(&mut port, 2, amount, verbose) {
+					match set_frequency_millihertz(&mut port, 2, amount, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -658,7 +658,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_frequency_hz_channel1") {
 					let amount = matches.value_of("set_frequency_hz_channel1").unwrap_or_default();
 
-					match match_set_frequency_hertz_arg(&mut port, 1, amount, verbose) {
+					match set_frequency_hertz(&mut port, 1, amount, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -671,7 +671,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_frequency_hz_channel2") {
 					let amount = matches.value_of("set_frequency_hz_channel2").unwrap_or_default();
 
-					match match_set_frequency_hertz_arg(&mut port, 2, amount, verbose) {
+					match set_frequency_hertz(&mut port, 2, amount, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -684,7 +684,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_frequency_khz_channel1") {
 					let amount = matches.value_of("set_frequency_khz_channel1").unwrap_or_default();
 
-					match match_set_frequency_kilohertz_arg(&mut port, 1, amount, verbose) {
+					match set_frequency_kilohertz(&mut port, 1, amount, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -697,7 +697,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_frequency_khz_channel2") {
 					let amount = matches.value_of("set_frequency_khz_channel2").unwrap_or_default();
 
-					match match_set_frequency_kilohertz_arg(&mut port, 2, amount, verbose) {
+					match set_frequency_kilohertz(&mut port, 2, amount, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -710,7 +710,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_frequency_mega_channel1") {
 					let amount = matches.value_of("set_frequency_mega_channel1").unwrap_or_default();
 
-					match match_set_frequency_megahertz_arg(&mut port, 1, amount, verbose) {
+					match set_frequency_megahertz(&mut port, 1, amount, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -723,7 +723,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_frequency_mega_channel2") {
 					let amount = matches.value_of("set_frequency_mega_channel2").unwrap_or_default();
 
-					match match_set_frequency_megahertz_arg(&mut port, 2, amount, verbose) {
+					match set_frequency_megahertz(&mut port, 2, amount, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -737,7 +737,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_amplitude_volts_channel1") {
 					let amount = matches.value_of("set_amplitude_volts_channel1").unwrap_or_default();
 
-					match match_set_amplitude_arg(&mut port, 1, amount, verbose) {
+					match set_amplitude(&mut port, 1, amount, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -750,7 +750,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_amplitude_volts_channel2") {
 					let amount = matches.value_of("set_amplitude_volts_channel2").unwrap_or_default();
 
-					match match_set_amplitude_arg(&mut port, 2, amount, verbose) {
+					match set_amplitude(&mut port, 2, amount, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -764,7 +764,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_duty_cycle_channel1") {
 					let amount = matches.value_of("set_duty_cycle_channel1").unwrap_or_default();
 
-					match match_set_duty_cycle_arg(&mut port, 1, amount, verbose) {
+					match set_duty_cycle(&mut port, 1, amount, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -777,7 +777,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_duty_cycle_channel2") {
 					let amount = matches.value_of("set_duty_cycle_channel2").unwrap_or_default();
 
-					match match_set_duty_cycle_arg(&mut port, 2, amount, verbose) {
+					match set_duty_cycle(&mut port, 2, amount, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -791,7 +791,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_voltage_offset_channel1") {
 					let amount = matches.value_of("set_voltage_offset_channel1").unwrap_or_default();
 
-					match match_set_voltage_offset_arg(&mut port, 1, amount, verbose) {
+					match set_voltage_offset(&mut port, 1, amount, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -804,7 +804,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_voltage_offset_channel2") {
 					let amount = matches.value_of("set_voltage_offset_channel2").unwrap_or_default();
 
-					match match_set_voltage_offset_arg(&mut port, 2, amount, verbose) {
+					match set_voltage_offset(&mut port, 2, amount, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -818,7 +818,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_phase") {
 					let amount = matches.value_of("set_phase").unwrap_or_default();
 
-					match match_set_phase_arg(&mut port, amount, verbose) {
+					match set_phase(&mut port, amount, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -857,7 +857,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_measurement_gate_time") {
 					let amount = matches.value_of("set_measurement_gate_time").unwrap_or_default();
 
-					match match_set_measurement_gate_time_arg(&mut port, amount, verbose) {
+					match set_measurement_gate_time(&mut port, amount, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -897,7 +897,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_burst_pulse_number") {
 					let amount = matches.value_of("set_burst_pulse_number").unwrap_or_default();
 
-					match match_set_burst_pulse_number_arg(&mut port, amount, verbose) {
+					match set_burst_pulse_number(&mut port, amount, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -961,7 +961,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_sweep_start_freq") {
 					let amount = matches.value_of("set_sweep_start_freq").unwrap_or_default();
 
-					match match_set_sweep_starting_frequency_arg(&mut port, amount, verbose) {
+					match set_sweep_starting_frequency(&mut port, amount, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -971,11 +971,11 @@ fn real_main() -> Result<i32, error::Error> {
 					}
 				}
 
-				// If set sweep termination frequency is requested.
-				if matches.is_present("set_sweep_stop_freq") {
-					let amount = matches.value_of("set_sweep_stop_freq").unwrap_or_default();
+				// If set sweep end frequency is requested.
+				if matches.is_present("set_sweep_end_freq") {
+					let amount = matches.value_of("set_sweep_end_freq").unwrap_or_default();
 
-					match match_set_sweep_termination_frequency_arg(&mut port, amount, verbose) {
+					match set_sweep_end_frequency(&mut port, amount, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -990,7 +990,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_sweep_time") {
 					let amount = matches.value_of("set_sweep_time").unwrap_or_default();
 
-					match match_set_sweep_time_arg(&mut port, amount, verbose) {
+					match set_sweep_time(&mut port, amount, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -1001,9 +1001,9 @@ fn real_main() -> Result<i32, error::Error> {
 				}
 
 
-				// If set sweep direction normal (rise) is requested.
+				// If set sweep direction rise is requested.
 				if matches.is_present("set_sweep_direction_rise") {
-					match set_sweep_direction_normal(&mut port, verbose) {
+					match set_sweep_direction_rise(&mut port, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -1013,9 +1013,9 @@ fn real_main() -> Result<i32, error::Error> {
 					}
 				}
 
-				// If set sweep direction reverse (fall) is requested.
+				// If set sweep direction fall is requested.
 				if matches.is_present("set_sweep_direction_fall") {
-					match set_sweep_direction_reverse(&mut port, verbose) {
+					match set_sweep_direction_fall(&mut port, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -1025,9 +1025,9 @@ fn real_main() -> Result<i32, error::Error> {
 					}
 				}
 
-				// If set sweep direction round trip (rise and fall) is requested.
+				// If set sweep direction rise and fall is requested.
 				if matches.is_present("set_sweep_direction_rise_fall") {
-					match set_sweep_direction_round_trip(&mut port, verbose) {
+					match set_sweep_direction_rise_fall(&mut port, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -1067,7 +1067,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_pulse_width_nanoseconds") {
 					let amount = matches.value_of("set_pulse_width_nanoseconds").unwrap_or_default();
 
-					match match_set_pulse_width_arg(&mut port, amount, false, verbose) {
+					match set_pulse_width(&mut port, amount, false, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -1081,7 +1081,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_pulse_width_microseconds") {
 					let amount = matches.value_of("set_pulse_width_microseconds").unwrap_or_default();
 
-					match match_set_pulse_width_arg(&mut port, amount, true, verbose) {
+					match set_pulse_width(&mut port, amount, true, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -1096,7 +1096,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_pulse_period_nanoseconds") {
 					let amount = matches.value_of("set_pulse_period_nanoseconds").unwrap_or_default();
 
-					match match_set_pulse_period_arg(&mut port, amount, false, verbose) {
+					match set_pulse_period(&mut port, amount, false, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -1110,7 +1110,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_pulse_period_microseconds") {
 					let amount = matches.value_of("set_pulse_period_microseconds").unwrap_or_default();
 
-					match match_set_pulse_period_arg(&mut port, amount, true, verbose) {
+					match set_pulse_period(&mut port, amount, true, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -1125,7 +1125,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_pulse_offset") {
 					let amount = matches.value_of("set_pulse_offset").unwrap_or_default();
 
-					match match_set_pulse_offset_arg(&mut port, amount, verbose) {
+					match set_pulse_offset(&mut port, amount, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -1140,7 +1140,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_pulse_amplitude") {
 					let amount = matches.value_of("set_pulse_amplitude").unwrap_or_default();
 
-					match match_set_pulse_amplitude_arg(&mut port, amount, verbose) {
+					match set_pulse_amplitude(&mut port, amount, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -1168,7 +1168,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("save_preset") {
 					let amount = matches.value_of("save_preset").unwrap_or_default();
 
-					match match_save_preset_arg(&mut port, amount, verbose) {
+					match save_preset(&mut port, amount, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -1180,25 +1180,10 @@ fn real_main() -> Result<i32, error::Error> {
 
 
 				// If recall preset is requested.
-				if matches.is_present("recall_preset") {
-					let amount = matches.value_of("recall_preset").unwrap_or_default();
+				if matches.is_present("load_preset") {
+					let amount = matches.value_of("load_preset").unwrap_or_default();
 
-					match match_recall_preset_arg(&mut port, amount, verbose) {
-						Ok(_res) => {
-						},
-						Err(e) => {
-							err = Some(error::Error::from_clap_error(e));
-							println!("{}", err.as_ref().unwrap());
-						},
-					}
-				}
-
-
-				// If clear preset is requested.
-				if matches.is_present("clear_preset") {
-					let amount = matches.value_of("clear_preset").unwrap_or_default();
-
-					match match_clear_preset_arg(&mut port, amount, verbose) {
+					match load_preset(&mut port, amount, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -1210,10 +1195,10 @@ fn real_main() -> Result<i32, error::Error> {
 
 
 				// If write arbitrary wave stdin is requested.
-				if matches.is_present("write_arbitrary_wave_stdin") {
-					let arg = matches.value_of("write_arbitrary_wave_stdin").unwrap_or_default();
+				if matches.is_present("set_arbitrary_wave_stdin") {
+					let arg = matches.value_of("set_arbitrary_wave_stdin").unwrap_or_default();
 
-					match match_write_arbitrary_wave_stdin_arg(&mut port, arg, verbose) {
+					match set_arbitrary_wave_stdin(&mut port, arg, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -1225,10 +1210,10 @@ fn real_main() -> Result<i32, error::Error> {
 
 
 				// If write arbitrary wavecad is requested.
-				if matches.is_present("write_arbitrary_wavecad") {
-					let arg = matches.value_of("write_arbitrary_wavecad").unwrap_or_default();
+				if matches.is_present("set_arbitrary_wavecad") {
+					let arg = matches.value_of("set_arbitrary_wavecad").unwrap_or_default();
 
-					match match_write_arbitrary_wavecad_arg(&mut port, arg, verbose) {
+					match set_arbitrary_wavecad(&mut port, arg, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -1252,7 +1237,7 @@ fn real_main() -> Result<i32, error::Error> {
 
 				// If set counting starting is requested.
 				if matches.is_present("start_counting") {
-					match set_counting_starting(&mut port, verbose) {
+					match start_counting(&mut port, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -1264,7 +1249,7 @@ fn real_main() -> Result<i32, error::Error> {
 
 				// If set sweep starting ch1 is requested.
 				if matches.is_present("start_sweeping_ch1") {
-					match set_sweep_starting(&mut port, 1, verbose) {
+					match start_sweeping(&mut port, 1, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -1276,7 +1261,7 @@ fn real_main() -> Result<i32, error::Error> {
 
 				// If set sweep starting ch2 is requested.
 				if matches.is_present("start_sweeping_ch2") {
-					match set_sweep_starting(&mut port, 2, verbose) {
+					match start_sweeping(&mut port, 2, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -1288,7 +1273,7 @@ fn real_main() -> Result<i32, error::Error> {
 
 				// If set pulse starting is requested.
 				if matches.is_present("start_pulsing") {
-					match set_pulse_starting(&mut port, verbose) {
+					match start_pulsing(&mut port, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -1299,8 +1284,8 @@ fn real_main() -> Result<i32, error::Error> {
 
 
 				// If set burst pulse once is requested.
-				if matches.is_present("burst_pulse_once") {
-					match set_burst_pulse_once(&mut port, verbose) {
+				if matches.is_present("start_burst_pulse_once") {
+					match start_burst_pulse_once(&mut port, verbose) {
 						Ok(_res) => {
 						},
 						Err(e) => {
@@ -1313,7 +1298,7 @@ fn real_main() -> Result<i32, error::Error> {
 
 				// If set bursting starting is requested.
 				if matches.is_present("start_bursting") {
-					match set_bursting_starting(&mut port, verbose) {
+					match start_bursting(&mut port, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));
@@ -1325,9 +1310,9 @@ fn real_main() -> Result<i32, error::Error> {
 
 				// If set measurement starting is requested.
 				if matches.is_present("start_measuring") {
-					match set_measurement_starting(&mut port, verbose) {
+					match start_measuring(&mut port, verbose) {
 						Ok(_res) => {
-							match set_channel_output(&mut port, false, false, verbose) {
+							match set_channel_output(&mut port, "0", verbose) {
 								Ok(_res) => {},
 								Err(e) => {
 									err = Some(error::Error::from_clap_error(e));
@@ -1347,7 +1332,7 @@ fn real_main() -> Result<i32, error::Error> {
 				if matches.is_present("set_channel_output") {
 					let sco = matches.value_of("set_channel_output").unwrap_or_default();
 
-					match match_set_channel_output_arg(&mut port, sco, verbose) {
+					match set_channel_output(&mut port, sco, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
 							err = Some(error::Error::from_clap_error(e));

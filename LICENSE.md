@@ -2,7 +2,7 @@ LICENSE
 =======  
 signal-gen-cjds66  
   
-Copyright © 2020 Jeremy Carter <jeremy@jeremycarter.ca>  
+Copyright © 2020-2021 Jeremy Carter <jeremy@jeremycarter.ca>  
   
 By using this software, you agree to the following
 LICENSE TERMS (if you don't agree, you aren't allowed

@@ -1,4 +1,4 @@
-/* Copyright © 2020 Jeremy Carter <jeremy@jeremycarter.ca>
+/* Copyright © 2020-2021 Jeremy Carter <jeremy@jeremycarter.ca>
 
 By using this software, you agree to the LICENSE TERMS 
 outlined in the file titled LICENSE.md contained in the 
@@ -7,10 +7,15 @@ to the LICENSE TERMS, you aren't allowed to use this
 software.
 */
 
+/*! Miscellaneous utility functions used by the library,
+which make some common tasks more convenient to perform.
+*/
+
 use std::path::{Path, PathBuf};
 
-// Change the file extension at the end of a file path,
-// and return the whole new path.
+/** Change the file extension at the end of a file path,
+and return the whole new path.
+*/
 pub fn change_file_extension(path: &str, new_ext: &str) -> String {
 	let mut new_path_obj = PathBuf::from(path);
 	new_path_obj.pop();

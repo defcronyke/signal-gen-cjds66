@@ -1,4 +1,4 @@
-# Copyright © 2020 Jeremy Carter <jeremy@jeremycarter.ca>
+# Copyright © 2020-2021 Jeremy Carter <jeremy@jeremycarter.ca>
 #
 # By using this software, you agree to the LICENSE TERMS 
 # outlined in the file titled LICENSE.md contained in the 
@@ -10,7 +10,7 @@ name: signal-gen-cjds66
 
 author: Jeremy Carter <jeremy@jeremycarter.ca>
 
-version: "0.1.0"
+version: "0.1.1"
 
 about: |
   An unofficial program to control the CJDS66 60MHz DDS
@@ -22,7 +22,7 @@ about: |
 
 template: |
   {bin} v{version}
-  Copyright © 2020 {author}
+  Copyright © 2020-2021 {author}
 
   {about}
 
@@ -135,7 +135,7 @@ args:
       long: ms
       help: Get the device's model number and serial number.
 
-  - read_arbitrary_wave:
+  - get_arbitrary_wave:
       long: rw
       takes_value: true
       value_name: slot_number
@@ -524,11 +524,11 @@ args:
       value_name: start_freq_hz
       help: Set the sweep starting frequency.
 
-  - set_sweep_stop_freq:
+  - set_sweep_end_freq:
       long: se
       takes_value: true
-      value_name: stop_freq_hz
-      help: Set the sweep stopping frequency.
+      value_name: end_freq_hz
+      help: Set the sweep end frequency.
 
   - set_sweep_time:
       long: st
@@ -545,7 +545,7 @@ args:
       help: Set the sweep direction to fall (reverse).
 
   - set_sweep_direction_rise_fall:
-      long: sdt
+      long: sdrf
       help: Set the sweep direction to rise and fall (round trip).
 
   - set_sweep_linear:
@@ -602,25 +602,19 @@ args:
       value_name: preset_number
       help: Save all the current values on the device as a numbered preset.
 
-  - recall_preset:
-      long: rpr
+  - load_preset:
+      long: lpr
       takes_value: true
       value_name: preset_number
-      help: Recall all the values on the device from a numbered preset.
+      help: Load all the values for the device from a numbered preset.
 
-  - clear_preset:
-      long: cpr
-      takes_value: true
-      value_name: preset_number
-      help: Clear a numbered preset. Any values saved to it will be permanently lost. This doesn't seem to work though.
-
-  - write_arbitrary_wave_stdin:
+  - set_arbitrary_wave_stdin:
       long: wws
       takes_value: true
       value_name: slot_number
       help: "Write an arbitrary waveform to the device from stdin, and save it in one of the 60 slots.\nEx (using file redirection to stdin): --wws 5 < file.wav.txt"
 
-  - write_arbitrary_wavecad:
+  - set_arbitrary_wavecad:
       long: wwc
       takes_value: true
       value_name: slot_number
@@ -653,7 +647,7 @@ args:
       long: start-pulse
       help: Set the extended function to start pulse.
 
-  - burst_pulse_once:
+  - start_burst_pulse_once:
       long: b1
       help: Burst pulse once.
 

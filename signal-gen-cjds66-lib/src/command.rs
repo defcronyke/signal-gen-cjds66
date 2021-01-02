@@ -1,10 +1,23 @@
-/* Copyright © 2020 Jeremy Carter <jeremy@jeremycarter.ca>
+/* Copyright © 2020-2021 Jeremy Carter <jeremy@jeremycarter.ca>
 
 By using this software, you agree to the LICENSE TERMS 
 outlined in the file titled LICENSE.md contained in the 
 top-level directory of this project. If you don't agree
 to the LICENSE TERMS, you aren't allowed to use this
 software.
+*/
+
+/*! Functions which communicate with the device over its USB-serial 
+interface, and expose nearly all of its remotely-accessible features. 
+This contains the support code and logic for almost everything the 
+device can do.  
+  
+Each function accepts a "verbose" integer parameter, which can be
+set to a number above 0 to enable a different and more verbose style 
+of output which is useful for debugging, or to help understand what 
+is happening behind-the-scenes when a function is run. Currently 
+any number above 0 produces the exact same verbose output, so you
+can just use 1 for "verbose" output, and 0 for "not verbose" output.
 */
 
 extern crate byteorder;
@@ -22,16 +35,17 @@ use std::str;
 use byteorder::{ByteOrder, LittleEndian};
 use clap::{Error, ErrorKind};
 
-pub fn read_machine_model(
+/** Get the model number of the device. */
+pub fn get_model(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	if verbose > 0 {
-		println!("\nRequesting machine model number:\n{}", READ_MACHINE_MODEL);
+		println!("\nRequesting machine model number:\n{}", GET_MODEL);
 	}
 
-	let inbuf: Vec<u8> = READ_MACHINE_MODEL.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..READ_MACHINE_MODEL_RES_LEN).collect();
+	let inbuf: Vec<u8> = GET_MODEL.as_bytes().to_vec();
+	let mut outbuf: Vec<u8> = (0..GET_MODEL_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -72,19 +86,20 @@ pub fn read_machine_model(
 	Ok(res.to_string())
 }
 
-pub fn read_machine_number(
+/** Get the serial number of the device. */
+pub fn get_serial(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	if verbose > 0 {
 		println!(
 			"\nRequesting machine serial number:\n{}",
-			READ_MACHINE_NUMBER
+			GET_SERIAL
 		);
 	}
 
-	let inbuf: Vec<u8> = READ_MACHINE_NUMBER.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..READ_MACHINE_NUMBER_RES_LEN).collect();
+	let inbuf: Vec<u8> = GET_SERIAL.as_bytes().to_vec();
+	let mut outbuf: Vec<u8> = (0..GET_SERIAL_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -125,16 +140,17 @@ pub fn read_machine_number(
 	Ok(res.to_string())
 }
 
-pub fn read_machine_model_and_number(
+/** Get the model number and the serial number of the device. */
+pub fn get_model_and_serial(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	if verbose > 0 {
-		println!("\nRequesting machine model and serial number:\n{}", READ_MACHINE_MODEL_AND_NUMBER);
+		println!("\nRequesting machine model and serial number:\n{}", GET_MODEL_AND_NUMBER);
 	}
 
-	let inbuf: Vec<u8> = READ_MACHINE_MODEL_AND_NUMBER.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..READ_MACHINE_MODEL_AND_NUMBER_RES_LEN).collect();
+	let inbuf: Vec<u8> = GET_MODEL_AND_NUMBER.as_bytes().to_vec();
+	let mut outbuf: Vec<u8> = (0..GET_MODEL_AND_NUMBER_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -192,7 +208,59 @@ pub fn read_machine_model_and_number(
 	Ok(res.to_string())
 }
 
+/** Set the device's output state (on or off) for channels 1 and 2.  
+  
+"sco" parameter:  
+```
+	channel 1 on, channel 2 on:  
+		"1,1" | "11" | "on,on" | "1" | "on"  
+  
+	channel 1 off, channel 2 off:  
+		"0,0" | "00" | "off,off" | "0" | "off"  
+  
+	channel 1 on, channel 2 off:  
+		"1,0" | "10" | "on,off"  
+  
+	channel 1 off, channel 2 on:  
+		"0,1" | "01" | "off,on"  
+```
+*/
 pub fn set_channel_output(
+	mut port: &mut Box<dyn SerialPort>,
+	sco: &str,
+	verbose: u64,
+) -> Result<String, clap::Error> {
+	let res: Result<String, clap::Error>;
+
+	match sco {
+		"1,1" | "11" | "on,on" | "1" | "on" => {
+			res = set_channel_output_inner(&mut port, true, true, verbose);
+		}
+
+		"0,0" | "00" | "off,off" | "0" | "off" => {
+			res = set_channel_output_inner(&mut port, false, false, verbose);
+		}
+
+		"1,0" | "10" | "on,off" => {
+			res = set_channel_output_inner(&mut port, true, false, verbose);
+		}
+
+		"0,1" | "01" | "off,on" => {
+			res = set_channel_output_inner(&mut port, false, true, verbose);
+		}
+
+		_ => {
+			res = Err(Error::with_description(
+				&format!("unsupported value passed to \"-o\" argument: {}", sco),
+				ErrorKind::InvalidValue,
+			));
+		}
+	}
+
+	res
+}
+
+fn set_channel_output_inner(
 	port: &mut Box<dyn SerialPort>,
 	ch1: bool,
 	ch2: bool,
@@ -203,16 +271,16 @@ pub fn set_channel_output(
 	// Supported states.
 	if ch1 && ch2 {
 		// Both on.
-		command = WRITE_CHANNEL_OUTPUT_BOTH_ON;
+		command = SET_CHANNEL_OUTPUT_BOTH_ON;
 	} else if !ch1 && !ch2 {
 		// Both off.
-		command = WRITE_CHANNEL_OUTPUT_BOTH_OFF;
+		command = SET_CHANNEL_OUTPUT_BOTH_OFF;
 	} else if ch1 && !ch2 {
 		// ch1 on, ch2 off.
-		command = WRITE_CHANNEL_OUTPUT_CH1_ON_CH2_OFF;
+		command = SET_CHANNEL_OUTPUT_CH1_ON_CH2_OFF;
 	} else if !ch1 && ch2 {
 		// ch1 off, ch2 on.
-		command = WRITE_CHANNEL_OUTPUT_CH1_OFF_CH2_ON;
+		command = SET_CHANNEL_OUTPUT_CH1_OFF_CH2_ON;
 	} else {
 		return Err(Error::with_description(
 			"unsupported input condition",
@@ -228,7 +296,7 @@ pub fn set_channel_output(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_CHANNEL_OUTPUT_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_CHANNEL_OUTPUT_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -243,53 +311,29 @@ pub fn set_channel_output(
 	Ok(res.to_string())
 }
 
-pub fn match_set_channel_output_arg(
-	mut port: &mut Box<dyn SerialPort>,
-	sco: &str,
-	verbose: u64,
-) -> Result<String, clap::Error> {
-	let res: Result<String, clap::Error>;
+/** Get the device's channel output state (on or off) for channel 1 and channel 2.  
+  
+Return Value (Ok Result):  
+```
+channel 1 off, channel 2 on:
+"0,1"
 
-	match sco {
-		"1,1" | "11" | "on,on" | "1" | "on" => {
-			res = set_channel_output(&mut port, true, true, verbose);
-		}
-
-		"0,0" | "00" | "off,off" | "0" | "off" => {
-			res = set_channel_output(&mut port, false, false, verbose);
-		}
-
-		"1,0" | "10" | "on,off" => {
-			res = set_channel_output(&mut port, true, false, verbose);
-		}
-
-		"0,1" | "01" | "off,on" => {
-			res = set_channel_output(&mut port, false, true, verbose);
-		}
-
-		_ => {
-			res = Err(Error::with_description(
-				&format!("unsupported value passed to \"-o\" argument: {}", sco),
-				ErrorKind::InvalidValue,
-			));
-		}
-	}
-
-	res
-}
-
+channel 1 on, channel 2 on:
+"1,1"
+```
+*/
 pub fn get_channel_output(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command = READ_CHANNEL_OUTPUT;
+	let command = GET_CHANNEL_OUTPUT;
 
 	if verbose > 0 {
 		println!("\nGetting channel output:\n{}", command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..READ_CHANNEL_OUTPUT_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..GET_CHANNEL_OUTPUT_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -334,7 +378,138 @@ pub fn get_channel_output(
 	Ok(res3.to_string())
 }
 
+/** Set the device to use a certain named or numbered waveform preset 
+for a specific channel's output. You can choose one of these presets 
+either by name or by the number listed next to the name below.  
+  
+"preset" parameter:
+```
+Waveform names that are accepted, along with their corresponding numbers:
+"0":  "sine" | "sin"
+"1":  "square" | "sq"
+"2":  "pulse" | "pul"
+"3":  "triangle" | "tri"
+"4":  "partialsine" | "partial-sine" | "parsine" | "par-sine" | "parsin" | "par-sin" | "psine" | "p-sine" | "psin" | "p-sin"
+"5":  "cmos" | "cm"
+"6":  "dc"
+"7":  "halfwave" | "half-wave" | "hw" | "h-w"
+"8":  "fullwave" | "full-wave" | "fw" | "f-w"
+"9":  "pos-ladder" | "posladder" | "pos-lad" | "poslad" | "positive-ladder" | "positiveladder" | "pl"
+"10": "neg-ladder" | "negladder" | "neg-lad" | "neglad" | "negative-ladder" | "negativeladder" | "nl"
+"11": "noise" | "nois" | "noi" | "no" | "n"
+"12": "exp-rise" | "exprise" | "e-r" | "er" | "e-rise" | "erise" | "e-ris" | "eris"
+"13": "exp-decay" | "expdecay" | "e-d" | "ed" | "e-decay" | "edecay" | "e-dec" | "edec"
+"14": "multi-tone" | "multitone" | "m-t" | "mt" | "m-tone" | "mtone"
+"15": "sinc" | "sc"
+"16": "lorenz" | "loren" | "lor" | "lz"
+```
+*/
 pub fn set_waveform_preset(
+	mut port: &mut Box<dyn SerialPort>,
+	chan: u64,
+	preset: &str,
+	verbose: u64,
+) -> Result<String, clap::Error> {
+	let res: Result<String, clap::Error>;
+
+	match preset.parse::<u64>() {
+		Ok(preset) => {
+			match preset {
+				0..=16 => {
+					res = set_waveform_preset_inner(&mut port, chan, preset, verbose);
+				}
+
+				_ => {
+					res = Err(Error::with_description(&format!("unsupported value passed to \"set waveform\" argument (must be 0-16): {}", preset), ErrorKind::InvalidValue));
+				}
+			}
+		}
+
+		Err(_e) => {
+			match preset {
+				"sine" | "sin" => {
+					res = set_waveform_preset_inner(&mut port, chan, 0, verbose);
+				}
+
+				"square" | "sq" => {
+					res = set_waveform_preset_inner(&mut port, chan, 1, verbose);
+				}
+
+				"pulse" | "pul" => {
+					res = set_waveform_preset_inner(&mut port, chan, 2, verbose);
+				}
+
+				"triangle" | "tri" => {
+					res = set_waveform_preset_inner(&mut port, chan, 3, verbose);
+				}
+
+				"partialsine" | "partial-sine" | "parsine" | "par-sine" | "parsin" | "par-sin"
+				| "psine" | "p-sine" | "psin" | "p-sin" => {
+					res = set_waveform_preset_inner(&mut port, chan, 4, verbose);
+				}
+
+				"cmos" | "cm" => {
+					res = set_waveform_preset_inner(&mut port, chan, 5, verbose);
+				}
+
+				"dc" => {
+					res = set_waveform_preset_inner(&mut port, chan, 6, verbose);
+				}
+
+				"halfwave" | "half-wave" | "hw" | "h-w" => {
+					res = set_waveform_preset_inner(&mut port, chan, 7, verbose);
+				}
+
+				"fullwave" | "full-wave" | "fw" | "f-w" => {
+					res = set_waveform_preset_inner(&mut port, chan, 8, verbose);
+				}
+
+				"pos-ladder" | "posladder" | "pos-lad" | "poslad" | "positive-ladder"
+				| "positiveladder" | "pl" => {
+					res = set_waveform_preset_inner(&mut port, chan, 9, verbose);
+				}
+
+				"neg-ladder" | "negladder" | "neg-lad" | "neglad" | "negative-ladder"
+				| "negativeladder" | "nl" => {
+					res = set_waveform_preset_inner(&mut port, chan, 10, verbose);
+				}
+
+				"noise" | "nois" | "noi" | "no" | "n" => {
+					res = set_waveform_preset_inner(&mut port, chan, 11, verbose);
+				}
+
+				"exp-rise" | "exprise" | "e-r" | "er" | "e-rise" | "erise" | "e-ris" | "eris" => {
+					res = set_waveform_preset_inner(&mut port, chan, 12, verbose);
+				}
+
+				"exp-decay" | "expdecay" | "e-d" | "ed" | "e-decay" | "edecay" | "e-dec"
+				| "edec" => {
+					res = set_waveform_preset_inner(&mut port, chan, 13, verbose);
+				}
+
+				"multi-tone" | "multitone" | "m-t" | "mt" | "m-tone" | "mtone" => {
+					res = set_waveform_preset_inner(&mut port, chan, 14, verbose);
+				}
+
+				"sinc" | "sc" => {
+					res = set_waveform_preset_inner(&mut port, chan, 15, verbose);
+				}
+
+				"lorenz" | "loren" | "lor" | "lz" => {
+					res = set_waveform_preset_inner(&mut port, chan, 16, verbose);
+				}
+
+				_ => {
+					res = Err(Error::with_description(&format!("unsupported value passed to \"set waveform\" argument (must be 0-16): {}", preset), ErrorKind::InvalidValue));
+				}
+			}
+		}
+	}
+
+	res
+}
+
+fn set_waveform_preset_inner(
 	port: &mut Box<dyn SerialPort>,
 	chan: u64,
 	preset: u64,
@@ -344,9 +519,9 @@ pub fn set_waveform_preset(
 	let chan_out: &str;
 
 	if chan == 1 {
-		chan_out = WRITE_WAVEFORM_PRESET_COMMAND_CH1;
+		chan_out = SET_WAVEFORM_PRESET_COMMAND_CH1;
 	} else if chan == 2 {
-		chan_out = WRITE_WAVEFORM_PRESET_COMMAND_CH2;
+		chan_out = SET_WAVEFORM_PRESET_COMMAND_CH2;
 	} else {
 		return Err(Error::with_description(
 			"Unsupported channel number. Must be 1 or 2.",
@@ -363,7 +538,7 @@ pub fn set_waveform_preset(
 
 	command = format!(
 		"{}{}{}{}{}{}",
-		COMMAND_BEGIN, COMMAND_WRITE, chan_out, COMMAND_SEPARATOR, preset, COMMAND_END,
+		COMMAND_BEGIN, COMMAND_SET, chan_out, COMMAND_SEPARATOR, preset, COMMAND_END,
 	);
 
 	if verbose > 0 {
@@ -374,7 +549,7 @@ pub fn set_waveform_preset(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_WAVEFORM_PRESET_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_WAVEFORM_PRESET_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -389,152 +564,34 @@ pub fn set_waveform_preset(
 	Ok(res.to_string())
 }
 
-// NOTE: See here for valid waveform preset names you
-// can use with -w and -x args if you'd rather use
-// names instead of numbers.
-//
-// Waveform names that are accepted:
-// 0:  sine || sin
-// 1:  square || sq
-// 2:  pulse || pul
-// 3:  triangle || tri
-// 4:  partialsine || partial-sine || parsine || par-sine || parsin || par-sin || psine || p-sine || psin || p-sin
-// 5:  cmos || cm
-// 6:  dc
-// 7:  halfwave || half-wave || hw || h-w
-// 8:  fullwave || full-wave || fw || f-w
-// 9:  pos-ladder || posladder || pos-lad || poslad || positive-ladder || positiveladder || pl
-// 10: neg-ladder || negladder || neg-lad || neglad || negative-ladder || negativeladder || nl
-// 11: noise || nois || noi || no || n
-// 12: exp-rise || exprise || e-r || er || e-rise || erise || e-ris || eris
-// 13: exp-decay || expdecay || e-d || ed || e-decay || edecay || e-dec || edec
-// 14: multi-tone || multitone || m-t || mt || m-tone || mtone
-// 15: sinc || sc
-// 16: lorenz || loren || lor || lz
-pub fn match_set_waveform_preset_arg(
-	mut port: &mut Box<dyn SerialPort>,
-	chan: u64,
-	preset: &str,
-	verbose: u64,
-) -> Result<String, clap::Error> {
-	let res: Result<String, clap::Error>;
+/** Get the current output waveform preset for a 
+specific channel.  
+  
+Return Value (Ok Result):  
+```
+Waveform preset number to name mappings:
+"0":  sine
+"1":  square
+"2":  pulse
+"3":  triangle
+"4":  partial-sine
+"5":  cmos
+"6":  dc
+"7":  half-wave
+"8":  full-wave
+"9":  pos-ladder
+"10": neg-ladder
+"11": noise
+"12": exp-rise
+"13": exp-decay
+"14": multi-tone
+"15": sinc
+"16": lorenz
 
-	match preset.parse::<u64>() {
-		Ok(preset) => {
-			match preset {
-				0..=16 => {
-					res = set_waveform_preset(&mut port, chan, preset, verbose);
-				}
-
-				_ => {
-					res = Err(Error::with_description(&format!("unsupported value passed to \"set waveform\" argument (must be 0-16): {}", preset), ErrorKind::InvalidValue));
-				}
-			}
-		}
-
-		Err(_e) => {
-			match preset {
-				"sine" | "sin" => {
-					res = set_waveform_preset(&mut port, chan, 0, verbose);
-				}
-
-				"square" | "sq" => {
-					res = set_waveform_preset(&mut port, chan, 1, verbose);
-				}
-
-				"pulse" | "pul" => {
-					res = set_waveform_preset(&mut port, chan, 2, verbose);
-				}
-
-				"triangle" | "tri" => {
-					res = set_waveform_preset(&mut port, chan, 3, verbose);
-				}
-
-				"partialsine" | "partial-sine" | "parsine" | "par-sine" | "parsin" | "par-sin"
-				| "psine" | "p-sine" | "psin" | "p-sin" => {
-					res = set_waveform_preset(&mut port, chan, 4, verbose);
-				}
-
-				"cmos" | "cm" => {
-					res = set_waveform_preset(&mut port, chan, 5, verbose);
-				}
-
-				"dc" => {
-					res = set_waveform_preset(&mut port, chan, 6, verbose);
-				}
-
-				"halfwave" | "half-wave" | "hw" | "h-w" => {
-					res = set_waveform_preset(&mut port, chan, 7, verbose);
-				}
-
-				"fullwave" | "full-wave" | "fw" | "f-w" => {
-					res = set_waveform_preset(&mut port, chan, 8, verbose);
-				}
-
-				"pos-ladder" | "posladder" | "pos-lad" | "poslad" | "positive-ladder"
-				| "positiveladder" | "pl" => {
-					res = set_waveform_preset(&mut port, chan, 9, verbose);
-				}
-
-				"neg-ladder" | "negladder" | "neg-lad" | "neglad" | "negative-ladder"
-				| "negativeladder" | "nl" => {
-					res = set_waveform_preset(&mut port, chan, 10, verbose);
-				}
-
-				"noise" | "nois" | "noi" | "no" | "n" => {
-					res = set_waveform_preset(&mut port, chan, 11, verbose);
-				}
-
-				"exp-rise" | "exprise" | "e-r" | "er" | "e-rise" | "erise" | "e-ris" | "eris" => {
-					res = set_waveform_preset(&mut port, chan, 12, verbose);
-				}
-
-				"exp-decay" | "expdecay" | "e-d" | "ed" | "e-decay" | "edecay" | "e-dec"
-				| "edec" => {
-					res = set_waveform_preset(&mut port, chan, 13, verbose);
-				}
-
-				"multi-tone" | "multitone" | "m-t" | "mt" | "m-tone" | "mtone" => {
-					res = set_waveform_preset(&mut port, chan, 14, verbose);
-				}
-
-				"sinc" | "sc" => {
-					res = set_waveform_preset(&mut port, chan, 15, verbose);
-				}
-
-				"lorenz" | "loren" | "lor" | "lz" => {
-					res = set_waveform_preset(&mut port, chan, 16, verbose);
-				}
-
-				_ => {
-					res = Err(Error::with_description(&format!("unsupported value passed to \"set waveform\" argument (must be 0-16): {}", preset), ErrorKind::InvalidValue));
-				}
-			}
-		}
-	}
-
-	res
-}
-
-// Waveform names:
-// 0:  sine
-// 1:  square
-// 2:  pulse
-// 3:  triangle
-// 4:  partialsine
-// 5:  cmos
-// 6:  dc
-// 7:  halfwave
-// 8:  fullwave
-// 9:  pos-ladder
-// 10: neg-ladder
-// 11: noise
-// 12: exp-rise
-// 13: exp-decay
-// 14: multi-tone
-// 15: sinc
-// 16: lorenz
-// 101..160: arbitrary01 - arbitrary60
+Arbitrary waveform presets:
+"101" - "160": arbitrary wave 1 - arbitrary wave 60
+```
+*/
 pub fn get_waveform_preset(
 	port: &mut Box<dyn SerialPort>,
 	chan: u64,
@@ -544,9 +601,9 @@ pub fn get_waveform_preset(
 	let chan_out: &str;
 
 	if chan == 1 {
-		chan_out = READ_WAVEFORM_PRESET_COMMAND_CH1;
+		chan_out = GET_WAVEFORM_PRESET_COMMAND_CH1;
 	} else if chan == 2 {
-		chan_out = READ_WAVEFORM_PRESET_COMMAND_CH2;
+		chan_out = GET_WAVEFORM_PRESET_COMMAND_CH2;
 	} else {
 		return Err(Error::with_description(
 			"Unsupported channel number. Must be 1 or 2.",
@@ -557,10 +614,10 @@ pub fn get_waveform_preset(
 	command = format!(
 		"{}{}{}{}{}{}",
 		COMMAND_BEGIN,
-		COMMAND_READ,
+		COMMAND_GET,
 		chan_out,
 		COMMAND_SEPARATOR,
-		READ_WAVEFORM_PRESET_ARG,
+		GET_WAVEFORM_PRESET_ARG,
 		COMMAND_END,
 	);
 
@@ -569,7 +626,7 @@ pub fn get_waveform_preset(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..READ_WAVEFORM_PRESET_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..GET_WAVEFORM_PRESET_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -614,7 +671,46 @@ pub fn get_waveform_preset(
 	Ok(res3.to_string())
 }
 
-pub fn set_waveform_arbitrary(
+/** Set the device to use a user-defined arbitrary waveform 
+preset by number, for a specific channel's output.  
+  
+"preset" parameter:
+```
+Arbitrary waveform preset 1 (a.k.a. preset 101):
+"1"
+
+Arbitrary waveform preset 60 (a.k.a. preset 160):
+"60"
+```
+*/
+pub fn set_waveform_preset_arbitrary(
+	mut port: &mut Box<dyn SerialPort>,
+	chan: u64,
+	preset: &str,
+	verbose: u64,
+) -> Result<String, clap::Error> {
+	let res: Result<String, clap::Error>;
+
+	match preset.parse::<u64>() {
+		Ok(preset) => match preset {
+			1..=60 => {
+				res = set_waveform_preset_arbitrary_inner(&mut port, chan, preset, verbose);
+			}
+
+			_ => {
+				res = Err(Error::with_description(&format!("unsupported value passed to \"set arbitrary waveform\" argument (must be 1-60): {}", preset), ErrorKind::InvalidValue));
+			}
+		},
+
+		Err(e) => {
+			res = Err(Error::with_description(&format!("unsupported value passed to \"set arbitrary waveform\" argument (must be 1-60): {}: {}", preset, e), ErrorKind::InvalidValue));
+		}
+	}
+
+	res
+}
+
+fn set_waveform_preset_arbitrary_inner(
 	port: &mut Box<dyn SerialPort>,
 	chan: u64,
 	preset: u64,
@@ -624,9 +720,9 @@ pub fn set_waveform_arbitrary(
 	let chan_out: &str;
 
 	if chan == 1 {
-		chan_out = WRITE_WAVEFORM_PRESET_COMMAND_CH1;
+		chan_out = SET_WAVEFORM_PRESET_COMMAND_CH1;
 	} else if chan == 2 {
-		chan_out = WRITE_WAVEFORM_PRESET_COMMAND_CH2;
+		chan_out = SET_WAVEFORM_PRESET_COMMAND_CH2;
 	} else {
 		return Err(Error::with_description(
 			"Unsupported channel number. Must be 1 or 2.",
@@ -644,7 +740,7 @@ pub fn set_waveform_arbitrary(
 	command = format!(
 		"{}{}{}{}{}{}",
 		COMMAND_BEGIN,
-		COMMAND_WRITE,
+		COMMAND_SET,
 		chan_out,
 		COMMAND_SEPARATOR,
 		preset + 100,
@@ -659,7 +755,7 @@ pub fn set_waveform_arbitrary(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_WAVEFORM_PRESET_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_WAVEFORM_PRESET_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -674,34 +770,48 @@ pub fn set_waveform_arbitrary(
 	Ok(res.to_string())
 }
 
-pub fn match_set_waveform_arbitrary_arg(
+/** Set the device's output frequency for a particular channel,
+in microhertz (µHz).  
+  
+"amount" parameter:
+```
+"0.01" - "80000000.0"
+```
+*/
+pub fn set_frequency_microhertz(
 	mut port: &mut Box<dyn SerialPort>,
 	chan: u64,
-	preset: &str,
+	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	let amount_parts: Vec<&str> = amount.split(".").collect();
+
+	if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
+		return Err(Error::with_description(&format!("unsupported value passed to \"set frequency uHz\" argument (must be 0.01-80000000.0): {}: too many decimal places (2 max)", amount), ErrorKind::InvalidValue));
+	}
+
 	let res: Result<String, clap::Error>;
 
-	match preset.parse::<u64>() {
-		Ok(preset) => match preset {
-			1..=60 => {
-				res = set_waveform_arbitrary(&mut port, chan, preset, verbose);
+	match amount.parse::<f64>() {
+		Ok(amount) => match amount {
+			_y if amount >= 0.01 && amount <= 80000000.0 => {
+				res = set_frequency_microhertz_inner(&mut port, chan, amount * 100.0, verbose);
 			}
 
 			_ => {
-				res = Err(Error::with_description(&format!("unsupported value passed to \"set arbitrary waveform\" argument (must be 1-60): {}", preset), ErrorKind::InvalidValue));
+				res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency uHz\" argument (must be 0.01-80000000.0): {}", amount), ErrorKind::InvalidValue));
 			}
 		},
 
 		Err(e) => {
-			res = Err(Error::with_description(&format!("unsupported value passed to \"set arbitrary waveform\" argument (must be 1-60): {}: {}", preset, e), ErrorKind::InvalidValue));
+			res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency uHz\" argument (must be 0.01-80000000.0): {}: {}", amount, e), ErrorKind::InvalidValue));
 		}
 	}
 
 	res
 }
 
-pub fn set_frequency_microhertz(
+fn set_frequency_microhertz_inner(
 	port: &mut Box<dyn SerialPort>,
 	chan: u64,
 	amount: f64,
@@ -711,9 +821,9 @@ pub fn set_frequency_microhertz(
 	let chan_out: &str;
 
 	if chan == 1 {
-		chan_out = WRITE_FREQUENCY_COMMAND_CH1;
+		chan_out = SET_FREQUENCY_COMMAND_CH1;
 	} else if chan == 2 {
-		chan_out = WRITE_FREQUENCY_COMMAND_CH2;
+		chan_out = SET_FREQUENCY_COMMAND_CH2;
 	} else {
 		return Err(Error::with_description(
 			"Unsupported channel number. Must be 1 or 2.",
@@ -731,12 +841,12 @@ pub fn set_frequency_microhertz(
 	command = format!(
 		"{}{}{}{}{}{}{}{}",
 		COMMAND_BEGIN,
-		COMMAND_WRITE,
+		COMMAND_SET,
 		chan_out,
 		COMMAND_SEPARATOR,
 		amount,
 		COMMAND_ARG_SEPARATOR,
-		WRITE_FREQUENCY_COMMAND_UNIT_MICROHERTZ,
+		SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ,
 		COMMAND_END,
 	);
 
@@ -748,7 +858,7 @@ pub fn set_frequency_microhertz(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_FREQUENCY_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_FREQUENCY_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -763,7 +873,15 @@ pub fn set_frequency_microhertz(
 	Ok(res.to_string())
 }
 
-pub fn match_set_frequency_microhertz_arg(
+/** Set the device's output frequency for a particular channel,
+in millihertz (mHz).  
+  
+"amount" parameter:
+```
+"0.01" - "80000000.0"
+```
+*/
+pub fn set_frequency_millihertz(
 	mut port: &mut Box<dyn SerialPort>,
 	chan: u64,
 	amount: &str,
@@ -772,7 +890,7 @@ pub fn match_set_frequency_microhertz_arg(
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"set frequency uHz\" argument (must be 0.01-80000000.0): {}: too many decimal places (2 max)", amount), ErrorKind::InvalidValue));
+		return Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-80000000.0): {}: too many decimal places (2 max)", amount), ErrorKind::InvalidValue));
 	}
 
 	let res: Result<String, clap::Error>;
@@ -780,23 +898,23 @@ pub fn match_set_frequency_microhertz_arg(
 	match amount.parse::<f64>() {
 		Ok(amount) => match amount {
 			_y if amount >= 0.01 && amount <= 80000000.0 => {
-				res = set_frequency_microhertz(&mut port, chan, amount * 100.0, verbose);
+				res = set_frequency_millihertz_inner(&mut port, chan, amount * 100.0, verbose);
 			}
 
 			_ => {
-				res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency uHz\" argument (must be 0.01-80000000.0): {}", amount), ErrorKind::InvalidValue));
+				res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-80000000.0): {}", amount), ErrorKind::InvalidValue));
 			}
 		},
 
 		Err(e) => {
-			res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency uHz\" argument (must be 0.01-80000000.0): {}: {}", amount, e), ErrorKind::InvalidValue));
+			res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-80000000.0): {}: {}", amount, e), ErrorKind::InvalidValue));
 		}
 	}
 
 	res
 }
 
-pub fn set_frequency_millihertz(
+fn set_frequency_millihertz_inner(
 	port: &mut Box<dyn SerialPort>,
 	chan: u64,
 	amount: f64,
@@ -806,9 +924,9 @@ pub fn set_frequency_millihertz(
 	let chan_out: &str;
 
 	if chan == 1 {
-		chan_out = WRITE_FREQUENCY_COMMAND_CH1;
+		chan_out = SET_FREQUENCY_COMMAND_CH1;
 	} else if chan == 2 {
-		chan_out = WRITE_FREQUENCY_COMMAND_CH2;
+		chan_out = SET_FREQUENCY_COMMAND_CH2;
 	} else {
 		return Err(Error::with_description(
 			"Unsupported channel number. Must be 1 or 2.",
@@ -826,12 +944,12 @@ pub fn set_frequency_millihertz(
 	command = format!(
 		"{}{}{}{}{}{}{}{}",
 		COMMAND_BEGIN,
-		COMMAND_WRITE,
+		COMMAND_SET,
 		chan_out,
 		COMMAND_SEPARATOR,
 		amount,
 		COMMAND_ARG_SEPARATOR,
-		WRITE_FREQUENCY_COMMAND_UNIT_MILLIHERTZ,
+		SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ,
 		COMMAND_END,
 	);
 
@@ -843,7 +961,7 @@ pub fn set_frequency_millihertz(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_FREQUENCY_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_FREQUENCY_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -858,7 +976,15 @@ pub fn set_frequency_millihertz(
 	Ok(res.to_string())
 }
 
-pub fn match_set_frequency_millihertz_arg(
+/** Set the device's output frequency for a particular channel,
+in hertz (Hz).  
+  
+"amount" parameter:
+```
+"0.01" - "60000000.0"
+```
+*/
+pub fn set_frequency_hertz(
 	mut port: &mut Box<dyn SerialPort>,
 	chan: u64,
 	amount: &str,
@@ -867,31 +993,31 @@ pub fn match_set_frequency_millihertz_arg(
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-80000000.0): {}: too many decimal places (2 max)", amount), ErrorKind::InvalidValue));
+		return Err(Error::with_description(&format!("unsupported value passed to \"set frequency Hz\" argument (must be 0.01-60000000.0): {}: too many decimal places (2 max)", amount), ErrorKind::InvalidValue));
 	}
 
 	let res: Result<String, clap::Error>;
 
 	match amount.parse::<f64>() {
 		Ok(amount) => match amount {
-			_y if amount >= 0.01 && amount <= 80000000.0 => {
-				res = set_frequency_millihertz(&mut port, chan, amount * 100.0, verbose);
+			_y if amount >= 0.01 && amount <= 60000000.0 => {
+				res = set_frequency_hertz_inner(&mut port, chan, amount * 100.0, verbose);
 			}
 
 			_ => {
-				res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-80000000.0): {}", amount), ErrorKind::InvalidValue));
+				res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-60000000.0): {}", amount), ErrorKind::InvalidValue));
 			}
 		},
 
 		Err(e) => {
-			res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-80000000.0): {}: {}", amount, e), ErrorKind::InvalidValue));
+			res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-60000000.0): {}: {}", amount, e), ErrorKind::InvalidValue));
 		}
 	}
 
 	res
 }
 
-pub fn set_frequency_hertz(
+fn set_frequency_hertz_inner(
 	port: &mut Box<dyn SerialPort>,
 	chan: u64,
 	amount: f64,
@@ -901,9 +1027,9 @@ pub fn set_frequency_hertz(
 	let chan_out: &str;
 
 	if chan == 1 {
-		chan_out = WRITE_FREQUENCY_COMMAND_CH1;
+		chan_out = SET_FREQUENCY_COMMAND_CH1;
 	} else if chan == 2 {
-		chan_out = WRITE_FREQUENCY_COMMAND_CH2;
+		chan_out = SET_FREQUENCY_COMMAND_CH2;
 	} else {
 		return Err(Error::with_description(
 			"Unsupported channel number. Must be 1 or 2.",
@@ -921,12 +1047,12 @@ pub fn set_frequency_hertz(
 	command = format!(
 		"{}{}{}{}{}{}{}{}",
 		COMMAND_BEGIN,
-		COMMAND_WRITE,
+		COMMAND_SET,
 		chan_out,
 		COMMAND_SEPARATOR,
 		amount,
 		COMMAND_ARG_SEPARATOR,
-		WRITE_FREQUENCY_COMMAND_UNIT_HERTZ,
+		SET_FREQUENCY_COMMAND_UNIT_HERTZ,
 		COMMAND_END,
 	);
 
@@ -938,7 +1064,7 @@ pub fn set_frequency_hertz(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_FREQUENCY_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_FREQUENCY_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -953,102 +1079,15 @@ pub fn set_frequency_hertz(
 	Ok(res.to_string())
 }
 
-pub fn match_set_frequency_hertz_arg(
-	mut port: &mut Box<dyn SerialPort>,
-	chan: u64,
-	amount: &str,
-	verbose: u64,
-) -> Result<String, clap::Error> {
-	let amount_parts: Vec<&str> = amount.split(".").collect();
-
-	if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"set frequency Hz\" argument (must be 0.01-60000000.0): {}: too many decimal places (2 max)", amount), ErrorKind::InvalidValue));
-	}
-
-	let res: Result<String, clap::Error>;
-
-	match amount.parse::<f64>() {
-		Ok(amount) => match amount {
-			_y if amount >= 0.01 && amount <= 60000000.0 => {
-				res = set_frequency_hertz(&mut port, chan, amount * 100.0, verbose);
-			}
-
-			_ => {
-				res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-60000000.0): {}", amount), ErrorKind::InvalidValue));
-			}
-		},
-
-		Err(e) => {
-			res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-60000000.0): {}: {}", amount, e), ErrorKind::InvalidValue));
-		}
-	}
-
-	res
-}
-
+/** Set the device's output frequency for a particular channel,
+in kilohertz (kHz).  
+  
+"amount" parameter:
+```
+"0.00001" - "60000.0"
+```
+*/
 pub fn set_frequency_kilohertz(
-	port: &mut Box<dyn SerialPort>,
-	chan: u64,
-	amount: f64,
-	verbose: u64,
-) -> Result<String, clap::Error> {
-	let command: String;
-	let chan_out: &str;
-
-	if chan == 1 {
-		chan_out = WRITE_FREQUENCY_COMMAND_CH1;
-	} else if chan == 2 {
-		chan_out = WRITE_FREQUENCY_COMMAND_CH2;
-	} else {
-		return Err(Error::with_description(
-			"Unsupported channel number. Must be 1 or 2.",
-			ErrorKind::InvalidValue,
-		));
-	}
-
-	if amount < 1.0 || amount > 6000000000.0 {
-		return Err(Error::with_description(
-			"Unsupported amount of kHz. Must be 0.00001-60000.0.",
-			ErrorKind::InvalidValue,
-		));
-	}
-
-	command = format!(
-		"{}{}{}{}{}{}{}{}",
-		COMMAND_BEGIN,
-		COMMAND_WRITE,
-		chan_out,
-		COMMAND_SEPARATOR,
-		amount,
-		COMMAND_ARG_SEPARATOR,
-		WRITE_FREQUENCY_COMMAND_UNIT_KILOHERTZ,
-		COMMAND_END,
-	);
-
-	if verbose > 0 {
-		println!(
-			"\nSetting frequency in kHz: ch{}={}:\n{}",
-			chan, amount, command
-		);
-	}
-
-	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_FREQUENCY_RES_LEN).collect();
-
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
-
-	let res = str::from_utf8(&outbuf).unwrap();
-
-	if verbose > 0 {
-		println!("Response:");
-		println!("{}", res);
-	}
-
-	Ok(res.to_string())
-}
-
-pub fn match_set_frequency_kilohertz_arg(
 	mut port: &mut Box<dyn SerialPort>,
 	chan: u64,
 	amount: &str,
@@ -1067,7 +1106,7 @@ pub fn match_set_frequency_kilohertz_arg(
 			_y if amount >= 0.00001 && amount <= 60000.0 => {
 				let amount_rounded = ((amount * 100000.0 * 100000.0).round() / 100000.0).round();
 
-				res = set_frequency_kilohertz(&mut port, chan, amount_rounded, verbose);
+				res = set_frequency_kilohertz_inner(&mut port, chan, amount_rounded, verbose);
 			}
 
 			_ => {
@@ -1083,7 +1122,7 @@ pub fn match_set_frequency_kilohertz_arg(
 	res
 }
 
-pub fn set_frequency_megahertz(
+fn set_frequency_kilohertz_inner(
 	port: &mut Box<dyn SerialPort>,
 	chan: u64,
 	amount: f64,
@@ -1093,9 +1132,9 @@ pub fn set_frequency_megahertz(
 	let chan_out: &str;
 
 	if chan == 1 {
-		chan_out = WRITE_FREQUENCY_COMMAND_CH1;
+		chan_out = SET_FREQUENCY_COMMAND_CH1;
 	} else if chan == 2 {
-		chan_out = WRITE_FREQUENCY_COMMAND_CH2;
+		chan_out = SET_FREQUENCY_COMMAND_CH2;
 	} else {
 		return Err(Error::with_description(
 			"Unsupported channel number. Must be 1 or 2.",
@@ -1105,7 +1144,7 @@ pub fn set_frequency_megahertz(
 
 	if amount < 1.0 || amount > 6000000000.0 {
 		return Err(Error::with_description(
-			"Unsupported amount of MHz. Must be 0.00000001-60.0.",
+			"Unsupported amount of kHz. Must be 0.00001-60000.0.",
 			ErrorKind::InvalidValue,
 		));
 	}
@@ -1113,24 +1152,24 @@ pub fn set_frequency_megahertz(
 	command = format!(
 		"{}{}{}{}{}{}{}{}",
 		COMMAND_BEGIN,
-		COMMAND_WRITE,
+		COMMAND_SET,
 		chan_out,
 		COMMAND_SEPARATOR,
 		amount,
 		COMMAND_ARG_SEPARATOR,
-		WRITE_FREQUENCY_COMMAND_UNIT_MEGAHERTZ,
+		SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ,
 		COMMAND_END,
 	);
 
 	if verbose > 0 {
 		println!(
-			"\nSetting frequency in MHz: ch{}={}:\n{}",
+			"\nSetting frequency in kHz: ch{}={}:\n{}",
 			chan, amount, command
 		);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_FREQUENCY_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_FREQUENCY_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -1145,7 +1184,15 @@ pub fn set_frequency_megahertz(
 	Ok(res.to_string())
 }
 
-pub fn match_set_frequency_megahertz_arg(
+/** Set the device's output frequency for a particular channel,
+in megahertz (MHz).  
+  
+"amount" parameter:
+```
+"0.00000001" - "60.0"
+```
+*/
+pub fn set_frequency_megahertz(
 	mut port: &mut Box<dyn SerialPort>,
 	chan: u64,
 	amount: &str,
@@ -1165,7 +1212,7 @@ pub fn match_set_frequency_megahertz_arg(
 				let amount_rounded =
 					((amount * 100000000.0 * 10000000.0).round() / 10000000.0).round();
 
-				res = set_frequency_megahertz(&mut port, chan, amount_rounded, verbose);
+				res = set_frequency_megahertz_inner(&mut port, chan, amount_rounded, verbose);
 			}
 
 			_ => {
@@ -1181,6 +1228,77 @@ pub fn match_set_frequency_megahertz_arg(
 	res
 }
 
+fn set_frequency_megahertz_inner(
+	port: &mut Box<dyn SerialPort>,
+	chan: u64,
+	amount: f64,
+	verbose: u64,
+) -> Result<String, clap::Error> {
+	let command: String;
+	let chan_out: &str;
+
+	if chan == 1 {
+		chan_out = SET_FREQUENCY_COMMAND_CH1;
+	} else if chan == 2 {
+		chan_out = SET_FREQUENCY_COMMAND_CH2;
+	} else {
+		return Err(Error::with_description(
+			"Unsupported channel number. Must be 1 or 2.",
+			ErrorKind::InvalidValue,
+		));
+	}
+
+	if amount < 1.0 || amount > 6000000000.0 {
+		return Err(Error::with_description(
+			"Unsupported amount of MHz. Must be 0.00000001-60.0.",
+			ErrorKind::InvalidValue,
+		));
+	}
+
+	command = format!(
+		"{}{}{}{}{}{}{}{}",
+		COMMAND_BEGIN,
+		COMMAND_SET,
+		chan_out,
+		COMMAND_SEPARATOR,
+		amount,
+		COMMAND_ARG_SEPARATOR,
+		SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ,
+		COMMAND_END,
+	);
+
+	if verbose > 0 {
+		println!(
+			"\nSetting frequency in MHz: ch{}={}:\n{}",
+			chan, amount, command
+		);
+	}
+
+	let inbuf: Vec<u8> = command.as_bytes().to_vec();
+	let mut outbuf: Vec<u8> = (0..SET_FREQUENCY_RES_LEN).collect();
+
+	port.write(&inbuf[..])?;
+	port.read(&mut outbuf[..])?;
+
+	let res = str::from_utf8(&outbuf).unwrap();
+
+	if verbose > 0 {
+		println!("Response:");
+		println!("{}", res);
+	}
+
+	Ok(res.to_string())
+}
+
+/** Get the device's output frequency for a particular channel,
+in hertz (Hz).  
+  
+Return Value (Ok Result):
+```
+10,000 Hz:
+"10000"
+```
+*/
 pub fn get_frequency_hertz(
 	port: &mut Box<dyn SerialPort>,
 	chan: u64,
@@ -1190,9 +1308,9 @@ pub fn get_frequency_hertz(
 	let chan_out: &str;
 
 	if chan == 1 {
-		chan_out = READ_FREQUENCY_COMMAND_CH1;
+		chan_out = GET_FREQUENCY_COMMAND_CH1;
 	} else if chan == 2 {
-		chan_out = READ_FREQUENCY_COMMAND_CH2;
+		chan_out = GET_FREQUENCY_COMMAND_CH2;
 	} else {
 		return Err(Error::with_description(
 			"Unsupported channel number. Must be 1 or 2.",
@@ -1202,7 +1320,7 @@ pub fn get_frequency_hertz(
 
 	command = format!(
 		"{}{}{}{}{}{}",
-		COMMAND_BEGIN, COMMAND_READ, chan_out, COMMAND_SEPARATOR, READ_FREQUENCY_ARG, COMMAND_END,
+		COMMAND_BEGIN, COMMAND_GET, chan_out, COMMAND_SEPARATOR, GET_FREQUENCY_ARG, COMMAND_END,
 	);
 
 	if verbose > 0 {
@@ -1210,7 +1328,7 @@ pub fn get_frequency_hertz(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..READ_FREQUENCY_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..GET_FREQUENCY_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -1271,62 +1389,15 @@ pub fn get_frequency_hertz(
 	Ok(res4.to_string())
 }
 
+/** Set the device's output signal amplitude in volts, for a 
+particular channel.  
+  
+"amount" parameter:
+```
+"0.000" - "20.0"
+```
+*/
 pub fn set_amplitude(
-	port: &mut Box<dyn SerialPort>,
-	chan: u64,
-	amount: f64,
-	verbose: u64,
-) -> Result<String, clap::Error> {
-	let command: String;
-	let chan_out: &str;
-
-	if chan == 1 {
-		chan_out = WRITE_AMPLITUDE_COMMAND_CH1;
-	} else if chan == 2 {
-		chan_out = WRITE_AMPLITUDE_COMMAND_CH2;
-	} else {
-		return Err(Error::with_description(
-			"Unsupported channel number. Must be 1 or 2.",
-			ErrorKind::InvalidValue,
-		));
-	}
-
-	if amount < 0.0 || amount > 20000.0 {
-		return Err(Error::with_description(
-			"Unsupported amount of volts. Must be 0.000-20.0.",
-			ErrorKind::InvalidValue,
-		));
-	}
-
-	command = format!(
-		"{}{}{}{}{}{}",
-		COMMAND_BEGIN, COMMAND_WRITE, chan_out, COMMAND_SEPARATOR, amount, COMMAND_END,
-	);
-
-	if verbose > 0 {
-		println!(
-			"\nSetting amplitude in volts: ch{}={}:\n{}",
-			chan, amount, command
-		);
-	}
-
-	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_AMPLITUDE_RES_LEN).collect();
-
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
-
-	let res = str::from_utf8(&outbuf).unwrap();
-
-	if verbose > 0 {
-		println!("Response:");
-		println!("{}", res);
-	}
-
-	Ok(res.to_string())
-}
-
-pub fn match_set_amplitude_arg(
 	mut port: &mut Box<dyn SerialPort>,
 	chan: u64,
 	amount: &str,
@@ -1345,7 +1416,7 @@ pub fn match_set_amplitude_arg(
 			_y if amount >= 0.0 && amount <= 20.0 => {
 				let amount_rounded = ((amount * 1000.0 * 1000.0).round() / 1000.0).round();
 
-				res = set_amplitude(&mut port, chan, amount_rounded, verbose);
+				res = set_amplitude_inner(&mut port, chan, amount_rounded, verbose);
 			}
 
 			_ => {
@@ -1361,6 +1432,70 @@ pub fn match_set_amplitude_arg(
 	res
 }
 
+fn set_amplitude_inner(
+	port: &mut Box<dyn SerialPort>,
+	chan: u64,
+	amount: f64,
+	verbose: u64,
+) -> Result<String, clap::Error> {
+	let command: String;
+	let chan_out: &str;
+
+	if chan == 1 {
+		chan_out = SET_AMPLITUDE_COMMAND_CH1;
+	} else if chan == 2 {
+		chan_out = SET_AMPLITUDE_COMMAND_CH2;
+	} else {
+		return Err(Error::with_description(
+			"Unsupported channel number. Must be 1 or 2.",
+			ErrorKind::InvalidValue,
+		));
+	}
+
+	if amount < 0.0 || amount > 20000.0 {
+		return Err(Error::with_description(
+			"Unsupported amount of volts. Must be 0.000-20.0.",
+			ErrorKind::InvalidValue,
+		));
+	}
+
+	command = format!(
+		"{}{}{}{}{}{}",
+		COMMAND_BEGIN, COMMAND_SET, chan_out, COMMAND_SEPARATOR, amount, COMMAND_END,
+	);
+
+	if verbose > 0 {
+		println!(
+			"\nSetting amplitude in volts: ch{}={}:\n{}",
+			chan, amount, command
+		);
+	}
+
+	let inbuf: Vec<u8> = command.as_bytes().to_vec();
+	let mut outbuf: Vec<u8> = (0..SET_AMPLITUDE_RES_LEN).collect();
+
+	port.write(&inbuf[..])?;
+	port.read(&mut outbuf[..])?;
+
+	let res = str::from_utf8(&outbuf).unwrap();
+
+	if verbose > 0 {
+		println!("Response:");
+		println!("{}", res);
+	}
+
+	Ok(res.to_string())
+}
+
+/** Get the device's output signal amplitude in volts for 
+a particular channel.  
+  
+Return Value (Ok Result):
+```
+5 volts:
+"5"
+```
+*/
 pub fn get_amplitude(
 	port: &mut Box<dyn SerialPort>,
 	chan: u64,
@@ -1370,9 +1505,9 @@ pub fn get_amplitude(
 	let chan_out: &str;
 
 	if chan == 1 {
-		chan_out = READ_AMPLITUDE_COMMAND_CH1;
+		chan_out = GET_AMPLITUDE_COMMAND_CH1;
 	} else if chan == 2 {
-		chan_out = READ_AMPLITUDE_COMMAND_CH2;
+		chan_out = GET_AMPLITUDE_COMMAND_CH2;
 	} else {
 		return Err(Error::with_description(
 			"Unsupported channel number. Must be 1 or 2.",
@@ -1382,7 +1517,7 @@ pub fn get_amplitude(
 
 	command = format!(
 		"{}{}{}{}{}{}",
-		COMMAND_BEGIN, COMMAND_READ, chan_out, COMMAND_SEPARATOR, READ_AMPLITUDE_ARG, COMMAND_END,
+		COMMAND_BEGIN, COMMAND_GET, chan_out, COMMAND_SEPARATOR, GET_AMPLITUDE_ARG, COMMAND_END,
 	);
 
 	if verbose > 0 {
@@ -1390,7 +1525,7 @@ pub fn get_amplitude(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..READ_AMPLITUDE_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..GET_AMPLITUDE_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -1437,62 +1572,15 @@ pub fn get_amplitude(
 	Ok(res3.to_string())
 }
 
+/** Set the device's duty cycle in percent, for a 
+particular channel.  
+  
+"amount" parameter:
+```
+"0.0" - "99.9"
+```
+*/
 pub fn set_duty_cycle(
-	port: &mut Box<dyn SerialPort>,
-	chan: u64,
-	amount: f64,
-	verbose: u64,
-) -> Result<String, clap::Error> {
-	let command: String;
-	let chan_out: &str;
-
-	if chan == 1 {
-		chan_out = WRITE_DUTY_CYCLE_COMMAND_CH1;
-	} else if chan == 2 {
-		chan_out = WRITE_DUTY_CYCLE_COMMAND_CH2;
-	} else {
-		return Err(Error::with_description(
-			"Unsupported channel number. Must be 1 or 2.",
-			ErrorKind::InvalidValue,
-		));
-	}
-
-	if amount < 0.0 || amount > 999.0 {
-		return Err(Error::with_description(
-			"Unsupported duty cycle. Must be 0.0-99.9.",
-			ErrorKind::InvalidValue,
-		));
-	}
-
-	command = format!(
-		"{}{}{}{}{}{}",
-		COMMAND_BEGIN, COMMAND_WRITE, chan_out, COMMAND_SEPARATOR, amount, COMMAND_END,
-	);
-
-	if verbose > 0 {
-		println!(
-			"\nSetting duty cycle percent: ch{}={}:\n{}",
-			chan, amount, command
-		);
-	}
-
-	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_DUTY_CYCLE_RES_LEN).collect();
-
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
-
-	let res = str::from_utf8(&outbuf).unwrap();
-
-	if verbose > 0 {
-		println!("Response:");
-		println!("{}", res);
-	}
-
-	Ok(res.to_string())
-}
-
-pub fn match_set_duty_cycle_arg(
 	mut port: &mut Box<dyn SerialPort>,
 	chan: u64,
 	amount: &str,
@@ -1511,7 +1599,7 @@ pub fn match_set_duty_cycle_arg(
 			_y if amount >= 0.0 && amount <= 99.9 => {
 				let amount_rounded = ((amount * 10.0 * 10.0).round() / 10.0).round();
 
-				res = set_duty_cycle(&mut port, chan, amount_rounded, verbose);
+				res = set_duty_cycle_inner(&mut port, chan, amount_rounded, verbose);
 			}
 
 			_ => {
@@ -1527,6 +1615,70 @@ pub fn match_set_duty_cycle_arg(
 	res
 }
 
+fn set_duty_cycle_inner(
+	port: &mut Box<dyn SerialPort>,
+	chan: u64,
+	amount: f64,
+	verbose: u64,
+) -> Result<String, clap::Error> {
+	let command: String;
+	let chan_out: &str;
+
+	if chan == 1 {
+		chan_out = SET_DUTY_CYCLE_COMMAND_CH1;
+	} else if chan == 2 {
+		chan_out = SET_DUTY_CYCLE_COMMAND_CH2;
+	} else {
+		return Err(Error::with_description(
+			"Unsupported channel number. Must be 1 or 2.",
+			ErrorKind::InvalidValue,
+		));
+	}
+
+	if amount < 0.0 || amount > 999.0 {
+		return Err(Error::with_description(
+			"Unsupported duty cycle. Must be 0.0-99.9.",
+			ErrorKind::InvalidValue,
+		));
+	}
+
+	command = format!(
+		"{}{}{}{}{}{}",
+		COMMAND_BEGIN, COMMAND_SET, chan_out, COMMAND_SEPARATOR, amount, COMMAND_END,
+	);
+
+	if verbose > 0 {
+		println!(
+			"\nSetting duty cycle percent: ch{}={}:\n{}",
+			chan, amount, command
+		);
+	}
+
+	let inbuf: Vec<u8> = command.as_bytes().to_vec();
+	let mut outbuf: Vec<u8> = (0..SET_DUTY_CYCLE_RES_LEN).collect();
+
+	port.write(&inbuf[..])?;
+	port.read(&mut outbuf[..])?;
+
+	let res = str::from_utf8(&outbuf).unwrap();
+
+	if verbose > 0 {
+		println!("Response:");
+		println!("{}", res);
+	}
+
+	Ok(res.to_string())
+}
+
+/** Get the device's duty cycle in percent, for a 
+particular channel.  
+  
+Return Value (Ok Result):
+```
+1%:
+"1"
+```
+*/
 pub fn get_duty_cycle(
 	port: &mut Box<dyn SerialPort>,
 	chan: u64,
@@ -1536,9 +1688,9 @@ pub fn get_duty_cycle(
 	let chan_out: &str;
 
 	if chan == 1 {
-		chan_out = READ_DUTY_CYCLE_COMMAND_CH1;
+		chan_out = GET_DUTY_CYCLE_COMMAND_CH1;
 	} else if chan == 2 {
-		chan_out = READ_DUTY_CYCLE_COMMAND_CH2;
+		chan_out = GET_DUTY_CYCLE_COMMAND_CH2;
 	} else {
 		return Err(Error::with_description(
 			"Unsupported channel number. Must be 1 or 2.",
@@ -1548,7 +1700,7 @@ pub fn get_duty_cycle(
 
 	command = format!(
 		"{}{}{}{}{}{}",
-		COMMAND_BEGIN, COMMAND_READ, chan_out, COMMAND_SEPARATOR, READ_DUTY_CYCLE_ARG, COMMAND_END,
+		COMMAND_BEGIN, COMMAND_GET, chan_out, COMMAND_SEPARATOR, GET_DUTY_CYCLE_ARG, COMMAND_END,
 	);
 
 	if verbose > 0 {
@@ -1556,7 +1708,7 @@ pub fn get_duty_cycle(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..READ_DUTY_CYCLE_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..GET_DUTY_CYCLE_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -1603,62 +1755,15 @@ pub fn get_duty_cycle(
 	Ok(res.to_string())
 }
 
+/** Set the device's voltage offset in volts, for a 
+particular channel.  
+  
+"amount" parameter:
+```
+"-9.99" - "9.99"
+```
+*/
 pub fn set_voltage_offset(
-	port: &mut Box<dyn SerialPort>,
-	chan: u64,
-	amount: f64,
-	verbose: u64,
-) -> Result<String, clap::Error> {
-	let command: String;
-	let chan_out: &str;
-
-	if chan == 1 {
-		chan_out = WRITE_VOLTAGE_OFFSET_COMMAND_CH1;
-	} else if chan == 2 {
-		chan_out = WRITE_VOLTAGE_OFFSET_COMMAND_CH2;
-	} else {
-		return Err(Error::with_description(
-			"Unsupported channel number. Must be 1 or 2.",
-			ErrorKind::InvalidValue,
-		));
-	}
-
-	if amount < 1.0 || amount > 1999.0 {
-		return Err(Error::with_description(
-			"Unsupported voltage offset. Must be -9.99-9.99.",
-			ErrorKind::InvalidValue,
-		));
-	}
-
-	command = format!(
-		"{}{}{}{}{}{}",
-		COMMAND_BEGIN, COMMAND_WRITE, chan_out, COMMAND_SEPARATOR, amount, COMMAND_END,
-	);
-
-	if verbose > 0 {
-		println!(
-			"\nSetting voltage offset: ch{}={}:\n{}",
-			chan, amount, command
-		);
-	}
-
-	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_VOLTAGE_OFFSET_RES_LEN).collect();
-
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
-
-	let res = str::from_utf8(&outbuf).unwrap();
-
-	if verbose > 0 {
-		println!("Response:");
-		println!("{}", res);
-	}
-
-	Ok(res.to_string())
-}
-
-pub fn match_set_voltage_offset_arg(
 	mut port: &mut Box<dyn SerialPort>,
 	chan: u64,
 	amount: &str,
@@ -1677,7 +1782,7 @@ pub fn match_set_voltage_offset_arg(
 			_y if amount >= -9.99 && amount <= 9.99 => {
 				let amount_rounded = (((1000.0 + amount * 100.0) * 100.0).round() / 100.0).round();
 
-				res = set_voltage_offset(&mut port, chan, amount_rounded, verbose);
+				res = set_voltage_offset_inner(&mut port, chan, amount_rounded, verbose);
 			}
 
 			_ => {
@@ -1693,6 +1798,70 @@ pub fn match_set_voltage_offset_arg(
 	res
 }
 
+fn set_voltage_offset_inner(
+	port: &mut Box<dyn SerialPort>,
+	chan: u64,
+	amount: f64,
+	verbose: u64,
+) -> Result<String, clap::Error> {
+	let command: String;
+	let chan_out: &str;
+
+	if chan == 1 {
+		chan_out = SET_VOLTAGE_OFFSET_COMMAND_CH1;
+	} else if chan == 2 {
+		chan_out = SET_VOLTAGE_OFFSET_COMMAND_CH2;
+	} else {
+		return Err(Error::with_description(
+			"Unsupported channel number. Must be 1 or 2.",
+			ErrorKind::InvalidValue,
+		));
+	}
+
+	if amount < 1.0 || amount > 1999.0 {
+		return Err(Error::with_description(
+			"Unsupported voltage offset. Must be -9.99-9.99.",
+			ErrorKind::InvalidValue,
+		));
+	}
+
+	command = format!(
+		"{}{}{}{}{}{}",
+		COMMAND_BEGIN, COMMAND_SET, chan_out, COMMAND_SEPARATOR, amount, COMMAND_END,
+	);
+
+	if verbose > 0 {
+		println!(
+			"\nSetting voltage offset: ch{}={}:\n{}",
+			chan, amount, command
+		);
+	}
+
+	let inbuf: Vec<u8> = command.as_bytes().to_vec();
+	let mut outbuf: Vec<u8> = (0..SET_VOLTAGE_OFFSET_RES_LEN).collect();
+
+	port.write(&inbuf[..])?;
+	port.read(&mut outbuf[..])?;
+
+	let res = str::from_utf8(&outbuf).unwrap();
+
+	if verbose > 0 {
+		println!("Response:");
+		println!("{}", res);
+	}
+
+	Ok(res.to_string())
+}
+
+/** Get the device's voltage offset in volts, for a 
+particular channel.  
+  
+Return Value (Ok Result):
+```
+5 volts:
+"5"
+```
+*/
 pub fn get_voltage_offset(
 	port: &mut Box<dyn SerialPort>,
 	chan: u64,
@@ -1702,9 +1871,9 @@ pub fn get_voltage_offset(
 	let chan_out: &str;
 
 	if chan == 1 {
-		chan_out = READ_VOLTAGE_OFFSET_COMMAND_CH1;
+		chan_out = GET_VOLTAGE_OFFSET_COMMAND_CH1;
 	} else if chan == 2 {
-		chan_out = READ_VOLTAGE_OFFSET_COMMAND_CH2;
+		chan_out = GET_VOLTAGE_OFFSET_COMMAND_CH2;
 	} else {
 		return Err(Error::with_description(
 			"Unsupported channel number. Must be 1 or 2.",
@@ -1715,10 +1884,10 @@ pub fn get_voltage_offset(
 	command = format!(
 		"{}{}{}{}{}{}",
 		COMMAND_BEGIN,
-		COMMAND_READ,
+		COMMAND_GET,
 		chan_out,
 		COMMAND_SEPARATOR,
-		READ_VOLTAGE_OFFSET_ARG,
+		GET_VOLTAGE_OFFSET_ARG,
 		COMMAND_END,
 	);
 
@@ -1727,7 +1896,7 @@ pub fn get_voltage_offset(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..READ_VOLTAGE_OFFSET_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..GET_VOLTAGE_OFFSET_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -1774,46 +1943,14 @@ pub fn get_voltage_offset(
 	Ok(res.to_string())
 }
 
+/** Set the device's phase in degrees (°).  
+  
+"amount" parameter:
+```
+"0.0" - "360.0"
+```
+*/
 pub fn set_phase(
-	port: &mut Box<dyn SerialPort>,
-	amount: f64,
-	verbose: u64,
-) -> Result<String, clap::Error> {
-	let command: String;
-
-	if amount < 0.0 || amount > 3600.0 {
-		return Err(Error::with_description(
-			"Unsupported phase. Must be 0.0-360.0.",
-			ErrorKind::InvalidValue,
-		));
-	}
-
-	command = format!(
-		"{}{}{}{}{}{}",
-		COMMAND_BEGIN, COMMAND_WRITE, WRITE_PHASE_COMMAND, COMMAND_SEPARATOR, amount, COMMAND_END,
-	);
-
-	if verbose > 0 {
-		println!("\nSetting phase: {}:\n{}", amount, command);
-	}
-
-	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_PHASE_RES_LEN).collect();
-
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
-
-	let res = str::from_utf8(&outbuf).unwrap();
-
-	if verbose > 0 {
-		println!("Response:");
-		println!("{}", res);
-	}
-
-	Ok(res.to_string())
-}
-
-pub fn match_set_phase_arg(
 	mut port: &mut Box<dyn SerialPort>,
 	amount: &str,
 	verbose: u64,
@@ -1831,7 +1968,7 @@ pub fn match_set_phase_arg(
 			_y if amount >= 0.0 && amount <= 360.0 => {
 				let amount_rounded = ((amount * 10.0 * 10.0).round() / 10.0).round();
 
-				res = set_phase(&mut port, amount_rounded, verbose);
+				res = set_phase_inner(&mut port, amount_rounded, verbose);
 			}
 
 			_ => {
@@ -1847,16 +1984,63 @@ pub fn match_set_phase_arg(
 	res
 }
 
+fn set_phase_inner(
+	port: &mut Box<dyn SerialPort>,
+	amount: f64,
+	verbose: u64,
+) -> Result<String, clap::Error> {
+	let command: String;
+
+	if amount < 0.0 || amount > 3600.0 {
+		return Err(Error::with_description(
+			"Unsupported phase. Must be 0.0-360.0.",
+			ErrorKind::InvalidValue,
+		));
+	}
+
+	command = format!(
+		"{}{}{}{}{}{}",
+		COMMAND_BEGIN, COMMAND_SET, SET_PHASE_COMMAND, COMMAND_SEPARATOR, amount, COMMAND_END,
+	);
+
+	if verbose > 0 {
+		println!("\nSetting phase: {}:\n{}", amount, command);
+	}
+
+	let inbuf: Vec<u8> = command.as_bytes().to_vec();
+	let mut outbuf: Vec<u8> = (0..SET_PHASE_RES_LEN).collect();
+
+	port.write(&inbuf[..])?;
+	port.read(&mut outbuf[..])?;
+
+	let res = str::from_utf8(&outbuf).unwrap();
+
+	if verbose > 0 {
+		println!("Response:");
+		println!("{}", res);
+	}
+
+	Ok(res.to_string())
+}
+
+/** Get the device's phase in degrees (°).  
+  
+Return Value (Ok Result):
+```
+180 degrees:
+"180"
+```
+*/
 pub fn get_phase(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
 	let command: String;
 
 	command = format!(
 		"{}{}{}{}{}{}",
 		COMMAND_BEGIN,
-		COMMAND_READ,
-		READ_PHASE_COMMAND,
+		COMMAND_GET,
+		GET_PHASE_COMMAND,
 		COMMAND_SEPARATOR,
-		READ_PHASE_ARG,
+		GET_PHASE_ARG,
 		COMMAND_END,
 	);
 
@@ -1865,7 +2049,7 @@ pub fn get_phase(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String,
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..READ_PHASE_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..GET_PHASE_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -1912,50 +2096,44 @@ pub fn get_phase(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String,
 	Ok(res.to_string())
 }
 
+/** Set the device's tracking mode.  
+  
+"track" parameter:
+```
+The value must be either a set of comma-separated setting names 
+(see below), or a set of zeros and ones in the range of "0" - "11111", 
+each bit corresponding to a feature you want to toggle tracking on/off 
+for ("1" being on and "0" being off). For example: track frequency and 
+amplitude: "101"
+
+The bit position meanings are as follows:
+0: "frequency" | "freq" | "fq" | "fr" | "f"
+1: "waveform" | "wave" | "wav" | "wv" | "w"
+2: "amplitude" | "ampli" | "amp" | "am" | "a"
+3: "dutycycle" | "duty" | "dc" | "du" | "d"
+4: "offset" | "off" | "os" | "ot" | "o"
+
+turn off tracking: "0" | "none" | "null" | "non" | "nil" | "no" | "n"
+
+You can also use any of the names above separated by commas to turn on
+the tracking by feature name.
+Ex:
+frequency and amplitude sync: "freq,amp"
+
+Or you can use the single character versions with no commas in between.
+Ex:
+frequency and amplitude sync: "fa"
+
+Turn tracking off like this: "n"
+
+Note that a value of zero (or no value) in the bit position will turn off 
+tracking for the corresponding feature, so to turn tracking off for all 
+features, you can do: "0"
+
+You can also separate the values with commas if you prefer: "1,0,1"
+```
+*/
 pub fn set_tracking(
-	port: &mut Box<dyn SerialPort>,
-	track: TrackingArg,
-	verbose: u64,
-) -> Result<String, clap::Error> {
-	let command: String;
-
-	if track > TrackingArg::all() {
-		return Err(Error::with_description(
-			&format!(
-				"Unsupported tracking argument. Must be a number 0-{}.\n\n{}",
-				TrackingArg::all().to_str_val(),
-				TRACKING_FEATURES
-			),
-			ErrorKind::InvalidValue,
-		));
-	}
-
-	command = format!(
-		"{}{}{}{}{}{}",
-		COMMAND_BEGIN, COMMAND_WRITE, WRITE_TRACKING_COMMAND, COMMAND_SEPARATOR, track, COMMAND_END,
-	);
-
-	if verbose > 0 {
-		println!("\nSetting tracking: {}:\n{}", track.to_names(), command);
-	}
-
-	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_TRACKING_RES_LEN).collect();
-
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
-
-	let res = str::from_utf8(&outbuf).unwrap();
-
-	if verbose > 0 {
-		println!("Response:");
-		println!("{}", res);
-	}
-
-	Ok(res.to_string())
-}
-
-pub fn match_set_tracking_arg(
 	mut port: &mut Box<dyn SerialPort>,
 	track: &str,
 	verbose: u64,
@@ -2038,7 +2216,7 @@ pub fn match_set_tracking_arg(
 
 	match track_bits {
 		track_bits if track_bits <= TrackingArg::all() => {
-			res = set_tracking(&mut port, track_bits, verbose);
+			res = set_tracking_inner(&mut port, track_bits, verbose);
 		}
 
 		_ => {
@@ -2049,7 +2227,62 @@ pub fn match_set_tracking_arg(
 	res
 }
 
-pub fn set_switch_function_panel_main(
+fn set_tracking_inner(
+	port: &mut Box<dyn SerialPort>,
+	track: TrackingArg,
+	verbose: u64,
+) -> Result<String, clap::Error> {
+	let command: String;
+
+	if track > TrackingArg::all() {
+		return Err(Error::with_description(
+			&format!(
+				"Unsupported tracking argument. Must be a number 0-{}.\n\n{}",
+				TrackingArg::all().to_str_val(),
+				TRACKING_FEATURES
+			),
+			ErrorKind::InvalidValue,
+		));
+	}
+
+	command = format!(
+		"{}{}{}{}{}{}",
+		COMMAND_BEGIN, COMMAND_SET, SET_TRACKING_COMMAND, COMMAND_SEPARATOR, track, COMMAND_END,
+	);
+
+	if verbose > 0 {
+		println!("\nSetting tracking: {}:\n{}", track.to_names(), command);
+	}
+
+	let inbuf: Vec<u8> = command.as_bytes().to_vec();
+	let mut outbuf: Vec<u8> = (0..SET_TRACKING_RES_LEN).collect();
+
+	port.write(&inbuf[..])?;
+	port.read(&mut outbuf[..])?;
+
+	let res = str::from_utf8(&outbuf).unwrap();
+
+	if verbose > 0 {
+		println!("Response:");
+		println!("{}", res);
+	}
+
+	Ok(res.to_string())
+}
+
+/** Switch the device's display panel to the main screen,
+with either channel 1 or channel 2 showing at the top.
+
+"chan" parameter:
+```
+Channel 1 at the top:
+1
+
+Channel 2 at the top:
+2
+```
+*/
+pub fn switch_function_panel_main(
 	port: &mut Box<dyn SerialPort>,
 	chan: u64,
 	verbose: u64,
@@ -2062,10 +2295,10 @@ pub fn set_switch_function_panel_main(
 			ErrorKind::InvalidValue,
 		));
 	} else if chan == 1 {
-		command = WRITE_SWITCH_FUNCTION_PANEL_MAIN_CH1;
+		command = SWITCH_FUNCTION_PANEL_MAIN_CH1;
 	} else {
 		// if chan == 2
-		command = WRITE_SWITCH_FUNCTION_PANEL_MAIN_CH2;
+		command = SWITCH_FUNCTION_PANEL_MAIN_CH2;
 	}
 
 	if verbose > 0 {
@@ -2076,7 +2309,7 @@ pub fn set_switch_function_panel_main(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SWITCH_FUNCTION_PANEL_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2091,11 +2324,13 @@ pub fn set_switch_function_panel_main(
 	Ok(res.to_string())
 }
 
-pub fn set_switch_function_panel_sys(
+/** Switch the device's display panel to the system (SYS)
+screen. */
+pub fn switch_function_panel_sys(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = WRITE_SWITCH_FUNCTION_PANEL_SYS;
+	let command: &'static str = SWITCH_FUNCTION_PANEL_SYS;
 
 	if verbose > 0 {
 		println!(
@@ -2105,7 +2340,7 @@ pub fn set_switch_function_panel_sys(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SWITCH_FUNCTION_PANEL_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2120,11 +2355,13 @@ pub fn set_switch_function_panel_sys(
 	Ok(res.to_string())
 }
 
-pub fn set_switch_function_panel_measurement(
+/** Switch the device's display panel to the measure 
+subsection on the measure mode (MEAS) screen. */
+pub fn switch_function_panel_measurement(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = WRITE_SWITCH_FUNCTION_PANEL_MEASUREMENT;
+	let command: &'static str = SWITCH_FUNCTION_PANEL_MEASUREMENT;
 
 	if verbose > 0 {
 		println!(
@@ -2134,7 +2371,7 @@ pub fn set_switch_function_panel_measurement(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SWITCH_FUNCTION_PANEL_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2149,12 +2386,24 @@ pub fn set_switch_function_panel_measurement(
 	Ok(res.to_string())
 }
 
-// Measurement starting - counting, sweep, frequency, pulse, burst stopping.
-pub fn set_measurement_starting(
+/** Start taking a measurement from the device's input (Ext. IN) 
+channel.  
+  
+Also, stop the following functions if any are currently in 
+progress:  
+```
+counting
+sweep
+frequency
+pulse
+burst
+```
+*/
+pub fn start_measuring(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = WRITE_EXTENDED_FUNCTION_MEASUREMENT_STARTING;
+	let command: &'static str = START_MEASURING;
 
 	if verbose > 0 {
 		println!(
@@ -2164,7 +2413,7 @@ pub fn set_measurement_starting(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_EXTENDED_FUNCTION_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_EXTENDED_FUNCTION_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2179,18 +2428,20 @@ pub fn set_measurement_starting(
 	Ok(res.to_string())
 }
 
-pub fn set_switch_function_panel_counting(
+/** Switch the device's display panel to the counting
+subsection on the measure mode (MEAS) screen. */
+pub fn switch_function_panel_counting(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = WRITE_SWITCH_FUNCTION_PANEL_COUNTING;
+	let command: &'static str = SWITCH_FUNCTION_PANEL_COUNTING;
 
 	if verbose > 0 {
 		println!("\nSwitching function panel to counting mode:\n{}", command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SWITCH_FUNCTION_PANEL_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2205,19 +2456,19 @@ pub fn set_switch_function_panel_counting(
 	Ok(res.to_string())
 }
 
-// Counting starting.
-pub fn set_counting_starting(
+/** Start counting, using the device's input (Ext. IN) channel. */
+pub fn start_counting(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = WRITE_EXTENDED_FUNCTION_COUNTING_STARTING;
+	let command: &'static str = START_COUNTING;
 
 	if verbose > 0 {
 		println!("\nCounting starting:\n{}", command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_EXTENDED_FUNCTION_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_EXTENDED_FUNCTION_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2232,7 +2483,20 @@ pub fn set_counting_starting(
 	Ok(res.to_string())
 }
 
-pub fn set_switch_function_panel_sweep(
+/** Switch the device's display panel to the sweep frequency
+(channel 1 or channel 2) subsection of the modulation mode 
+screen.  
+  
+"chan" parameter:
+```
+Sweep Frequency (CH1):
+1
+
+Sweep Frequency (CH2):
+2
+```
+*/
+pub fn switch_function_panel_sweep(
 	port: &mut Box<dyn SerialPort>,
 	chan: u64,
 	verbose: u64,
@@ -2245,10 +2509,10 @@ pub fn set_switch_function_panel_sweep(
 			ErrorKind::InvalidValue,
 		));
 	} else if chan == 1 {
-		command = WRITE_SWITCH_FUNCTION_PANEL_SWEEP_CH1;
+		command = SWITCH_FUNCTION_PANEL_SWEEP_CH1;
 	} else {
 		// if chan == 2
-		command = WRITE_SWITCH_FUNCTION_PANEL_SWEEP_CH2;
+		command = SWITCH_FUNCTION_PANEL_SWEEP_CH2;
 	}
 
 	if verbose > 0 {
@@ -2259,7 +2523,7 @@ pub fn set_switch_function_panel_sweep(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SWITCH_FUNCTION_PANEL_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2274,22 +2538,32 @@ pub fn set_switch_function_panel_sweep(
 	Ok(res.to_string())
 }
 
-// Sweep starting.
-pub fn set_sweep_starting(
+/** Start frequency sweeping on a given output channel.  
+  
+"chan" parameter:
+```
+Sweep Frequency (CH1):
+1
+
+Sweep Frequency (CH2):
+2
+```
+*/
+pub fn start_sweeping(
 	port: &mut Box<dyn SerialPort>,
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	set_switch_function_panel_sweep(port, chan, verbose)?;
+	switch_function_panel_sweep(port, chan, verbose)?;
 
-	let command: &'static str = WRITE_EXTENDED_FUNCTION_SWEEP_STARTING;
+	let command: &'static str = START_SWEEPING;
 
 	if verbose > 0 {
 		println!("\nSweep starting:\n{}", command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_EXTENDED_FUNCTION_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_EXTENDED_FUNCTION_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2304,18 +2578,20 @@ pub fn set_sweep_starting(
 	Ok(res.to_string())
 }
 
-pub fn set_switch_function_panel_pulse(
+/** Switch the device's display panel to the pulse generator
+subsection of the modulation mode screen. */
+pub fn switch_function_panel_pulse(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = WRITE_SWITCH_FUNCTION_PANEL_PULSE;
+	let command: &'static str = SWITCH_FUNCTION_PANEL_PULSE;
 
 	if verbose > 0 {
 		println!("\nSwitching function panel to pulse mode:\n{}", command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SWITCH_FUNCTION_PANEL_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2330,19 +2606,19 @@ pub fn set_switch_function_panel_pulse(
 	Ok(res.to_string())
 }
 
-// Pulse starting.
-pub fn set_pulse_starting(
+/** Start the device's pulsing output on channel 1. */
+pub fn start_pulsing(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = WRITE_EXTENDED_FUNCTION_PULSE_STARTING;
+	let command: &'static str = START_PULSING;
 
 	if verbose > 0 {
 		println!("\nPulse starting:\n{}", command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_EXTENDED_FUNCTION_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_EXTENDED_FUNCTION_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2357,18 +2633,20 @@ pub fn set_pulse_starting(
 	Ok(res.to_string())
 }
 
-pub fn set_switch_function_panel_bursting(
+/** Switch the device's display panel to the burst subsection
+of the modulation mode screen. */
+pub fn switch_function_panel_bursting(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = WRITE_SWITCH_FUNCTION_PANEL_BURST;
+	let command: &'static str = SWITCH_FUNCTION_PANEL_BURST;
 
 	if verbose > 0 {
 		println!("\nSwitching function panel to bursting mode:\n{}", command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_SWITCH_FUNCTION_PANEL_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SWITCH_FUNCTION_PANEL_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2383,19 +2661,19 @@ pub fn set_switch_function_panel_bursting(
 	Ok(res.to_string())
 }
 
-// Bursting starting.
-pub fn set_bursting_starting(
+/** Start the device's bursting output on channel 1. */
+pub fn start_bursting(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = WRITE_EXTENDED_FUNCTION_BURSTING_STARTING;
+	let command: &'static str = START_BURSTING;
 
 	if verbose > 0 {
 		println!("\nBursting starting:\n{}", command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_EXTENDED_FUNCTION_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_EXTENDED_FUNCTION_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2410,19 +2688,21 @@ pub fn set_bursting_starting(
 	Ok(res.to_string())
 }
 
-// set measurement coupling to AC.
+/** Set the device's measurement mode measure coupling to 
+AC (Ext. IN).
+*/
 pub fn set_measurement_coupling_ac(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = WRITE_MEASUREMENT_COUPLING_AC;
+	let command: &'static str = SET_MEASUREMENT_COUPLING_AC;
 
 	if verbose > 0 {
 		println!("\nSetting measurement coupling to AC:\n{}", command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_MEASUREMENT_COUPLING_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_MEASUREMENT_COUPLING_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2437,19 +2717,21 @@ pub fn set_measurement_coupling_ac(
 	Ok(res.to_string())
 }
 
-// set measurement coupling to DC.
+/** Set the device's measurement mode measure coupling to 
+DC (Ext. IN).
+*/
 pub fn set_measurement_coupling_dc(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = WRITE_MEASUREMENT_COUPLING_DC;
+	let command: &'static str = SET_MEASUREMENT_COUPLING_DC;
 
 	if verbose > 0 {
 		println!("\nSetting measurement coupling to DC:\n{}", command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_MEASUREMENT_COUPLING_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_MEASUREMENT_COUPLING_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2464,51 +2746,15 @@ pub fn set_measurement_coupling_dc(
 	Ok(res.to_string())
 }
 
+/** Set the device's measurement mode measure gate time 
+in seconds.  
+  
+"amount" parameter:
+```
+"0.01" - "10.0"
+```
+*/
 pub fn set_measurement_gate_time(
-	port: &mut Box<dyn SerialPort>,
-	amount: f64,
-	verbose: u64,
-) -> Result<String, clap::Error> {
-	let command: String;
-
-	if amount < 1.0 || amount > 1000.0 {
-		return Err(Error::with_description(
-			"Unsupported measurement gate time. Must be 0.01-10.0.",
-			ErrorKind::InvalidValue,
-		));
-	}
-
-	command = format!(
-		"{}{}{}{}{}{}",
-		COMMAND_BEGIN,
-		COMMAND_WRITE,
-		WRITE_MEASUREMENT_GATE_TIME_COMMAND,
-		COMMAND_SEPARATOR,
-		amount,
-		COMMAND_END,
-	);
-
-	if verbose > 0 {
-		println!("\nSetting measurement gate time: {}:\n{}", amount, command);
-	}
-
-	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_MEASUREMENT_GATE_TIME_RES_LEN).collect();
-
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
-
-	let res = str::from_utf8(&outbuf).unwrap();
-
-	if verbose > 0 {
-		println!("Response:");
-		println!("{}", res);
-	}
-
-	Ok(res.to_string())
-}
-
-pub fn match_set_measurement_gate_time_arg(
 	mut port: &mut Box<dyn SerialPort>,
 	amount: &str,
 	verbose: u64,
@@ -2526,7 +2772,7 @@ pub fn match_set_measurement_gate_time_arg(
 			_y if amount >= 0.01 && amount <= 10.0 => {
 				let amount_rounded = ((amount * 100.0 * 100.0).round() / 100.0).round();
 
-				res = set_measurement_gate_time(&mut port, amount_rounded, verbose);
+				res = set_measurement_gate_time_inner(&mut port, amount_rounded, verbose);
 			}
 
 			_ => {
@@ -2541,12 +2787,58 @@ pub fn match_set_measurement_gate_time_arg(
 
 	res
 }
-// set measurement mode to count frequency.
+
+fn set_measurement_gate_time_inner(
+	port: &mut Box<dyn SerialPort>,
+	amount: f64,
+	verbose: u64,
+) -> Result<String, clap::Error> {
+	let command: String;
+
+	if amount < 1.0 || amount > 1000.0 {
+		return Err(Error::with_description(
+			"Unsupported measurement gate time. Must be 0.01-10.0.",
+			ErrorKind::InvalidValue,
+		));
+	}
+
+	command = format!(
+		"{}{}{}{}{}{}",
+		COMMAND_BEGIN,
+		COMMAND_SET,
+		SET_MEASUREMENT_GATE_TIME_COMMAND,
+		COMMAND_SEPARATOR,
+		amount,
+		COMMAND_END,
+	);
+
+	if verbose > 0 {
+		println!("\nSetting measurement gate time: {}:\n{}", amount, command);
+	}
+
+	let inbuf: Vec<u8> = command.as_bytes().to_vec();
+	let mut outbuf: Vec<u8> = (0..SET_MEASUREMENT_GATE_TIME_RES_LEN).collect();
+
+	port.write(&inbuf[..])?;
+	port.read(&mut outbuf[..])?;
+
+	let res = str::from_utf8(&outbuf).unwrap();
+
+	if verbose > 0 {
+		println!("Response:");
+		println!("{}", res);
+	}
+
+	Ok(res.to_string())
+}
+
+/** Set the device's measurement mode to measure count 
+frequency in hertz (Hz). */
 pub fn set_measurement_mode_count_frequency(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = WRITE_MEASUREMENT_MODE_COUNT_FREQUENCY;
+	let command: &'static str = SET_MEASUREMENT_MODE_COUNT_FREQUENCY;
 
 	if verbose > 0 {
 		println!(
@@ -2556,7 +2848,7 @@ pub fn set_measurement_mode_count_frequency(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_MEASUREMENT_MODE_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_MEASUREMENT_MODE_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2571,12 +2863,13 @@ pub fn set_measurement_mode_count_frequency(
 	Ok(res.to_string())
 }
 
-// set measurement mode to counting period.
+/** Set the device's measurement mode to measure counting 
+period in hertz (Hz). */
 pub fn set_measurement_mode_counting_period(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = WRITE_MEASUREMENT_MODE_COUNTING_PERIOD;
+	let command: &'static str = SET_MEASUREMENT_MODE_COUNTING_PERIOD;
 
 	if verbose > 0 {
 		println!(
@@ -2586,7 +2879,7 @@ pub fn set_measurement_mode_counting_period(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_MEASUREMENT_MODE_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_MEASUREMENT_MODE_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2601,19 +2894,19 @@ pub fn set_measurement_mode_counting_period(
 	Ok(res.to_string())
 }
 
-// set measurement count clear.
+/** Clear the measure mode counter's count number (Cnt. Num). */
 pub fn set_measurement_count_clear(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = WRITE_MEASUREMENT_COUNT_CLEAR;
+	let command: &'static str = SET_MEASUREMENT_COUNT_CLEAR;
 
 	if verbose > 0 {
 		println!("\nSetting measurement count clear:\n{}", command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_MEASUREMENT_COUNT_CLEAR_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_MEASUREMENT_COUNT_CLEAR_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2628,12 +2921,12 @@ pub fn set_measurement_count_clear(
 	Ok(res.to_string())
 }
 
-// Get measurement count.
+/** Get the measure mode counter's count number (Cnt. Num). */
 pub fn get_measurement_count(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = READ_MEASUREMENT_COUNT;
+	let command: &'static str = GET_MEASUREMENT_COUNT;
 
 	if verbose > 0 {
 		println!(
@@ -2643,7 +2936,7 @@ pub fn get_measurement_count(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..READ_MEASUREMENT_COUNT_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..GET_MEASUREMENT_COUNT_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2688,12 +2981,13 @@ pub fn get_measurement_count(
 	Ok(res.to_string())
 }
 
-// Get measurement frequency value in frequency mode (in hertz).
+/** Get the measure mode's measure frequency in frequency mode 
+(hertz). */
 pub fn get_measurement_frequency(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = READ_MEASUREMENT_FREQUENCY;
+	let command: &'static str = GET_MEASUREMENT_FREQUENCY;
 
 	if verbose > 0 {
 		println!(
@@ -2703,7 +2997,7 @@ pub fn get_measurement_frequency(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..READ_MEASUREMENT_FREQUENCY_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..GET_MEASUREMENT_FREQUENCY_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2748,12 +3042,13 @@ pub fn get_measurement_frequency(
 	Ok(res.to_string())
 }
 
-// Get measurement frequency value in period mode (in hertz).
+/** Get the measure mode's measure frequency in period mode 
+(hertz). */
 pub fn get_measurement_frequency_period(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = READ_MEASUREMENT_FREQUENCY_PERIOD;
+	let command: &'static str = GET_MEASUREMENT_FREQUENCY_PERIOD;
 
 	if verbose > 0 {
 		println!(
@@ -2763,7 +3058,7 @@ pub fn get_measurement_frequency_period(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..READ_MEASUREMENT_FREQUENCY_PERIOD_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..GET_MEASUREMENT_FREQUENCY_PERIOD_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2811,12 +3106,12 @@ pub fn get_measurement_frequency_period(
 	Ok(res.to_string())
 }
 
-// Get measurement pulse width (positive).
+/** Get the measure mode's measure pulse width (positive). */
 pub fn get_measurement_pulse_width_positive(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = READ_MEASUREMENT_PULSE_WIDTH_POSITIVE;
+	let command: &'static str = GET_MEASUREMENT_PULSE_WIDTH_POSITIVE;
 
 	if verbose > 0 {
 		println!(
@@ -2826,7 +3121,7 @@ pub fn get_measurement_pulse_width_positive(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..READ_MEASUREMENT_PULSE_WIDTH_POSITIVE_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..GET_MEASUREMENT_PULSE_WIDTH_POSITIVE_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2874,12 +3169,12 @@ pub fn get_measurement_pulse_width_positive(
 	Ok(res.to_string())
 }
 
-// Get measurement pulse width (negative).
+/** Get the measure mode's measure pulse width (negative). */
 pub fn get_measurement_pulse_width_negative(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = READ_MEASUREMENT_PULSE_WIDTH_NEGATIVE;
+	let command: &'static str = GET_MEASUREMENT_PULSE_WIDTH_NEGATIVE;
 
 	if verbose > 0 {
 		println!(
@@ -2889,7 +3184,7 @@ pub fn get_measurement_pulse_width_negative(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..READ_MEASUREMENT_PULSE_WIDTH_NEGATIVE_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..GET_MEASUREMENT_PULSE_WIDTH_NEGATIVE_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -2937,12 +3232,12 @@ pub fn get_measurement_pulse_width_negative(
 	Ok(res.to_string())
 }
 
-// Get measurement period.
+/** Get the measure mode's measure period. */
 pub fn get_measurement_period(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = READ_MEASUREMENT_PERIOD;
+	let command: &'static str = GET_MEASUREMENT_PERIOD;
 
 	if verbose > 0 {
 		println!(
@@ -2952,7 +3247,7 @@ pub fn get_measurement_period(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..READ_MEASUREMENT_PERIOD_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..GET_MEASUREMENT_PERIOD_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -3000,12 +3295,12 @@ pub fn get_measurement_period(
 	Ok(res.to_string())
 }
 
-// Get measurement duty cycle.
+/** Get the measure mode's measure duty cycle. */
 pub fn get_measurement_duty_cycle(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command: &'static str = READ_MEASUREMENT_DUTY_CYCLE;
+	let command: &'static str = GET_MEASUREMENT_DUTY_CYCLE;
 
 	if verbose > 0 {
 		println!(
@@ -3015,7 +3310,7 @@ pub fn get_measurement_duty_cycle(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..READ_MEASUREMENT_DUTY_CYCLE_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..GET_MEASUREMENT_DUTY_CYCLE_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -3063,7 +3358,47 @@ pub fn get_measurement_duty_cycle(
 	Ok(res.to_string())
 }
 
+/** Set the number of burst pulses to perform when bursting.  
+  
+"amount" parameter:
+```
+5 burst pulses:
+"5"
+```
+*/
 pub fn set_burst_pulse_number(
+	mut port: &mut Box<dyn SerialPort>,
+	amount: &str,
+	verbose: u64,
+) -> Result<String, clap::Error> {
+	let amount_parts: Vec<&str> = amount.split(".").collect();
+
+	if amount_parts.len() > 1 && amount_parts[1] != "0" {
+		return Err(Error::with_description(&format!("unsupported value passed to \"set burst pulse number\" argument (must be 1-1048575): {}: too many decimal places (0 max)", amount), ErrorKind::InvalidValue));
+	}
+
+	let res: Result<String, clap::Error>;
+
+	match amount.parse::<f64>() {
+		Ok(amount) => match amount {
+			_y if amount >= 1.0 && amount <= 1048575.0 => {
+				res = set_burst_pulse_number_inner(&mut port, amount, verbose);
+			}
+
+			_ => {
+				res = Err(Error::with_description(&format!("unsupported value passed to \"set burst pulse number\" argument (must be 1-1048575): {}", amount), ErrorKind::InvalidValue));
+			}
+		},
+
+		Err(e) => {
+			res = Err(Error::with_description(&format!("unsupported value passed to \"set burst pulse number\" argument (must be 1-1048575): {}: {}", amount, e), ErrorKind::InvalidValue));
+		}
+	}
+
+	res
+}
+
+fn set_burst_pulse_number_inner(
 	port: &mut Box<dyn SerialPort>,
 	amount: f64,
 	verbose: u64,
@@ -3080,8 +3415,8 @@ pub fn set_burst_pulse_number(
 	command = format!(
 		"{}{}{}{}{}{}",
 		COMMAND_BEGIN,
-		COMMAND_WRITE,
-		WRITE_BURST_PULSE_NUMBER_COMMAND,
+		COMMAND_SET,
+		SET_BURST_PULSE_NUMBER_COMMAND,
 		COMMAND_SEPARATOR,
 		amount,
 		COMMAND_END,
@@ -3092,7 +3427,7 @@ pub fn set_burst_pulse_number(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_BURST_PULSE_NUMBER_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_BURST_PULSE_NUMBER_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -3107,50 +3442,19 @@ pub fn set_burst_pulse_number(
 	Ok(res.to_string())
 }
 
-pub fn match_set_burst_pulse_number_arg(
-	mut port: &mut Box<dyn SerialPort>,
-	amount: &str,
-	verbose: u64,
-) -> Result<String, clap::Error> {
-	let amount_parts: Vec<&str> = amount.split(".").collect();
-
-	if amount_parts.len() > 1 && amount_parts[1] != "0" {
-		return Err(Error::with_description(&format!("unsupported value passed to \"set burst pulse number\" argument (must be 1-1048575): {}: too many decimal places (0 max)", amount), ErrorKind::InvalidValue));
-	}
-
-	let res: Result<String, clap::Error>;
-
-	match amount.parse::<f64>() {
-		Ok(amount) => match amount {
-			_y if amount >= 1.0 && amount <= 1048575.0 => {
-				res = set_burst_pulse_number(&mut port, amount, verbose);
-			}
-
-			_ => {
-				res = Err(Error::with_description(&format!("unsupported value passed to \"set burst pulse number\" argument (must be 1-1048575): {}", amount), ErrorKind::InvalidValue));
-			}
-		},
-
-		Err(e) => {
-			res = Err(Error::with_description(&format!("unsupported value passed to \"set burst pulse number\" argument (must be 1-1048575): {}: {}", amount, e), ErrorKind::InvalidValue));
-		}
-	}
-
-	res
-}
-
-pub fn set_burst_pulse_once(
+/** Perform a single burst pulse immediately. */
+pub fn start_burst_pulse_once(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command = WRITE_BURST_PULSE_ONCE;
+	let command = START_BURST_PULSE_ONCE;
 
 	if verbose > 0 {
 		println!("\nBurst pulse once:\n{}", command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_BURST_PULSE_ONCE_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..START_BURST_PULSE_ONCE_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -3165,18 +3469,21 @@ pub fn set_burst_pulse_once(
 	Ok(res.to_string())
 }
 
+/** Set the modulation mode's Burst (CH1) mode to manual trigger
+(Manual Trig.).
+*/
 pub fn set_burst_mode_manual_trigger(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command = WRITE_BURST_MODE_MANUAL_TRIGGER;
+	let command = SET_BURST_MODE_MANUAL_TRIGGER;
 
 	if verbose > 0 {
 		println!("\nSetting burst mode to manual trigger:\n{}", command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_BURST_MODE_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_BURST_MODE_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -3191,18 +3498,21 @@ pub fn set_burst_mode_manual_trigger(
 	Ok(res.to_string())
 }
 
+/** Set the modulation mode's Burst (CH1) mode to channel 2 trigger
+(CH2 Trig.).
+*/
 pub fn set_burst_mode_ch2_burst(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command = WRITE_BURST_MODE_CH2_BURST;
+	let command = SET_BURST_MODE_CH2_BURST;
 
 	if verbose > 0 {
 		println!("\nSetting burst mode to CH2 burst:\n{}", command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_BURST_MODE_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_BURST_MODE_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -3217,18 +3527,21 @@ pub fn set_burst_mode_ch2_burst(
 	Ok(res.to_string())
 }
 
+/** Set the modulation mode's Burst (CH1) mode to external 
+trigger AC (Ext. Trig (AC)).
+*/
 pub fn set_burst_mode_external_burst_ac(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command = WRITE_BURST_MODE_EXTERNAL_BURST_AC;
+	let command = SET_BURST_MODE_EXTERNAL_BURST_AC;
 
 	if verbose > 0 {
 		println!("\nSetting burst mode to external burst AC:\n{}", command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_BURST_MODE_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_BURST_MODE_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -3243,18 +3556,21 @@ pub fn set_burst_mode_external_burst_ac(
 	Ok(res.to_string())
 }
 
+/** Set the modulation mode's Burst (CH1) mode to external 
+trigger DC (Ext. Trig (DC)).
+*/
 pub fn set_burst_mode_external_burst_dc(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command = WRITE_BURST_MODE_EXTERNAL_BURST_DC;
+	let command = SET_BURST_MODE_EXTERNAL_BURST_DC;
 
 	if verbose > 0 {
 		println!("\nSetting burst mode to external burst DC:\n{}", command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_BURST_MODE_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_BURST_MODE_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -3269,54 +3585,16 @@ pub fn set_burst_mode_external_burst_dc(
 	Ok(res.to_string())
 }
 
+/** Set the modulation mode sweep frequency's starting
+frequency in hertz (Hz).  
+  
+"amount" parameter:
+```
+1,000 hertz:
+"1000"
+```
+*/
 pub fn set_sweep_starting_frequency(
-	port: &mut Box<dyn SerialPort>,
-	amount: f64,
-	verbose: u64,
-) -> Result<String, clap::Error> {
-	let command: String;
-
-	if amount < 1.0 || amount > 6000000000.0 {
-		return Err(Error::with_description(
-			"Unsupported sweep starting frequency. Must be 0.01-60000000.0.",
-			ErrorKind::InvalidValue,
-		));
-	}
-
-	command = format!(
-		"{}{}{}{}{}{}",
-		COMMAND_BEGIN,
-		COMMAND_WRITE,
-		WRITE_SWEEP_STARTING_FREQUENCY_COMMAND,
-		COMMAND_SEPARATOR,
-		amount,
-		COMMAND_END,
-	);
-
-	if verbose > 0 {
-		println!(
-			"\nSetting sweep starting frequency: {}:\n{}",
-			amount, command
-		);
-	}
-
-	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_STARTING_FREQUENCY_RES_LEN).collect();
-
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
-
-	let res = str::from_utf8(&outbuf).unwrap();
-
-	if verbose > 0 {
-		println!("Response:");
-		println!("{}", res);
-	}
-
-	Ok(res.to_string())
-}
-
-pub fn match_set_sweep_starting_frequency_arg(
 	mut port: &mut Box<dyn SerialPort>,
 	amount: &str,
 	verbose: u64,
@@ -3334,7 +3612,7 @@ pub fn match_set_sweep_starting_frequency_arg(
 			_y if amount >= 0.01 && amount <= 60000000.0 => {
 				let amount_rounded = ((amount * 100.0 * 10.0).round() / 10.0).round();
 
-				res = set_sweep_starting_frequency(&mut port, amount_rounded, verbose);
+				res = set_sweep_starting_frequency_inner(&mut port, amount_rounded, verbose);
 			}
 
 			_ => {
@@ -3350,7 +3628,7 @@ pub fn match_set_sweep_starting_frequency_arg(
 	res
 }
 
-pub fn set_sweep_termination_frequency(
+fn set_sweep_starting_frequency_inner(
 	port: &mut Box<dyn SerialPort>,
 	amount: f64,
 	verbose: u64,
@@ -3359,7 +3637,7 @@ pub fn set_sweep_termination_frequency(
 
 	if amount < 1.0 || amount > 6000000000.0 {
 		return Err(Error::with_description(
-			"Unsupported sweep termination frequency. Must be 0.01-60000000.0.",
+			"Unsupported sweep starting frequency. Must be 0.01-60000000.0.",
 			ErrorKind::InvalidValue,
 		));
 	}
@@ -3367,8 +3645,8 @@ pub fn set_sweep_termination_frequency(
 	command = format!(
 		"{}{}{}{}{}{}",
 		COMMAND_BEGIN,
-		COMMAND_WRITE,
-		WRITE_SWEEP_TERMINATION_FREQUENCY_COMMAND,
+		COMMAND_SET,
+		SET_SWEEP_STARTING_FREQUENCY_COMMAND,
 		COMMAND_SEPARATOR,
 		amount,
 		COMMAND_END,
@@ -3376,13 +3654,13 @@ pub fn set_sweep_termination_frequency(
 
 	if verbose > 0 {
 		println!(
-			"\nSetting sweep termination frequency: {}:\n{}",
+			"\nSetting sweep starting frequency: {}:\n{}",
 			amount, command
 		);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_TERMINATION_FREQUENCY_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_SWEEP_STARTING_FREQUENCY_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -3397,7 +3675,16 @@ pub fn set_sweep_termination_frequency(
 	Ok(res.to_string())
 }
 
-pub fn match_set_sweep_termination_frequency_arg(
+/** Set the modulation mode sweep frequency's end
+frequency in hertz (Hz).  
+  
+"amount" parameter:
+```
+2,000 hertz:
+"2000"
+```
+*/
+pub fn set_sweep_end_frequency(
 	mut port: &mut Box<dyn SerialPort>,
 	amount: &str,
 	verbose: u64,
@@ -3415,7 +3702,7 @@ pub fn match_set_sweep_termination_frequency_arg(
 			_y if amount >= 0.01 && amount <= 60000000.0 => {
 				let amount_rounded = ((amount * 100.0 * 10.0).round() / 10.0).round();
 
-				res = set_sweep_termination_frequency(&mut port, amount_rounded, verbose);
+				res = set_sweep_end_frequency_inner(&mut port, amount_rounded, verbose);
 			}
 
 			_ => {
@@ -3431,7 +3718,7 @@ pub fn match_set_sweep_termination_frequency_arg(
 	res
 }
 
-pub fn set_sweep_time(
+fn set_sweep_end_frequency_inner(
 	port: &mut Box<dyn SerialPort>,
 	amount: f64,
 	verbose: u64,
@@ -3440,7 +3727,7 @@ pub fn set_sweep_time(
 
 	if amount < 1.0 || amount > 6000000000.0 {
 		return Err(Error::with_description(
-			"Unsupported sweep time. Must be 0.1-999.9.",
+			"Unsupported sweep termination frequency. Must be 0.01-60000000.0.",
 			ErrorKind::InvalidValue,
 		));
 	}
@@ -3448,19 +3735,22 @@ pub fn set_sweep_time(
 	command = format!(
 		"{}{}{}{}{}{}",
 		COMMAND_BEGIN,
-		COMMAND_WRITE,
-		WRITE_SWEEP_TIME_COMMAND,
+		COMMAND_SET,
+		SET_SWEEP_END_FREQUENCY_COMMAND,
 		COMMAND_SEPARATOR,
 		amount,
 		COMMAND_END,
 	);
 
 	if verbose > 0 {
-		println!("\nSetting sweep time: {}:\n{}", amount, command);
+		println!(
+			"\nSetting sweep termination frequency: {}:\n{}",
+			amount, command
+		);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_TIME_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_SWEEP_END_FREQUENCY_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -3475,7 +3765,16 @@ pub fn set_sweep_time(
 	Ok(res.to_string())
 }
 
-pub fn match_set_sweep_time_arg(
+/** Set the modulation mode sweep frequency's sweep time
+in seconds.  
+  
+"amount" parameter:
+```
+10 seconds:
+"10"
+```
+*/
+pub fn set_sweep_time(
 	mut port: &mut Box<dyn SerialPort>,
 	amount: &str,
 	verbose: u64,
@@ -3493,7 +3792,7 @@ pub fn match_set_sweep_time_arg(
 			_y if amount >= 0.1 && amount <= 999.9 => {
 				let amount_rounded = (amount * 10.0).round();
 
-				res = set_sweep_time(&mut port, amount_rounded, verbose);
+				res = set_sweep_time_inner(&mut port, amount_rounded, verbose);
 			}
 
 			_ => {
@@ -3509,18 +3808,36 @@ pub fn match_set_sweep_time_arg(
 	res
 }
 
-pub fn set_sweep_direction_normal(
+fn set_sweep_time_inner(
 	port: &mut Box<dyn SerialPort>,
+	amount: f64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command = WRITE_SWEEP_DIRECTION_NORMAL;
+	let command: String;
+
+	if amount < 1.0 || amount > 6000000000.0 {
+		return Err(Error::with_description(
+			"Unsupported sweep time. Must be 0.1-999.9.",
+			ErrorKind::InvalidValue,
+		));
+	}
+
+	command = format!(
+		"{}{}{}{}{}{}",
+		COMMAND_BEGIN,
+		COMMAND_SET,
+		SET_SWEEP_TIME_COMMAND,
+		COMMAND_SEPARATOR,
+		amount,
+		COMMAND_END,
+	);
 
 	if verbose > 0 {
-		println!("\nSetting sweep direction to normal:\n{}", command);
+		println!("\nSetting sweep time: {}:\n{}", amount, command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_DIRECTION_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_SWEEP_TIME_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -3535,18 +3852,21 @@ pub fn set_sweep_direction_normal(
 	Ok(res.to_string())
 }
 
-pub fn set_sweep_direction_reverse(
+/** Set the modulation mode sweep frequency's sweep direction to normal:
+`Rise`
+*/
+pub fn set_sweep_direction_rise(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command = WRITE_SWEEP_DIRECTION_REVERSE;
+	let command = SET_SWEEP_DIRECTION_RISE;
 
 	if verbose > 0 {
-		println!("\nSetting sweep direction to reverse:\n{}", command);
+		println!("\nSetting sweep direction to rise:\n{}", command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_DIRECTION_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_SWEEP_DIRECTION_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -3561,18 +3881,21 @@ pub fn set_sweep_direction_reverse(
 	Ok(res.to_string())
 }
 
-pub fn set_sweep_direction_round_trip(
+/** Set the modulation mode sweep frequency's sweep direction to reverse:
+`Fall`
+*/
+pub fn set_sweep_direction_fall(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command = WRITE_SWEEP_DIRECTION_ROUND_TRIP;
+	let command = SET_SWEEP_DIRECTION_FALL;
 
 	if verbose > 0 {
-		println!("\nSetting sweep direction to round trip:\n{}", command);
+		println!("\nSetting sweep direction to fall:\n{}", command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_DIRECTION_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_SWEEP_DIRECTION_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -3587,18 +3910,48 @@ pub fn set_sweep_direction_round_trip(
 	Ok(res.to_string())
 }
 
+/** Set the modulation mode sweep frequency's sweep direction to round-trip:
+`Rise & Fall`
+*/
+pub fn set_sweep_direction_rise_fall(
+	port: &mut Box<dyn SerialPort>,
+	verbose: u64,
+) -> Result<String, clap::Error> {
+	let command = SET_SWEEP_DIRECTION_RISE_FALL;
+
+	if verbose > 0 {
+		println!("\nSetting sweep direction to rise and fall:\n{}", command);
+	}
+
+	let inbuf: Vec<u8> = command.as_bytes().to_vec();
+	let mut outbuf: Vec<u8> = (0..SET_SWEEP_DIRECTION_RES_LEN).collect();
+
+	port.write(&inbuf[..])?;
+	port.read(&mut outbuf[..])?;
+
+	let res = str::from_utf8(&outbuf).unwrap();
+
+	if verbose > 0 {
+		println!("Response:");
+		println!("{}", res);
+	}
+
+	Ok(res.to_string())
+}
+
+/** Set the modulation mode sweep frequency's mode to linear. */
 pub fn set_sweep_mode_linear(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command = WRITE_SWEEP_MODE_LINEAR;
+	let command = SET_SWEEP_MODE_LINEAR;
 
 	if verbose > 0 {
 		println!("\nSetting sweep mode to linear:\n{}", command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_MODE_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_SWEEP_MODE_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -3613,18 +3966,19 @@ pub fn set_sweep_mode_linear(
 	Ok(res.to_string())
 }
 
+/** Set the modulation mode sweep frequency's mode to logarithm. */
 pub fn set_sweep_mode_logarithm(
 	port: &mut Box<dyn SerialPort>,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	let command = WRITE_SWEEP_MODE_LOGARITHM;
+	let command = SET_SWEEP_MODE_LOGARITHM;
 
 	if verbose > 0 {
 		println!("\nSetting sweep mode to logarithm:\n{}", command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_SWEEP_MODE_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_SWEEP_MODE_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -3639,19 +3993,83 @@ pub fn set_sweep_mode_logarithm(
 	Ok(res.to_string())
 }
 
-// Set the modulation pulse width. It is in nanosecond units unless
-// the microseconds parameter is true.
-//
-// IMPORTANT NOTE: There seems to be no option on the device's physical
-// controls to switch between nanosecond and microsecond units, but if
-// you specify a value in microseconds, the device will switch to
-// microsecond mode, and all future values to this command entered through
-// the physical device interface will be interpreted as microsecond units
-// until you turn off the device, or set a nanosecond value using this
-// serial-interface-only command. If you save the device state while in
-// microseconds mode, this could be a problem, because then you need to
-// use this serial program to get back to the default nanoseconds mode.
+/** Set the modulation mode pulse generator's pulse width.  
+  
+It is in nanosecond units unless, the microseconds parameter is true.  
+  
+IMPORTANT NOTE: There seems to be no option on the device's physical
+controls to switch between nanosecond and microsecond units, but if
+you specify a value in microseconds, the device will switch to
+microsecond mode, and all future values to this command entered through
+the physical device interface will be interpreted as microsecond units
+until you turn off the device, or set a nanosecond value using this
+serial-interface-only command. If you save the device state while in
+microseconds mode, this could be a problem, because then you need to
+use this serial program to get back to the default nanoseconds mode.  
+  
+"amount" parameter when "microseconds" parameter is false:
+```
+1,000 nanoseconds:
+"1000"
+```
+  
+"amount" parameter when "microseconds" parameter is true:
+```
+2,000 microseconds:
+"2000"
+```
+*/
 pub fn set_pulse_width(
+	mut port: &mut Box<dyn SerialPort>,
+	amount: &str,
+	microseconds: bool,
+	verbose: u64,
+) -> Result<String, clap::Error> {
+	let amount_parts: Vec<&str> = amount.split(".").collect();
+	let units: &'static str;
+	let arg_min: f64;
+	let arg_max: f64;
+
+	if microseconds {
+		units = "us";
+		arg_min = SET_PULSE_WIDTH_ARG_MICROSECONDS_MIN;
+		arg_max = SET_PULSE_WIDTH_ARG_MICROSECONDS_MAX;
+	} else {
+		units = "ns";
+		arg_min = SET_PULSE_WIDTH_ARG_NANOSECONDS_MIN;
+		arg_max = SET_PULSE_WIDTH_ARG_NANOSECONDS_MAX;
+	}
+
+	if amount_parts.len() > 1 {
+		return Err(Error::with_description(&format!("unsupported value passed to \"set pulse width ({})\" argument (must be {}-{}): {}: too many decimal places (0 max)", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
+	}
+
+	let res: Result<String, clap::Error>;
+
+	match amount.parse::<f64>() {
+		Ok(amount) => match amount {
+			_y if amount >= arg_min && amount <= arg_max => {
+				if units == "ns" && amount as i64 % 5 != 0 {
+					return Err(Error::with_description(&format!("unsupported value passed to \"set pulse width ({})\" argument (must be {}-{}): {}: if nanoseconds, it must be a multiple of 5", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
+				}
+
+				res = set_pulse_width_inner(&mut port, amount, microseconds, verbose);
+			}
+
+			_ => {
+				res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse width ({})\" argument (must be {}-{}): {}", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
+			}
+		},
+
+		Err(e) => {
+			res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse width ({})\" argument (must be {}-{}): {}: {}", units, arg_min, arg_max, amount, e), ErrorKind::InvalidValue));
+		}
+	}
+
+	res
+}
+
+fn set_pulse_width_inner(
 	port: &mut Box<dyn SerialPort>,
 	amount: f64,
 	microseconds: bool,
@@ -3664,34 +4082,34 @@ pub fn set_pulse_width(
 
 	if microseconds {
 		units = "us";
-		arg_min = WRITE_PULSE_WIDTH_ARG_MICROSECONDS_MIN;
-		arg_max = WRITE_PULSE_WIDTH_ARG_MICROSECONDS_MAX;
+		arg_min = SET_PULSE_WIDTH_ARG_MICROSECONDS_MIN;
+		arg_max = SET_PULSE_WIDTH_ARG_MICROSECONDS_MAX;
 
 		command = format!(
 			"{}{}{}{}{}{}{}{}",
 			COMMAND_BEGIN,
-			COMMAND_WRITE,
-			WRITE_PULSE_WIDTH_COMMAND,
+			COMMAND_SET,
+			SET_PULSE_WIDTH_COMMAND,
 			COMMAND_SEPARATOR,
 			amount,
 			COMMAND_ARG_SEPARATOR,
-			WRITE_PULSE_WIDTH_ARG_MICROSECONDS,
+			SET_PULSE_WIDTH_ARG_MICROSECONDS,
 			COMMAND_END,
 		);
 	} else {
 		units = "ns";
-		arg_min = WRITE_PULSE_WIDTH_ARG_NANOSECONDS_MIN;
-		arg_max = WRITE_PULSE_WIDTH_ARG_NANOSECONDS_MAX;
+		arg_min = SET_PULSE_WIDTH_ARG_NANOSECONDS_MIN;
+		arg_max = SET_PULSE_WIDTH_ARG_NANOSECONDS_MAX;
 
 		command = format!(
 			"{}{}{}{}{}{}{}{}",
 			COMMAND_BEGIN,
-			COMMAND_WRITE,
-			WRITE_PULSE_WIDTH_COMMAND,
+			COMMAND_SET,
+			SET_PULSE_WIDTH_COMMAND,
 			COMMAND_SEPARATOR,
 			amount,
 			COMMAND_ARG_SEPARATOR,
-			WRITE_PULSE_WIDTH_ARG_NANOSECONDS,
+			SET_PULSE_WIDTH_ARG_NANOSECONDS,
 			COMMAND_END,
 		);
 	}
@@ -3711,7 +4129,7 @@ pub fn set_pulse_width(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_PULSE_WIDTH_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_PULSE_WIDTH_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -3726,7 +4144,33 @@ pub fn set_pulse_width(
 	Ok(res.to_string())
 }
 
-pub fn match_set_pulse_width_arg(
+/** Set the modulation mode pulse generator's pulse period.  
+  
+It is in nanosecond units unless the microseconds parameter is true.  
+  
+IMPORTANT NOTE: There seems to be no option on the device's physical
+controls to switch between nanosecond and microsecond units, but if
+you specify a value in microseconds, the device will switch to
+microsecond mode, and all future values to this command entered through
+the physical device interface will be interpreted as microsecond units
+until you turn off the device, or set a nanosecond value using this
+serial-interface-only command. If you save the device state while in
+microseconds mode, this could be a problem, because then you need to
+use this serial program to get back to the default nanoseconds mode.  
+  
+"amount" parameter when "microseconds" parameter is false:
+```
+1,000 nanoseconds:
+"1000"
+```
+  
+"amount" parameter when "microseconds" parameter is true:
+```
+2,000 microseconds:
+"2000"
+```
+*/
+pub fn set_pulse_period(
 	mut port: &mut Box<dyn SerialPort>,
 	amount: &str,
 	microseconds: bool,
@@ -3739,16 +4183,16 @@ pub fn match_set_pulse_width_arg(
 
 	if microseconds {
 		units = "us";
-		arg_min = WRITE_PULSE_WIDTH_ARG_MICROSECONDS_MIN;
-		arg_max = WRITE_PULSE_WIDTH_ARG_MICROSECONDS_MAX;
+		arg_min = SET_PULSE_PERIOD_ARG_MICROSECONDS_MIN;
+		arg_max = SET_PULSE_PERIOD_ARG_MICROSECONDS_MAX;
 	} else {
 		units = "ns";
-		arg_min = WRITE_PULSE_WIDTH_ARG_NANOSECONDS_MIN;
-		arg_max = WRITE_PULSE_WIDTH_ARG_NANOSECONDS_MAX;
+		arg_min = SET_PULSE_PERIOD_ARG_NANOSECONDS_MIN;
+		arg_max = SET_PULSE_PERIOD_ARG_NANOSECONDS_MAX;
 	}
 
 	if amount_parts.len() > 1 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"set pulse width ({})\" argument (must be {}-{}): {}: too many decimal places (0 max)", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
+		return Err(Error::with_description(&format!("unsupported value passed to \"set pulse period ({})\" argument (must be {}-{}): {}: too many decimal places (0 max)", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
 	}
 
 	let res: Result<String, clap::Error>;
@@ -3757,38 +4201,26 @@ pub fn match_set_pulse_width_arg(
 		Ok(amount) => match amount {
 			_y if amount >= arg_min && amount <= arg_max => {
 				if units == "ns" && amount as i64 % 5 != 0 {
-					return Err(Error::with_description(&format!("unsupported value passed to \"set pulse width ({})\" argument (must be {}-{}): {}: if nanoseconds, it must be a multiple of 5", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
+					return Err(Error::with_description(&format!("unsupported value passed to \"set pulse period ({})\" argument (must be {}-{}): {}: if nanoseconds, it must be a multiple of 5", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
 				}
 
-				res = set_pulse_width(&mut port, amount, microseconds, verbose);
+				res = set_pulse_period_inner(&mut port, amount, microseconds, verbose);
 			}
 
 			_ => {
-				res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse width ({})\" argument (must be {}-{}): {}", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
+				res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse period ({})\" argument (must be {}-{}): {}", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
 			}
 		},
 
 		Err(e) => {
-			res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse width ({})\" argument (must be {}-{}): {}: {}", units, arg_min, arg_max, amount, e), ErrorKind::InvalidValue));
+			res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse period ({})\" argument (must be {}-{}): {}: {}", units, arg_min, arg_max, amount, e), ErrorKind::InvalidValue));
 		}
 	}
 
 	res
 }
 
-// Set the modulation pulse period. It is in nanosecond units unless
-// the microseconds parameter is true.
-//
-// IMPORTANT NOTE: There seems to be no option on the device's physical
-// controls to switch between nanosecond and microsecond units, but if
-// you specify a value in microseconds, the device will switch to
-// microsecond mode, and all future values to this command entered through
-// the physical device interface will be interpreted as microsecond units
-// until you turn off the device, or set a nanosecond value using this
-// serial-interface-only command. If you save the device state while in
-// microseconds mode, this could be a problem, because then you need to
-// use this serial program to get back to the default nanoseconds mode.
-pub fn set_pulse_period(
+fn set_pulse_period_inner(
 	port: &mut Box<dyn SerialPort>,
 	amount: f64,
 	microseconds: bool,
@@ -3801,34 +4233,34 @@ pub fn set_pulse_period(
 
 	if microseconds {
 		units = "us";
-		arg_min = WRITE_PULSE_PERIOD_ARG_MICROSECONDS_MIN;
-		arg_max = WRITE_PULSE_PERIOD_ARG_MICROSECONDS_MAX;
+		arg_min = SET_PULSE_PERIOD_ARG_MICROSECONDS_MIN;
+		arg_max = SET_PULSE_PERIOD_ARG_MICROSECONDS_MAX;
 
 		command = format!(
 			"{}{}{}{}{}{}{}{}",
 			COMMAND_BEGIN,
-			COMMAND_WRITE,
-			WRITE_PULSE_PERIOD_COMMAND,
+			COMMAND_SET,
+			SET_PULSE_PERIOD_COMMAND,
 			COMMAND_SEPARATOR,
 			amount,
 			COMMAND_ARG_SEPARATOR,
-			WRITE_PULSE_PERIOD_ARG_MICROSECONDS,
+			SET_PULSE_PERIOD_ARG_MICROSECONDS,
 			COMMAND_END,
 		);
 	} else {
 		units = "ns";
-		arg_min = WRITE_PULSE_PERIOD_ARG_NANOSECONDS_MIN;
-		arg_max = WRITE_PULSE_PERIOD_ARG_NANOSECONDS_MAX;
+		arg_min = SET_PULSE_PERIOD_ARG_NANOSECONDS_MIN;
+		arg_max = SET_PULSE_PERIOD_ARG_NANOSECONDS_MAX;
 
 		command = format!(
 			"{}{}{}{}{}{}{}{}",
 			COMMAND_BEGIN,
-			COMMAND_WRITE,
-			WRITE_PULSE_PERIOD_COMMAND,
+			COMMAND_SET,
+			SET_PULSE_PERIOD_COMMAND,
 			COMMAND_SEPARATOR,
 			amount,
 			COMMAND_ARG_SEPARATOR,
-			WRITE_PULSE_PERIOD_ARG_NANOSECONDS,
+			SET_PULSE_PERIOD_ARG_NANOSECONDS,
 			COMMAND_END,
 		);
 	}
@@ -3848,7 +4280,7 @@ pub fn set_pulse_period(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_PULSE_PERIOD_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_PULSE_PERIOD_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -3863,68 +4295,60 @@ pub fn set_pulse_period(
 	Ok(res.to_string())
 }
 
-pub fn match_set_pulse_period_arg(
+/** Set the modulation mode pulse generator's pulse offset in percent (%).  
+  
+"amount" parameter:
+```
+50 percent:
+"50"
+```
+*/
+pub fn set_pulse_offset(
 	mut port: &mut Box<dyn SerialPort>,
 	amount: &str,
-	microseconds: bool,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let amount_parts: Vec<&str> = amount.split(".").collect();
-	let units: &'static str;
-	let arg_min: f64;
-	let arg_max: f64;
-
-	if microseconds {
-		units = "us";
-		arg_min = WRITE_PULSE_PERIOD_ARG_MICROSECONDS_MIN;
-		arg_max = WRITE_PULSE_PERIOD_ARG_MICROSECONDS_MAX;
-	} else {
-		units = "ns";
-		arg_min = WRITE_PULSE_PERIOD_ARG_NANOSECONDS_MIN;
-		arg_max = WRITE_PULSE_PERIOD_ARG_NANOSECONDS_MAX;
-	}
 
 	if amount_parts.len() > 1 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"set pulse period ({})\" argument (must be {}-{}): {}: too many decimal places (0 max)", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
+		return Err(Error::with_description(&format!("unsupported value passed to \"set pulse offset\" argument (must be {}-{}): {}: too many decimal places (0 max)", SET_PULSE_OFFSET_ARG_PERCENT_MIN, SET_PULSE_OFFSET_ARG_PERCENT_MAX, amount), ErrorKind::InvalidValue));
 	}
 
 	let res: Result<String, clap::Error>;
 
 	match amount.parse::<f64>() {
 		Ok(amount) => match amount {
-			_y if amount >= arg_min && amount <= arg_max => {
-				if units == "ns" && amount as i64 % 5 != 0 {
-					return Err(Error::with_description(&format!("unsupported value passed to \"set pulse period ({})\" argument (must be {}-{}): {}: if nanoseconds, it must be a multiple of 5", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
-				}
-
-				res = set_pulse_period(&mut port, amount, microseconds, verbose);
+			_y if amount >= SET_PULSE_OFFSET_ARG_PERCENT_MIN
+				&& amount <= SET_PULSE_OFFSET_ARG_PERCENT_MAX =>
+			{
+				res = set_pulse_offset_inner(&mut port, amount, verbose);
 			}
 
 			_ => {
-				res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse period ({})\" argument (must be {}-{}): {}", units, arg_min, arg_max, amount), ErrorKind::InvalidValue));
+				res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse offset\" argument (must be {}-{}): {}", SET_PULSE_OFFSET_ARG_PERCENT_MIN, SET_PULSE_OFFSET_ARG_PERCENT_MAX, amount), ErrorKind::InvalidValue));
 			}
 		},
 
 		Err(e) => {
-			res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse period ({})\" argument (must be {}-{}): {}: {}", units, arg_min, arg_max, amount, e), ErrorKind::InvalidValue));
+			res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse offset\" argument (must be {}-{}): {}: {}", SET_PULSE_OFFSET_ARG_PERCENT_MIN, SET_PULSE_OFFSET_ARG_PERCENT_MAX, amount, e), ErrorKind::InvalidValue));
 		}
 	}
 
 	res
 }
-// Set the pulse offset in percent.
-pub fn set_pulse_offset(
+
+fn set_pulse_offset_inner(
 	port: &mut Box<dyn SerialPort>,
 	amount: f64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: String;
 
-	if amount < WRITE_PULSE_OFFSET_ARG_PERCENT_MIN || amount > WRITE_PULSE_OFFSET_ARG_PERCENT_MAX {
+	if amount < SET_PULSE_OFFSET_ARG_PERCENT_MIN || amount > SET_PULSE_OFFSET_ARG_PERCENT_MAX {
 		return Err(Error::with_description(
 			&format!(
 				"Unsupported pulse offset. Must be {}-{}.",
-				WRITE_PULSE_OFFSET_ARG_PERCENT_MIN, WRITE_PULSE_OFFSET_ARG_PERCENT_MAX
+				SET_PULSE_OFFSET_ARG_PERCENT_MIN, SET_PULSE_OFFSET_ARG_PERCENT_MAX
 			),
 			ErrorKind::InvalidValue,
 		));
@@ -3933,8 +4357,8 @@ pub fn set_pulse_offset(
 	command = format!(
 		"{}{}{}{}{}{}",
 		COMMAND_BEGIN,
-		COMMAND_WRITE,
-		WRITE_PULSE_OFFSET_COMMAND,
+		COMMAND_SET,
+		SET_PULSE_OFFSET_COMMAND,
 		COMMAND_SEPARATOR,
 		amount,
 		COMMAND_END,
@@ -3945,7 +4369,7 @@ pub fn set_pulse_offset(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_PULSE_OFFSET_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_PULSE_OFFSET_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -3960,54 +4384,64 @@ pub fn set_pulse_offset(
 	Ok(res.to_string())
 }
 
-pub fn match_set_pulse_offset_arg(
+/** Set the modulation mode pulse generator's pulse amplitude in volts (V).  
+  
+"amount" parameter:
+```
+5 volts:
+"5"
+```
+*/
+pub fn set_pulse_amplitude(
 	mut port: &mut Box<dyn SerialPort>,
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
-	if amount_parts.len() > 1 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"set pulse offset\" argument (must be {}-{}): {}: too many decimal places (0 max)", WRITE_PULSE_OFFSET_ARG_PERCENT_MIN, WRITE_PULSE_OFFSET_ARG_PERCENT_MAX, amount), ErrorKind::InvalidValue));
+	if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
+		return Err(Error::with_description(&format!("unsupported value passed to \"set pulse amplitude\" argument (must be {}-{}): {}: too many decimal places (2 max)", SET_PULSE_AMPLITUDE_ARG_VOLTS_MIN, SET_PULSE_AMPLITUDE_ARG_VOLTS_MAX, amount), ErrorKind::InvalidValue));
 	}
 
 	let res: Result<String, clap::Error>;
 
 	match amount.parse::<f64>() {
 		Ok(amount) => match amount {
-			_y if amount >= WRITE_PULSE_OFFSET_ARG_PERCENT_MIN
-				&& amount <= WRITE_PULSE_OFFSET_ARG_PERCENT_MAX =>
+			_y if amount >= SET_PULSE_AMPLITUDE_ARG_VOLTS_MIN
+				&& amount <= SET_PULSE_AMPLITUDE_ARG_VOLTS_MAX =>
 			{
-				res = set_pulse_offset(&mut port, amount, verbose);
+				let amount_rounded = ((amount * 100.0 * 100.0).round() / 100.0).round();
+
+				res = set_pulse_amplitude_inner(&mut port, amount_rounded, verbose);
 			}
 
 			_ => {
-				res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse offset\" argument (must be {}-{}): {}", WRITE_PULSE_OFFSET_ARG_PERCENT_MIN, WRITE_PULSE_OFFSET_ARG_PERCENT_MAX, amount), ErrorKind::InvalidValue));
+				res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse amplitude\" argument (must be {}-{}): {}", SET_PULSE_AMPLITUDE_ARG_VOLTS_MIN, SET_PULSE_AMPLITUDE_ARG_VOLTS_MAX, amount), ErrorKind::InvalidValue));
 			}
 		},
 
 		Err(e) => {
-			res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse offset\" argument (must be {}-{}): {}: {}", WRITE_PULSE_OFFSET_ARG_PERCENT_MIN, WRITE_PULSE_OFFSET_ARG_PERCENT_MAX, amount, e), ErrorKind::InvalidValue));
+			res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse amplitude\" argument (must be {}-{}): {}: {}", SET_PULSE_AMPLITUDE_ARG_VOLTS_MIN, SET_PULSE_AMPLITUDE_ARG_VOLTS_MAX, amount, e), ErrorKind::InvalidValue));
 		}
 	}
 
 	res
 }
-// Set the pulse amplitude in volts.
-pub fn set_pulse_amplitude(
+
+fn set_pulse_amplitude_inner(
 	port: &mut Box<dyn SerialPort>,
 	amount: f64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: String;
 
-	if amount < WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MIN * 100.0
-		|| amount > WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MAX * 100.0
+	if amount < SET_PULSE_AMPLITUDE_ARG_VOLTS_MIN * 100.0
+		|| amount > SET_PULSE_AMPLITUDE_ARG_VOLTS_MAX * 100.0
 	{
 		return Err(Error::with_description(
 			&format!(
 				"Unsupported pulse amplitude. Must be {}-{}.",
-				WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MIN, WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MAX
+				SET_PULSE_AMPLITUDE_ARG_VOLTS_MIN, SET_PULSE_AMPLITUDE_ARG_VOLTS_MAX
 			),
 			ErrorKind::InvalidValue,
 		));
@@ -4016,8 +4450,8 @@ pub fn set_pulse_amplitude(
 	command = format!(
 		"{}{}{}{}{}{}",
 		COMMAND_BEGIN,
-		COMMAND_WRITE,
-		WRITE_PULSE_AMPLITUDE_COMMAND,
+		COMMAND_SET,
+		SET_PULSE_AMPLITUDE_COMMAND,
 		COMMAND_SEPARATOR,
 		amount,
 		COMMAND_END,
@@ -4028,7 +4462,7 @@ pub fn set_pulse_amplitude(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_PULSE_AMPLITUDE_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_PULSE_AMPLITUDE_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -4043,54 +4477,68 @@ pub fn set_pulse_amplitude(
 	Ok(res.to_string())
 }
 
-pub fn match_set_pulse_amplitude_arg(
+/** Save all current values on the device as a numbered preset.  
+  
+"amount" parameter:
+```
+save as preset 0:
+"0"
+```
+*/
+pub fn save_preset(
 	mut port: &mut Box<dyn SerialPort>,
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
-	if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"set pulse amplitude\" argument (must be {}-{}): {}: too many decimal places (2 max)", WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MIN, WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MAX, amount), ErrorKind::InvalidValue));
+	if amount_parts.len() > 1 {
+		return Err(Error::with_description(&format!("unsupported value passed to \"save preset\" argument (must be {}-{}): {}: too many decimal places (0 max)", SAVE_PRESET_ARG_NUM_MIN, SAVE_PRESET_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
 	}
 
 	let res: Result<String, clap::Error>;
 
 	match amount.parse::<f64>() {
-		Ok(amount) => match amount {
-			_y if amount >= WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MIN
-				&& amount <= WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MAX =>
-			{
-				let amount_rounded = ((amount * 100.0 * 100.0).round() / 100.0).round();
+		Ok(amount) => {
+			match amount {
+				_y if amount >= SAVE_PRESET_ARG_NUM_MIN
+					&& amount <= SAVE_PRESET_ARG_NUM_MAX =>
+				{
+					res = save_preset_inner(&mut port, amount, verbose);
+				}
 
-				res = set_pulse_amplitude(&mut port, amount_rounded, verbose);
+				_ => {
+					res = Err(Error::with_description(&format!("unsupported value passed to \"save preset\" argument (must be {}-{}): {}", SAVE_PRESET_ARG_NUM_MIN, SAVE_PRESET_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+				}
 			}
-
-			_ => {
-				res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse amplitude\" argument (must be {}-{}): {}", WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MIN, WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MAX, amount), ErrorKind::InvalidValue));
-			}
-		},
+		}
 
 		Err(e) => {
-			res = Err(Error::with_description(&format!("unsupported value passed to \"set pulse amplitude\" argument (must be {}-{}): {}: {}", WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MIN, WRITE_PULSE_AMPLITUDE_ARG_VOLTS_MAX, amount, e), ErrorKind::InvalidValue));
+			res = Err(Error::with_description(
+				&format!(
+					"unsupported value passed to \"save preset\" argument (must be {}-{}): {}: {}",
+					SAVE_PRESET_ARG_NUM_MIN, SAVE_PRESET_ARG_NUM_MAX, amount, e
+				),
+				ErrorKind::InvalidValue,
+			));
 		}
 	}
 
 	res
 }
-// Save all values as a numbered preset.
-pub fn save_preset(
+
+fn save_preset_inner(
 	port: &mut Box<dyn SerialPort>,
 	amount: f64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: String;
 
-	if amount < WRITE_SAVE_PRESET_ARG_NUM_MIN || amount > WRITE_SAVE_PRESET_ARG_NUM_MAX {
+	if amount < SAVE_PRESET_ARG_NUM_MIN || amount > SAVE_PRESET_ARG_NUM_MAX {
 		return Err(Error::with_description(
 			&format!(
 				"Unsupported preset number. Must be {}-{}.",
-				WRITE_SAVE_PRESET_ARG_NUM_MIN, WRITE_SAVE_PRESET_ARG_NUM_MAX
+				SAVE_PRESET_ARG_NUM_MIN, SAVE_PRESET_ARG_NUM_MAX
 			),
 			ErrorKind::InvalidValue,
 		));
@@ -4099,8 +4547,8 @@ pub fn save_preset(
 	command = format!(
 		"{}{}{}{}{}{}",
 		COMMAND_BEGIN,
-		COMMAND_WRITE,
-		WRITE_SAVE_PRESET_COMMAND,
+		COMMAND_SET,
+		SAVE_PRESET_COMMAND,
 		COMMAND_SEPARATOR,
 		amount,
 		COMMAND_END,
@@ -4111,7 +4559,7 @@ pub fn save_preset(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_SAVE_PRESET_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SAVE_PRESET_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -4126,7 +4574,15 @@ pub fn save_preset(
 	Ok(res.to_string())
 }
 
-pub fn match_save_preset_arg(
+/** Load all values for the device from a numbered preset.  
+  
+"amount" parameter:
+```
+save as preset 0:
+"0"
+```
+*/
+pub fn load_preset(
 	mut port: &mut Box<dyn SerialPort>,
 	amount: &str,
 	verbose: u64,
@@ -4134,52 +4590,44 @@ pub fn match_save_preset_arg(
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"save preset\" argument (must be {}-{}): {}: too many decimal places (0 max)", WRITE_SAVE_PRESET_ARG_NUM_MIN, WRITE_SAVE_PRESET_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+		return Err(Error::with_description(&format!("unsupported value passed to \"recall preset\" argument (must be {}-{}): {}: too many decimal places (0 max)", LOAD_PRESET_ARG_NUM_MIN, LOAD_PRESET_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
 	}
 
 	let res: Result<String, clap::Error>;
 
 	match amount.parse::<f64>() {
-		Ok(amount) => {
-			match amount {
-				_y if amount >= WRITE_SAVE_PRESET_ARG_NUM_MIN
-					&& amount <= WRITE_SAVE_PRESET_ARG_NUM_MAX =>
-				{
-					res = save_preset(&mut port, amount, verbose);
-				}
-
-				_ => {
-					res = Err(Error::with_description(&format!("unsupported value passed to \"save preset\" argument (must be {}-{}): {}", WRITE_SAVE_PRESET_ARG_NUM_MIN, WRITE_SAVE_PRESET_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
-				}
+		Ok(amount) => match amount {
+			_y if amount >= LOAD_PRESET_ARG_NUM_MIN
+				&& amount <= LOAD_PRESET_ARG_NUM_MAX =>
+			{
+				res = load_preset_inner(&mut port, amount, verbose);
 			}
-		}
+
+			_ => {
+				res = Err(Error::with_description(&format!("unsupported value passed to \"recall preset\" argument (must be {}-{}): {}", LOAD_PRESET_ARG_NUM_MIN, LOAD_PRESET_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+			}
+		},
 
 		Err(e) => {
-			res = Err(Error::with_description(
-				&format!(
-					"unsupported value passed to \"save preset\" argument (must be {}-{}): {}: {}",
-					WRITE_SAVE_PRESET_ARG_NUM_MIN, WRITE_SAVE_PRESET_ARG_NUM_MAX, amount, e
-				),
-				ErrorKind::InvalidValue,
-			));
+			res = Err(Error::with_description(&format!("unsupported value passed to \"recall preset\" argument (must be {}-{}): {}: {}", LOAD_PRESET_ARG_NUM_MIN, LOAD_PRESET_ARG_NUM_MAX, amount, e), ErrorKind::InvalidValue));
 		}
 	}
 
 	res
 }
-// Recall all values from a numbered preset.
-pub fn recall_preset(
+
+fn load_preset_inner(
 	port: &mut Box<dyn SerialPort>,
 	amount: f64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: String;
 
-	if amount < WRITE_RECALL_PRESET_ARG_NUM_MIN || amount > WRITE_RECALL_PRESET_ARG_NUM_MAX {
+	if amount < LOAD_PRESET_ARG_NUM_MIN || amount > LOAD_PRESET_ARG_NUM_MAX {
 		return Err(Error::with_description(
 			&format!(
 				"Unsupported preset number. Must be {}-{}.",
-				WRITE_RECALL_PRESET_ARG_NUM_MIN, WRITE_RECALL_PRESET_ARG_NUM_MAX
+				LOAD_PRESET_ARG_NUM_MIN, LOAD_PRESET_ARG_NUM_MAX
 			),
 			ErrorKind::InvalidValue,
 		));
@@ -4188,8 +4636,8 @@ pub fn recall_preset(
 	command = format!(
 		"{}{}{}{}{}{}",
 		COMMAND_BEGIN,
-		COMMAND_WRITE,
-		WRITE_RECALL_PRESET_COMMAND,
+		COMMAND_SET,
+		LOAD_PRESET_COMMAND,
 		COMMAND_SEPARATOR,
 		amount,
 		COMMAND_END,
@@ -4203,7 +4651,7 @@ pub fn recall_preset(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_RECALL_PRESET_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..LOAD_PRESET_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -4218,136 +4666,15 @@ pub fn recall_preset(
 	Ok(res.to_string())
 }
 
-pub fn match_recall_preset_arg(
-	mut port: &mut Box<dyn SerialPort>,
-	amount: &str,
-	verbose: u64,
-) -> Result<String, clap::Error> {
-	let amount_parts: Vec<&str> = amount.split(".").collect();
-
-	if amount_parts.len() > 1 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"recall preset\" argument (must be {}-{}): {}: too many decimal places (0 max)", WRITE_RECALL_PRESET_ARG_NUM_MIN, WRITE_RECALL_PRESET_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
-	}
-
-	let res: Result<String, clap::Error>;
-
-	match amount.parse::<f64>() {
-		Ok(amount) => match amount {
-			_y if amount >= WRITE_RECALL_PRESET_ARG_NUM_MIN
-				&& amount <= WRITE_RECALL_PRESET_ARG_NUM_MAX =>
-			{
-				res = recall_preset(&mut port, amount, verbose);
-			}
-
-			_ => {
-				res = Err(Error::with_description(&format!("unsupported value passed to \"recall preset\" argument (must be {}-{}): {}", WRITE_RECALL_PRESET_ARG_NUM_MIN, WRITE_RECALL_PRESET_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
-			}
-		},
-
-		Err(e) => {
-			res = Err(Error::with_description(&format!("unsupported value passed to \"recall preset\" argument (must be {}-{}): {}: {}", WRITE_RECALL_PRESET_ARG_NUM_MIN, WRITE_RECALL_PRESET_ARG_NUM_MAX, amount, e), ErrorKind::InvalidValue));
-		}
-	}
-
-	res
-}
-// Clear a numbered preset.
-//
-// NOTE: This doesn't seem to work. It seems to do nothing even though
-// it returns ok. This feature on the device's panel does work however.
-// It doesn't work in the official software either, so the spec must be
-// wrong.
-pub fn clear_preset(
-	port: &mut Box<dyn SerialPort>,
-	amount: f64,
-	verbose: u64,
-) -> Result<String, clap::Error> {
-	let command: String;
-
-	if amount < WRITE_CLEAR_PRESET_ARG_NUM_MIN || amount > WRITE_CLEAR_PRESET_ARG_NUM_MAX {
-		return Err(Error::with_description(
-			&format!(
-				"Unsupported preset number. Must be {}-{}.",
-				WRITE_CLEAR_PRESET_ARG_NUM_MIN, WRITE_CLEAR_PRESET_ARG_NUM_MAX
-			),
-			ErrorKind::InvalidValue,
-		));
-	}
-
-	command = format!(
-		"{}{}{}{}{}{}",
-		COMMAND_BEGIN,
-		COMMAND_WRITE,
-		WRITE_CLEAR_PRESET_COMMAND,
-		COMMAND_SEPARATOR,
-		amount,
-		COMMAND_END,
-	);
-
-	if verbose > 0 {
-		println!("\nClearing preset number: {}:\n{}", amount, command);
-	}
-
-	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_CLEAR_PRESET_RES_LEN).collect();
-
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
-
-	let res = str::from_utf8(&outbuf).unwrap();
-
-	if verbose > 0 {
-		println!("Response:");
-		println!("{}", res);
-	}
-
-	Ok(res.to_string())
-}
-
-pub fn match_clear_preset_arg(
-	mut port: &mut Box<dyn SerialPort>,
-	amount: &str,
-	verbose: u64,
-) -> Result<String, clap::Error> {
-	let amount_parts: Vec<&str> = amount.split(".").collect();
-
-	if amount_parts.len() > 1 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"clear preset\" argument (must be {}-{}): {}: too many decimal places (0 max)", WRITE_CLEAR_PRESET_ARG_NUM_MIN, WRITE_CLEAR_PRESET_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
-	}
-
-	let res: Result<String, clap::Error>;
-
-	match amount.parse::<f64>() {
-		Ok(amount) => {
-			match amount {
-				_y if amount >= WRITE_CLEAR_PRESET_ARG_NUM_MIN
-					&& amount <= WRITE_CLEAR_PRESET_ARG_NUM_MAX =>
-				{
-					res = clear_preset(&mut port, amount, verbose);
-				}
-
-				_ => {
-					res = Err(Error::with_description(&format!("unsupported value passed to \"clear preset\" argument (must be {}-{}): {}", WRITE_CLEAR_PRESET_ARG_NUM_MIN, WRITE_CLEAR_PRESET_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
-				}
-			}
-		}
-
-		Err(e) => {
-			res = Err(Error::with_description(
-				&format!(
-					"unsupported value passed to \"clear preset\" argument (must be {}-{}): {}: {}",
-					WRITE_CLEAR_PRESET_ARG_NUM_MIN, WRITE_CLEAR_PRESET_ARG_NUM_MAX, amount, e
-				),
-				ErrorKind::InvalidValue,
-			));
-		}
-	}
-
-	res
-}
-
-// Convert a WaveCAD file to the device's arbitrary
-// waveform text file format.
+/** Convert a WaveCAD (.wav) file to the device's arbitrary
+waveform text (.txt) file format.  
+  
+"path" parameter:
+```
+some-wav-file-to-convert.wav:
+"some-wav-file-to-convert.wav"
+```
+*/
 pub fn wav_to_txt(path: &str, verbose: u64) -> Result<String, clap::Error> {
 	let mut res: Result<String, clap::Error>;
 
@@ -4486,8 +4813,18 @@ pub fn wav_to_txt(path: &str, verbose: u64) -> Result<String, clap::Error> {
 	res
 }
 
-// Convert the device's arbitrary waveform text file format
-// to a WaveCAD file.
+/** Convert the device's arbitrary waveform text (.txt) file format
+to a WaveCAD (.wav) file.  
+  
+Outputs the resulting binary file to stdout if the "output_binary" 
+parameter is set to true.  
+  
+"path" parameter:
+```
+some-txt-file-to-convert.txt:
+"some-txt-file-to-convert.txt"
+```
+*/
 pub fn txt_to_wav(path: &str, output_binary: bool, verbose: u64) -> Result<String, clap::Error> {
 	let mut res: Result<String, clap::Error>;
 
@@ -4611,8 +4948,32 @@ pub fn txt_to_wav(path: &str, output_binary: bool, verbose: u64) -> Result<Strin
 	res
 }
 
-// Write an arbitrary wave to the device.
-pub fn write_arbitrary_wave(
+/** Write a user-defined arbitrary waveform to the device.  
+  
+Use the helper function 
+[set_arbitrary_wave_stdin](fn.set_arbitrary_wave_stdin.html) 
+instead to accept the text input for the "data" parameter 
+from stdin.  
+  
+Specify which arbitrary wave preset to save it in, as the
+"amount" parameter.  
+  
+"data" parameter, some user-defined wave. Must be 2048 
+lines of ASCII whole numbers, each in the range of 0 - 4095, 
+followed by one extra blank line. For example:
+```
+"2456"
+"3016"
+"4054"
+"4001"
+...
+"3244"
+"2010"
+"1012"
+  
+```
+*/
+pub fn set_arbitrary_wave(
 	port: &mut Box<dyn SerialPort>,
 	amount: f64,
 	data: &[String],
@@ -4620,11 +4981,11 @@ pub fn write_arbitrary_wave(
 ) -> Result<String, clap::Error> {
 	let command: String;
 
-	if amount < WRITE_ARBITRARY_WAVE_ARG_NUM_MIN || amount > WRITE_ARBITRARY_WAVE_ARG_NUM_MAX {
+	if amount < SET_ARBITRARY_WAVE_ARG_NUM_MIN || amount > SET_ARBITRARY_WAVE_ARG_NUM_MAX {
 		return Err(Error::with_description(
 			&format!(
 				"Unsupported slot number. Must be {}-{}.",
-				WRITE_ARBITRARY_WAVE_ARG_NUM_MIN, WRITE_ARBITRARY_WAVE_ARG_NUM_MAX
+				SET_ARBITRARY_WAVE_ARG_NUM_MIN, SET_ARBITRARY_WAVE_ARG_NUM_MAX
 			),
 			ErrorKind::InvalidValue,
 		));
@@ -4676,7 +5037,7 @@ pub fn write_arbitrary_wave(
 	command = format!(
 		"{}{}{}{}{}{}",
 		COMMAND_BEGIN,
-		WRITE_ARBITRARY_WAVE_COMMAND,
+		SET_ARBITRARY_WAVE_COMMAND,
 		amount_str,
 		COMMAND_SEPARATOR,
 		arg,
@@ -4691,7 +5052,7 @@ pub fn write_arbitrary_wave(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..WRITE_ARBITRARY_WAVE_RES_LEN).collect();
+	let mut outbuf: Vec<u8> = (0..SET_ARBITRARY_WAVE_RES_LEN).collect();
 
 	port.write(&inbuf[..])?;
 	port.read(&mut outbuf[..])?;
@@ -4706,8 +5067,16 @@ pub fn write_arbitrary_wave(
 	Ok(res.to_string())
 }
 
-// Write an arbitrary wave to the device from a WaveCAD file.
-pub fn match_write_arbitrary_wavecad_arg(
+/** Write a user-defined arbitrary waveform to the device from a WaveCAD (.wav) 
+file, saving it into one of the device's arbitrary wave preset slots.  
+  
+"arg" parameter:
+```
+Save the wav file into preset 1:
+"1,some-wav-file-to-upload.wav"
+```
+*/
+pub fn set_arbitrary_wavecad(
 	mut port: &mut Box<dyn SerialPort>,
 	arg: &str,
 	verbose: u64,
@@ -4715,7 +5084,7 @@ pub fn match_write_arbitrary_wavecad_arg(
 	let arg_parts: Vec<&str> = arg.split(",").collect();
 
 	if arg_parts.len() < 2 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wavecad\" argument (must be {}-{},<file_path>): slot number and file path must be present and separated with a comma but no space: {}", WRITE_ARBITRARY_WAVE_ARG_NUM_MIN, WRITE_ARBITRARY_WAVE_ARG_NUM_MAX, arg), ErrorKind::InvalidValue));
+		return Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wavecad\" argument (must be {}-{},<file_path>): slot number and file path must be present and separated with a comma but no space: {}", SET_ARBITRARY_WAVE_ARG_NUM_MIN, SET_ARBITRARY_WAVE_ARG_NUM_MAX, arg), ErrorKind::InvalidValue));
 	}
 
 	let amount = arg_parts[0];
@@ -4723,7 +5092,7 @@ pub fn match_write_arbitrary_wavecad_arg(
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wavecad\" argument (must be {}-{}): {}: too many decimal places (0 max)", WRITE_ARBITRARY_WAVE_ARG_NUM_MIN, WRITE_ARBITRARY_WAVE_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+		return Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wavecad\" argument (must be {}-{}): {}: too many decimal places (0 max)", SET_ARBITRARY_WAVE_ARG_NUM_MIN, SET_ARBITRARY_WAVE_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
 	}
 
 	let path = arg_parts[1];
@@ -4732,8 +5101,8 @@ pub fn match_write_arbitrary_wavecad_arg(
 
 	match amount.parse::<f64>() {
 		Ok(amount) => match amount {
-			_y if amount >= WRITE_ARBITRARY_WAVE_ARG_NUM_MIN
-				&& amount <= WRITE_ARBITRARY_WAVE_ARG_NUM_MAX =>
+			_y if amount >= SET_ARBITRARY_WAVE_ARG_NUM_MIN
+				&& amount <= SET_ARBITRARY_WAVE_ARG_NUM_MAX =>
 			{
 				let data = wav_to_txt(path, verbose);
 
@@ -4747,23 +5116,77 @@ pub fn match_write_arbitrary_wavecad_arg(
 					.map(|res| res.to_string())
 					.collect();
 
-				res = write_arbitrary_wave(&mut port, amount, &data, verbose);
+				res = set_arbitrary_wave(&mut port, amount, &data, verbose);
 			}
 
 			_ => {
-				res = Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wavecad\" argument (must be {}-{}): {}", WRITE_ARBITRARY_WAVE_ARG_NUM_MIN, WRITE_ARBITRARY_WAVE_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+				res = Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wavecad\" argument (must be {}-{}): {}", SET_ARBITRARY_WAVE_ARG_NUM_MIN, SET_ARBITRARY_WAVE_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
 			}
 		},
 
 		Err(e) => {
-			res = Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wavecad\" argument (must be {}-{}): {}: {}", WRITE_ARBITRARY_WAVE_ARG_NUM_MIN, WRITE_ARBITRARY_WAVE_ARG_NUM_MAX, amount, e), ErrorKind::InvalidValue));
+			res = Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wavecad\" argument (must be {}-{}): {}: {}", SET_ARBITRARY_WAVE_ARG_NUM_MIN, SET_ARBITRARY_WAVE_ARG_NUM_MAX, amount, e), ErrorKind::InvalidValue));
 		}
 	}
 
 	res
 }
-// Write an arbitrary wave to the device from stdin.
-pub fn write_arbitrary_wave_stdin(
+
+/** Write a user-defined arbitrary waveform to the device from stdin.  
+  
+Specify which arbitrary wave preset to save it in, as the
+"amount" parameter.  
+  
+The stdin values define some user-defined wave. Must be 2048 
+lines of ASCII whole numbers, each in the range of 0 - 4095, 
+followed by one extra blank line. For example:
+```
+"2456"
+"3016"
+"4054"
+"4001"
+...
+"3244"
+"2010"
+"1012"
+  
+```
+*/
+pub fn set_arbitrary_wave_stdin(
+	mut port: &mut Box<dyn SerialPort>,
+	amount: &str,
+	verbose: u64,
+) -> Result<String, clap::Error> {
+	let amount_parts: Vec<&str> = amount.split(".").collect();
+
+	if amount_parts.len() > 1 {
+		return Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wave\" argument (must be {}-{}): {}: too many decimal places (0 max)", SET_ARBITRARY_WAVE_ARG_NUM_MIN, SET_ARBITRARY_WAVE_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+	}
+
+	let res: Result<String, clap::Error>;
+
+	match amount.parse::<f64>() {
+		Ok(amount) => match amount {
+			_y if amount >= SET_ARBITRARY_WAVE_ARG_NUM_MIN
+				&& amount <= SET_ARBITRARY_WAVE_ARG_NUM_MAX =>
+			{
+				res = set_arbitrary_wave_stdin_inner(&mut port, amount, verbose);
+			}
+
+			_ => {
+				res = Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wave\" argument (must be {}-{}): {}", SET_ARBITRARY_WAVE_ARG_NUM_MIN, SET_ARBITRARY_WAVE_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+			}
+		},
+
+		Err(e) => {
+			res = Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wave\" argument (must be {}-{}): {}: {}", SET_ARBITRARY_WAVE_ARG_NUM_MIN, SET_ARBITRARY_WAVE_ARG_NUM_MAX, amount, e), ErrorKind::InvalidValue));
+		}
+	}
+
+	res
+}
+
+fn set_arbitrary_wave_stdin_inner(
 	port: &mut Box<dyn SerialPort>,
 	amount: f64,
 	verbose: u64,
@@ -4780,10 +5203,19 @@ pub fn write_arbitrary_wave_stdin(
 		return Err(Error::with_description(&format!("Invalid arbitrary wave data from stdin. Must be 2048 lines of integers in the range of 0 - 4095: Incorrect number of lines: {}", data_len), ErrorKind::InvalidValue));
 	}
 
-	return write_arbitrary_wave(port, amount, &data[0..2048], verbose);
+	return set_arbitrary_wave(port, amount, &data[0..2048], verbose);
 }
 
-pub fn match_write_arbitrary_wave_stdin_arg(
+/** Read a user-defined arbitrary waveform from one of the device's 
+numbered arbitrary wave preset slots.  
+  
+"amount" parameter:
+```
+Get the waveform data which is stored in preset 1:
+"1"
+```
+*/
+pub fn get_arbitrary_wave(
 	mut port: &mut Box<dyn SerialPort>,
 	amount: &str,
 	verbose: u64,
@@ -4791,44 +5223,44 @@ pub fn match_write_arbitrary_wave_stdin_arg(
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wave\" argument (must be {}-{}): {}: too many decimal places (0 max)", WRITE_ARBITRARY_WAVE_ARG_NUM_MIN, WRITE_ARBITRARY_WAVE_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+		return Err(Error::with_description(&format!("unsupported value passed to \"read arbitrary wave\" argument (must be {}-{}): {}: too many decimal places (0 max)", SET_ARBITRARY_WAVE_ARG_NUM_MIN, SET_ARBITRARY_WAVE_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
 	}
 
 	let res: Result<String, clap::Error>;
 
 	match amount.parse::<f64>() {
 		Ok(amount) => match amount {
-			_y if amount >= WRITE_ARBITRARY_WAVE_ARG_NUM_MIN
-				&& amount <= WRITE_ARBITRARY_WAVE_ARG_NUM_MAX =>
+			_y if amount >= GET_ARBITRARY_WAVE_ARG_NUM_MIN
+				&& amount <= GET_ARBITRARY_WAVE_ARG_NUM_MAX =>
 			{
-				res = write_arbitrary_wave_stdin(&mut port, amount, verbose);
+				res = get_arbitrary_wave_inner(&mut port, amount, verbose);
 			}
 
 			_ => {
-				res = Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wave\" argument (must be {}-{}): {}", WRITE_ARBITRARY_WAVE_ARG_NUM_MIN, WRITE_ARBITRARY_WAVE_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
+				res = Err(Error::with_description(&format!("unsupported value passed to \"read arbitrary wave\" argument (must be {}-{}): {}", GET_ARBITRARY_WAVE_ARG_NUM_MIN, GET_ARBITRARY_WAVE_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
 			}
 		},
 
 		Err(e) => {
-			res = Err(Error::with_description(&format!("unsupported value passed to \"write arbitrary wave\" argument (must be {}-{}): {}: {}", WRITE_ARBITRARY_WAVE_ARG_NUM_MIN, WRITE_ARBITRARY_WAVE_ARG_NUM_MAX, amount, e), ErrorKind::InvalidValue));
+			res = Err(Error::with_description(&format!("unsupported value passed to \"read arbitrary wave\" argument (must be {}-{}): {}: {}", GET_ARBITRARY_WAVE_ARG_NUM_MIN, GET_ARBITRARY_WAVE_ARG_NUM_MAX, amount, e), ErrorKind::InvalidValue));
 		}
 	}
 
 	res
 }
-// Read an arbitrary wave from the device.
-pub fn read_arbitrary_wave(
+
+fn get_arbitrary_wave_inner(
 	port: &mut Box<dyn SerialPort>,
 	amount: f64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: String;
 
-	if amount < READ_ARBITRARY_WAVE_ARG_NUM_MIN || amount > READ_ARBITRARY_WAVE_ARG_NUM_MAX {
+	if amount < GET_ARBITRARY_WAVE_ARG_NUM_MIN || amount > GET_ARBITRARY_WAVE_ARG_NUM_MAX {
 		return Err(Error::with_description(
 			&format!(
 				"Unsupported slot number. Must be {}-{}.",
-				READ_ARBITRARY_WAVE_ARG_NUM_MIN, READ_ARBITRARY_WAVE_ARG_NUM_MAX
+				GET_ARBITRARY_WAVE_ARG_NUM_MIN, GET_ARBITRARY_WAVE_ARG_NUM_MAX
 			),
 			ErrorKind::InvalidValue,
 		));
@@ -4839,10 +5271,10 @@ pub fn read_arbitrary_wave(
 	command = format!(
 		"{}{}{}{}{}{}",
 		COMMAND_BEGIN,
-		READ_ARBITRARY_WAVE_COMMAND,
+		GET_ARBITRARY_WAVE_COMMAND,
 		amount_str,
 		COMMAND_SEPARATOR,
-		READ_ARBITRARY_WAVE_ARG2,
+		GET_ARBITRARY_WAVE_ARG2,
 		COMMAND_END,
 	);
 
@@ -4854,13 +5286,13 @@ pub fn read_arbitrary_wave(
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
-	let mut outbuf: Vec<u8> = (0..READ_ARBITRARY_WAVE_RES_LEN).map(|_val| 0u8).collect();
+	let mut outbuf: Vec<u8> = (0..GET_ARBITRARY_WAVE_RES_LEN).map(|_val| 0u8).collect();
 
 	port.write(&inbuf[..])?;
 	let mut n = 0;
 	let mut chunk: &str;
 
-	while n < READ_ARBITRARY_WAVE_RES_LEN as usize {
+	while n < GET_ARBITRARY_WAVE_RES_LEN as usize {
 		match port.read(&mut outbuf[n..]) {
 			Ok(val) => {
 				// Track buffer position.
@@ -4912,38 +5344,4 @@ pub fn read_arbitrary_wave(
 	}
 
 	Ok(res_str)
-}
-
-pub fn match_read_arbitrary_wave_arg(
-	mut port: &mut Box<dyn SerialPort>,
-	amount: &str,
-	verbose: u64,
-) -> Result<String, clap::Error> {
-	let amount_parts: Vec<&str> = amount.split(".").collect();
-
-	if amount_parts.len() > 1 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"read arbitrary wave\" argument (must be {}-{}): {}: too many decimal places (0 max)", WRITE_ARBITRARY_WAVE_ARG_NUM_MIN, WRITE_ARBITRARY_WAVE_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
-	}
-
-	let res: Result<String, clap::Error>;
-
-	match amount.parse::<f64>() {
-		Ok(amount) => match amount {
-			_y if amount >= READ_ARBITRARY_WAVE_ARG_NUM_MIN
-				&& amount <= READ_ARBITRARY_WAVE_ARG_NUM_MAX =>
-			{
-				res = read_arbitrary_wave(&mut port, amount, verbose);
-			}
-
-			_ => {
-				res = Err(Error::with_description(&format!("unsupported value passed to \"read arbitrary wave\" argument (must be {}-{}): {}", READ_ARBITRARY_WAVE_ARG_NUM_MIN, READ_ARBITRARY_WAVE_ARG_NUM_MAX, amount), ErrorKind::InvalidValue));
-			}
-		},
-
-		Err(e) => {
-			res = Err(Error::with_description(&format!("unsupported value passed to \"read arbitrary wave\" argument (must be {}-{}): {}: {}", READ_ARBITRARY_WAVE_ARG_NUM_MIN, READ_ARBITRARY_WAVE_ARG_NUM_MAX, amount, e), ErrorKind::InvalidValue));
-		}
-	}
-
-	res
 }
