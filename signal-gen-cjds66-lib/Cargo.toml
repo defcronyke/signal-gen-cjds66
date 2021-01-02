@@ -8,9 +8,18 @@
 
 [package]
 name = "signal-gen-cjds66-lib"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Jeremy Carter <jeremy@jeremycarter.ca>"]
 edition = "2018"
+description = "An unofficial support library which can fully remote control the inexpensive Koolertron DDS Signal Generator known as GH-CJDS66."
+documentation = "https://docs.rs/signal_gen_cjds66_lib"
+readme = "https://gitlab.com/defcronyke/signal-gen-cjds66/-/blob/master/README.md"
+homepage = "https://gitlab.com/defcronyke/signal-gen-cjds66"
+repository = "https://gitlab.com/defcronyke/signal-gen-cjds66"
+license-file = "LICENSE.md"
+keywords = ["signal", "generator", "arbitrary", "waveform", "GH-CJDS66"]
+categories = ["hardware-support", "mathematics", "science", "multimedia", "embedded"]
+# publish = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

@@ -165,15 +165,15 @@ git tag
 If there's any numbered versions available, it should output some versions, 
 such as for example:  
 ```shell
-v0.1.0
 v0.1.1
+v0.1.2
 ```  
   
-In the example above, v0.1.1 is the highest-numbered version available, 
+In the example above, v0.1.2 is the highest-numbered version available, 
 so it should be preferred unless you have some personal reason not to 
 prefer it. To use that version of the project, run this command:  
 ```shell
-git checkout v0.1.1
+git checkout v0.1.2
 ```  
   
 IMPORTANT: If you're running a numbered version and you'd like to update
@@ -185,7 +185,7 @@ as you like. For example:
 git checkout master
 git pull
 git tag
-git checkout v0.1.2
+git checkout v0.1.3
 ```  
   
   
