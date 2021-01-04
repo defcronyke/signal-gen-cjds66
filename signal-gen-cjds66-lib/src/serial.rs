@@ -25,7 +25,7 @@ and configure it so it can communicate properly.
   
 "arg" parameter (on Linux it defaults to "/dev/ttyUSB0", 
 on Windows it defaults to "COM3"):
-```
+```ignore
 Path to a serial device (Linux):
 "/dev/ttyUSB0"
 

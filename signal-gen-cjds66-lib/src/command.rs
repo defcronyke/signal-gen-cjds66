@@ -211,7 +211,7 @@ pub fn get_model_and_serial(
 /** Set the device's output state (on or off) for channels 1 and 2.  
   
 "sco" parameter:  
-```
+```ignore
 	channel 1 on, channel 2 on:  
 		"1,1" | "11" | "on,on" | "1" | "on"  
   
@@ -314,7 +314,7 @@ fn set_channel_output_inner(
 /** Get the device's channel output state (on or off) for channel 1 and channel 2.  
   
 Return Value (Ok Result):  
-```
+```ignore
 channel 1 off, channel 2 on:
 "0,1"
 
@@ -383,7 +383,7 @@ for a specific channel's output. You can choose one of these presets
 either by name or by the number listed next to the name below.  
   
 "preset" parameter:
-```
+```ignore
 Waveform names that are accepted, along with their corresponding numbers:
 "0":  "sine" | "sin"
 "1":  "square" | "sq"
@@ -568,7 +568,7 @@ fn set_waveform_preset_inner(
 specific channel.  
   
 Return Value (Ok Result):  
-```
+```ignore
 Waveform preset number to name mappings:
 "0":  sine
 "1":  square
@@ -675,7 +675,7 @@ pub fn get_waveform_preset(
 preset by number, for a specific channel's output.  
   
 "preset" parameter:
-```
+```ignore
 Arbitrary waveform preset 1 (a.k.a. preset 101):
 "1"
 
@@ -774,7 +774,7 @@ fn set_waveform_preset_arbitrary_inner(
 in microhertz (µHz).  
   
 "amount" parameter:
-```
+```ignore
 "0.01" - "80000000.0"
 ```
 */
@@ -877,7 +877,7 @@ fn set_frequency_microhertz_inner(
 in millihertz (mHz).  
   
 "amount" parameter:
-```
+```ignore
 "0.01" - "80000000.0"
 ```
 */
@@ -980,7 +980,7 @@ fn set_frequency_millihertz_inner(
 in hertz (Hz).  
   
 "amount" parameter:
-```
+```ignore
 "0.01" - "60000000.0"
 ```
 */
@@ -1083,7 +1083,7 @@ fn set_frequency_hertz_inner(
 in kilohertz (kHz).  
   
 "amount" parameter:
-```
+```ignore
 "0.00001" - "60000.0"
 ```
 */
@@ -1188,7 +1188,7 @@ fn set_frequency_kilohertz_inner(
 in megahertz (MHz).  
   
 "amount" parameter:
-```
+```ignore
 "0.00000001" - "60.0"
 ```
 */
@@ -1294,7 +1294,7 @@ fn set_frequency_megahertz_inner(
 in hertz (Hz).  
   
 Return Value (Ok Result):
-```
+```ignore
 10,000 Hz:
 "10000"
 ```
@@ -1393,7 +1393,7 @@ pub fn get_frequency_hertz(
 particular channel.  
   
 "amount" parameter:
-```
+```ignore
 "0.000" - "20.0"
 ```
 */
@@ -1491,7 +1491,7 @@ fn set_amplitude_inner(
 a particular channel.  
   
 Return Value (Ok Result):
-```
+```ignore
 5 volts:
 "5"
 ```
@@ -1576,7 +1576,7 @@ pub fn get_amplitude(
 particular channel.  
   
 "amount" parameter:
-```
+```ignore
 "0.0" - "99.9"
 ```
 */
@@ -1674,7 +1674,7 @@ fn set_duty_cycle_inner(
 particular channel.  
   
 Return Value (Ok Result):
-```
+```ignore
 1%:
 "1"
 ```
@@ -1759,7 +1759,7 @@ pub fn get_duty_cycle(
 particular channel.  
   
 "amount" parameter:
-```
+```ignore
 "-9.99" - "9.99"
 ```
 */
@@ -1857,7 +1857,7 @@ fn set_voltage_offset_inner(
 particular channel.  
   
 Return Value (Ok Result):
-```
+```ignore
 5 volts:
 "5"
 ```
@@ -1946,7 +1946,7 @@ pub fn get_voltage_offset(
 /** Set the device's phase in degrees (°).  
   
 "amount" parameter:
-```
+```ignore
 "0.0" - "360.0"
 ```
 */
@@ -2026,7 +2026,7 @@ fn set_phase_inner(
 /** Get the device's phase in degrees (°).  
   
 Return Value (Ok Result):
-```
+```ignore
 180 degrees:
 "180"
 ```
@@ -2099,7 +2099,7 @@ pub fn get_phase(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String,
 /** Set the device's tracking mode.  
   
 "track" parameter:
-```
+```ignore
 The value must be either a set of comma-separated setting names 
 (see below), or a set of zeros and ones in the range of "0" - "11111", 
 each bit corresponding to a feature you want to toggle tracking on/off 
@@ -2274,7 +2274,7 @@ fn set_tracking_inner(
 with either channel 1 or channel 2 showing at the top.
 
 "chan" parameter:
-```
+```ignore
 Channel 1 at the top:
 1
 
@@ -2391,7 +2391,7 @@ channel.
   
 Also, stop the following functions if any are currently in 
 progress:  
-```
+```ignore
 counting
 sweep
 frequency
@@ -2488,7 +2488,7 @@ pub fn start_counting(
 screen.  
   
 "chan" parameter:
-```
+```ignore
 Sweep Frequency (CH1):
 1
 
@@ -2541,7 +2541,7 @@ pub fn switch_function_panel_sweep(
 /** Start frequency sweeping on a given output channel.  
   
 "chan" parameter:
-```
+```ignore
 Sweep Frequency (CH1):
 1
 
@@ -2750,7 +2750,7 @@ pub fn set_measurement_coupling_dc(
 in seconds.  
   
 "amount" parameter:
-```
+```ignore
 "0.01" - "10.0"
 ```
 */
@@ -3361,7 +3361,7 @@ pub fn get_measurement_duty_cycle(
 /** Set the number of burst pulses to perform when bursting.  
   
 "amount" parameter:
-```
+```ignore
 5 burst pulses:
 "5"
 ```
@@ -3589,7 +3589,7 @@ pub fn set_burst_mode_external_burst_dc(
 frequency in hertz (Hz).  
   
 "amount" parameter:
-```
+```ignore
 1,000 hertz:
 "1000"
 ```
@@ -3679,7 +3679,7 @@ fn set_sweep_starting_frequency_inner(
 frequency in hertz (Hz).  
   
 "amount" parameter:
-```
+```ignore
 2,000 hertz:
 "2000"
 ```
@@ -3769,7 +3769,7 @@ fn set_sweep_end_frequency_inner(
 in seconds.  
   
 "amount" parameter:
-```
+```ignore
 10 seconds:
 "10"
 ```
@@ -4008,13 +4008,13 @@ microseconds mode, this could be a problem, because then you need to
 use this serial program to get back to the default nanoseconds mode.  
   
 "amount" parameter when "microseconds" parameter is false:
-```
+```ignore
 1,000 nanoseconds:
 "1000"
 ```
   
 "amount" parameter when "microseconds" parameter is true:
-```
+```ignore
 2,000 microseconds:
 "2000"
 ```
@@ -4159,13 +4159,13 @@ microseconds mode, this could be a problem, because then you need to
 use this serial program to get back to the default nanoseconds mode.  
   
 "amount" parameter when "microseconds" parameter is false:
-```
+```ignore
 1,000 nanoseconds:
 "1000"
 ```
   
 "amount" parameter when "microseconds" parameter is true:
-```
+```ignore
 2,000 microseconds:
 "2000"
 ```
@@ -4298,7 +4298,7 @@ fn set_pulse_period_inner(
 /** Set the modulation mode pulse generator's pulse offset in percent (%).  
   
 "amount" parameter:
-```
+```ignore
 50 percent:
 "50"
 ```
@@ -4387,7 +4387,7 @@ fn set_pulse_offset_inner(
 /** Set the modulation mode pulse generator's pulse amplitude in volts (V).  
   
 "amount" parameter:
-```
+```ignore
 5 volts:
 "5"
 ```
@@ -4480,7 +4480,7 @@ fn set_pulse_amplitude_inner(
 /** Save all current values on the device as a numbered preset.  
   
 "amount" parameter:
-```
+```ignore
 save as preset 0:
 "0"
 ```
@@ -4577,7 +4577,7 @@ fn save_preset_inner(
 /** Load all values for the device from a numbered preset.  
   
 "amount" parameter:
-```
+```ignore
 save as preset 0:
 "0"
 ```
@@ -4670,7 +4670,7 @@ fn load_preset_inner(
 waveform text (.txt) file format.  
   
 "path" parameter:
-```
+```ignore
 some-wav-file-to-convert.wav:
 "some-wav-file-to-convert.wav"
 ```
@@ -4820,7 +4820,7 @@ Outputs the resulting binary file to stdout if the "output_binary"
 parameter is set to true.  
   
 "path" parameter:
-```
+```ignore
 some-txt-file-to-convert.txt:
 "some-txt-file-to-convert.txt"
 ```
@@ -4961,7 +4961,7 @@ Specify which arbitrary wave preset to save it in, as the
 "data" parameter, some user-defined wave. Must be 2048 
 lines of ASCII whole numbers, each in the range of 0 - 4095, 
 followed by one extra blank line. For example:
-```
+```ignore
 "2456"
 "3016"
 "4054"
@@ -5071,7 +5071,7 @@ pub fn set_arbitrary_wave(
 file, saving it into one of the device's arbitrary wave preset slots.  
   
 "arg" parameter:
-```
+```ignore
 Save the wav file into preset 1:
 "1,some-wav-file-to-upload.wav"
 ```
@@ -5140,7 +5140,7 @@ Specify which arbitrary wave preset to save it in, as the
 The stdin values define some user-defined wave. Must be 2048 
 lines of ASCII whole numbers, each in the range of 0 - 4095, 
 followed by one extra blank line. For example:
-```
+```ignore
 "2456"
 "3016"
 "4054"
@@ -5210,7 +5210,7 @@ fn set_arbitrary_wave_stdin_inner(
 numbered arbitrary wave preset slots.  
   
 "amount" parameter:
-```
+```ignore
 Get the waveform data which is stored in preset 1:
 "1"
 ```

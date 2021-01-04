@@ -33,7 +33,7 @@ such as with a bash script, Windows batch file,
 or PowerShell script.
 
 "kind" parameter, accepts any clap::ErrorKind value, and then the function returns the associated number:
-```
+```ignore
 InvalidValue => 1
 UnknownArgument => 2
 InvalidSubcommand => 3

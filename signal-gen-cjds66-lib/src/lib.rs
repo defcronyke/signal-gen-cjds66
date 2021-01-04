@@ -48,10 +48,12 @@ pub mod protocol;
 pub mod serial;
 pub mod util;
 
-#[cfg(test)]
-mod tests {
-	// #[test]
-	// fn it_works() {
-	//     assert_eq!(2 + 2, 4);
-	// }
-}
+
+/* Unit Test Modules */
+
+mod command_test;
+mod error_test;
+mod serial_test;
+mod util_test;
+
+/* END Unit Test Modules */
