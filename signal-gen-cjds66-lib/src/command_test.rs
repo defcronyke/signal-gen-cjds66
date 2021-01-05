@@ -19,61 +19,74 @@ mod test {
 	
 	#[test]
 	pub fn get_model_ok() {
-		let device: &str = "";
-		let mock = true;
-		let verbose = 1;
+		let mut port = SerialPortType::new("", true).unwrap();
 
-		let mut port = SerialPortType::new(device, mock).unwrap();
-
-		get_model(&mut port, verbose).unwrap();
+		get_model(&mut port, 0).unwrap();
 	}
+
+	#[test]
+	pub fn get_model_verbose_ok() {
+		let mut port = SerialPortType::new("", true).unwrap();
+
+		get_model(&mut port, 1).unwrap();
+	}
+
 
 	#[test]
 	pub fn get_serial_ok() {
-		let device: &str = "";
-		let mock = true;
-		let verbose = 1;
+		let mut port = SerialPortType::new("", true).unwrap();
 
-		let mut port = SerialPortType::new(device, mock).unwrap();
-
-		get_serial(&mut port, verbose).unwrap();
+		get_serial(&mut port, 0).unwrap();
 	}
+
+	#[test]
+	pub fn get_serial_verbose_ok() {
+		let mut port = SerialPortType::new("", true).unwrap();
+
+		get_serial(&mut port, 1).unwrap();
+	}
+
 
 	#[test]
 	pub fn get_model_and_serial_ok() {
-		let device: &str = "";
-		let mock = true;
-		let verbose = 1;
+		let mut port = SerialPortType::new("", true).unwrap();
 
-		let mut port = SerialPortType::new(device, mock).unwrap();
-
-		get_model_and_serial(&mut port, verbose).unwrap();
+		get_model_and_serial(&mut port, 0).unwrap();
 	}
 
 	#[test]
-	pub fn set_channel_output_ok() {
-		let device: &str = "";
-		let mock = true;
-		let verbose = 1;
+	pub fn get_model_and_serial_verbose_ok() {
+		let mut port = SerialPortType::new("", true).unwrap();
 
-		let mut port = SerialPortType::new(device, mock).unwrap();
+		get_model_and_serial(&mut port, 1).unwrap();
+	}
+
+
+	#[test]
+	pub fn set_channel_output_ok() {
+		set_channel_output_ok_inner(0);
+	}
+
+	#[test]
+	pub fn set_channel_output_verbose_ok() {
+		set_channel_output_ok_inner(1);
+	}
+
+	fn set_channel_output_ok_inner(verbose: u64) {
+		let mut port = SerialPortType::new("", true).unwrap();
 
 		let zero = "0";
 		let one = "1";
-
 		let zero_zero = "00";
 		let zero_one = "01";
 		let one_one = "11";
 		let one_zero = "10";
-
 		let zero_c_zero = "0,0";
 		let zero_c_one = "0,1";
 		let one_c_one = "1,1";
 		let one_c_zero = "1,0";
-
 		let off = "off";
 		let on = "on";
-
 		let off_off = "off,off";
 		let off_on = "off,on";
 		let on_on = "on,on";
@@ -97,13 +110,19 @@ mod test {
 		set_channel_output(&mut port, on_off, verbose).unwrap();
 	}
 
+
 	#[test]
 	pub fn set_channel_output_err() {
-		let device: &str = "";
-		let mock = true;
-		let verbose = 1;
+		set_channel_output_err_inner(0);
+	}
 
-		let mut port = SerialPortType::new(device, mock).unwrap();
+	#[test]
+	pub fn set_channel_output_verbose_err() {
+		set_channel_output_err_inner(1);
+	}
+
+	fn set_channel_output_err_inner(verbose: u64) {
+		let mut port = SerialPortType::new("", true).unwrap();
 
 		let too_many_digits = "012";
 		let too_many_digits_comma = "01,2";
@@ -128,5 +147,20 @@ mod test {
 		set_channel_output(&mut port, invalid_word, verbose).unwrap_err();
 		set_channel_output(&mut port, invalid_words, verbose).unwrap_err();
 		set_channel_output(&mut port, mixed_digit_word, verbose).unwrap_err();
+	}
+	
+
+	#[test]
+	pub fn get_channel_output_ok() {
+		let mut port = SerialPortType::new("", true).unwrap();
+
+		get_channel_output(&mut port, 0).unwrap();
+	}
+
+	#[test]
+	pub fn get_channel_output_verbose_ok() {
+		let mut port = SerialPortType::new("", true).unwrap();
+
+		get_channel_output(&mut port, 1).unwrap();
 	}
 }

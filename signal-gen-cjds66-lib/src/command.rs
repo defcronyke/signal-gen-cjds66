@@ -50,6 +50,9 @@ pub fn get_model(
 	if !port.mock {
 		port.port.as_mut().unwrap().write(&inbuf[..])?;
 		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	
+	} else {	// Mock data for testing.
+		outbuf = Vec::from(":r00=60.\r\n");
 	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
@@ -106,6 +109,9 @@ pub fn get_serial(
 	if !port.mock {
 		port.port.as_mut().unwrap().write(&inbuf[..])?;
 		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	
+	} else {	// Mock data for testing.
+		outbuf = Vec::from(":r01=9876500000.\r\n");
 	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
@@ -159,6 +165,9 @@ pub fn get_model_and_serial(
 	if !port.mock {
 		port.port.as_mut().unwrap().write(&inbuf[..])?;
 		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	
+	} else {	// Mock data for testing.
+		outbuf = Vec::from(":r00=60.\r\n:r01=9876500000.\r\n");
 	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
@@ -346,6 +355,9 @@ pub fn get_channel_output(
 	if !port.mock {
 		port.port.as_mut().unwrap().write(&inbuf[..])?;
 		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	
+	} else {	// Mock data for tests.
+		outbuf = Vec::from(":r20=0.\r\n");
 	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
