@@ -139,7 +139,7 @@ args:
       long: rw
       takes_value: true
       value_name: slot_number
-      help: "Read an arbitrary waveform from the device, from one of the 60 save slots. It displays on stdout an output format which is suitable for saving to a .txt file, which can later be loaded back onto the device using the --wws flag.\nEx: --rw 5 > file.wav.txt"
+      help: "Get an arbitrary waveform's data from the device, from one of the 60 save slots. It displays on stdout an output format which is suitable for saving to a .txt file, which can later be loaded back onto the device using the --wws flag.\nEx: --gwd 5 > file.wav.txt"
 
   - get_channel_output:
       long: go
