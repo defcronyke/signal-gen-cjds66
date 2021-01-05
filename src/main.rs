@@ -14,7 +14,7 @@ extern crate clap;
 use signal_gen_cjds66_lib::command::*;
 use signal_gen_cjds66_lib::error;
 use signal_gen_cjds66_lib::error::From;
-use signal_gen_cjds66_lib::serial::open;
+use signal_gen_cjds66_lib::serial::*;
 
 use clap::{values_t, App, ErrorKind};
 
@@ -140,7 +140,7 @@ fn real_main() -> Result<i32, error::Error> {
 		let err = &mut err;
 
 		// Open the device.
-		let opened = open(device).map_or_else(
+		let opened = SerialPortType::new(device, false).map_or_else(
 			// If opening the device failed.
 			|e| {
 				Err(error::Error::with_description(&format!("(device: {}): {}: make sure the device is connected and turned on, or try specifying a different device path with -d /path/to/device", device, e), clap::ErrorKind::Io))

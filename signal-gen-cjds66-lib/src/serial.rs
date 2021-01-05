@@ -20,6 +20,54 @@ use std::time::Duration;
 
 use serial::prelude::*;
 
+/** A type which wraps the serial crate's SerialPort type,
+for test mocking convenience.  
+  
+All of the functions in the `command` module expect a value 
+of this type as their first parameter.
+*/
+pub struct SerialPortType {
+	/// The serial port connection.
+	pub port: Option<Box<dyn SerialPort>>,
+
+	/** Are we mocking a serial port for testing? If true, the 
+	`port` variable	will be `None` and you shouldn't try to 
+	use it.
+	*/
+	pub mock: bool,
+}
+
+impl SerialPortType {
+	/** The SerialPortType constructor. Pass in the path to the device
+	for `arg` and set `mock` to false, to open a serial connection to
+	a real device.  
+	  
+	If you want to instantiate without connecting to a serial device,
+	maybe for test mocking convenience for example, pass an empty
+	string for `arg` and set `mock` to true.
+	 */
+	pub fn new(arg: &str, mock: bool) -> io::Result<SerialPortType> {
+		if mock {
+			Ok(
+				Self{
+					port: None,
+					mock,
+				}
+			)
+
+		} else {
+			let port = open(&arg)?;
+
+			Ok(
+				Self{
+					port: Some(port),
+					mock,
+				}
+			)
+		}
+	}
+}
+
 /** Open a serial communication link with the device,
 and configure it so it can communicate properly.  
   

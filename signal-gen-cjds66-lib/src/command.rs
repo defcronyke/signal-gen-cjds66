@@ -24,9 +24,9 @@ extern crate byteorder;
 extern crate serial;
 
 use crate::protocol::*;
+use crate::serial::*;
 use crate::util::*;
 
-use serial::prelude::*;
 use std::fs;
 use std::io::prelude::*;
 use std::io::{self, BufRead};
@@ -37,7 +37,7 @@ use clap::{Error, ErrorKind};
 
 /** Get the model number of the device. */
 pub fn get_model(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	if verbose > 0 {
@@ -47,8 +47,10 @@ pub fn get_model(
 	let inbuf: Vec<u8> = GET_MODEL.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..GET_MODEL_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -88,7 +90,7 @@ pub fn get_model(
 
 /** Get the serial number of the device. */
 pub fn get_serial(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	if verbose > 0 {
@@ -101,8 +103,10 @@ pub fn get_serial(
 	let inbuf: Vec<u8> = GET_SERIAL.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..GET_SERIAL_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -142,7 +146,7 @@ pub fn get_serial(
 
 /** Get the model number and the serial number of the device. */
 pub fn get_model_and_serial(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	if verbose > 0 {
@@ -152,8 +156,10 @@ pub fn get_model_and_serial(
 	let inbuf: Vec<u8> = GET_MODEL_AND_NUMBER.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..GET_MODEL_AND_NUMBER_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -226,7 +232,7 @@ pub fn get_model_and_serial(
 ```
 */
 pub fn set_channel_output(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	sco: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -261,7 +267,7 @@ pub fn set_channel_output(
 }
 
 fn set_channel_output_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	ch1: bool,
 	ch2: bool,
 	verbose: u64,
@@ -298,8 +304,10 @@ fn set_channel_output_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_CHANNEL_OUTPUT_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -323,7 +331,7 @@ channel 1 on, channel 2 on:
 ```
 */
 pub fn get_channel_output(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command = GET_CHANNEL_OUTPUT;
@@ -335,8 +343,10 @@ pub fn get_channel_output(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..GET_CHANNEL_OUTPUT_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -405,7 +415,7 @@ Waveform names that are accepted, along with their corresponding numbers:
 ```
 */
 pub fn set_waveform_preset(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	chan: u64,
 	preset: &str,
 	verbose: u64,
@@ -510,7 +520,7 @@ pub fn set_waveform_preset(
 }
 
 fn set_waveform_preset_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	chan: u64,
 	preset: u64,
 	verbose: u64,
@@ -551,8 +561,10 @@ fn set_waveform_preset_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_WAVEFORM_PRESET_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -593,7 +605,7 @@ Arbitrary waveform presets:
 ```
 */
 pub fn get_waveform_preset(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -628,8 +640,10 @@ pub fn get_waveform_preset(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..GET_WAVEFORM_PRESET_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -684,7 +698,7 @@ Arbitrary waveform preset 60 (a.k.a. preset 160):
 ```
 */
 pub fn set_waveform_preset_arbitrary(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	chan: u64,
 	preset: &str,
 	verbose: u64,
@@ -711,7 +725,7 @@ pub fn set_waveform_preset_arbitrary(
 }
 
 fn set_waveform_preset_arbitrary_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	chan: u64,
 	preset: u64,
 	verbose: u64,
@@ -757,8 +771,10 @@ fn set_waveform_preset_arbitrary_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_WAVEFORM_PRESET_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -779,7 +795,7 @@ in microhertz (µHz).
 ```
 */
 pub fn set_frequency_microhertz(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	chan: u64,
 	amount: &str,
 	verbose: u64,
@@ -812,7 +828,7 @@ pub fn set_frequency_microhertz(
 }
 
 fn set_frequency_microhertz_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	chan: u64,
 	amount: f64,
 	verbose: u64,
@@ -860,8 +876,10 @@ fn set_frequency_microhertz_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_FREQUENCY_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -882,7 +900,7 @@ in millihertz (mHz).
 ```
 */
 pub fn set_frequency_millihertz(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	chan: u64,
 	amount: &str,
 	verbose: u64,
@@ -915,7 +933,7 @@ pub fn set_frequency_millihertz(
 }
 
 fn set_frequency_millihertz_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	chan: u64,
 	amount: f64,
 	verbose: u64,
@@ -963,8 +981,10 @@ fn set_frequency_millihertz_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_FREQUENCY_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -985,7 +1005,7 @@ in hertz (Hz).
 ```
 */
 pub fn set_frequency_hertz(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	chan: u64,
 	amount: &str,
 	verbose: u64,
@@ -1018,7 +1038,7 @@ pub fn set_frequency_hertz(
 }
 
 fn set_frequency_hertz_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	chan: u64,
 	amount: f64,
 	verbose: u64,
@@ -1066,8 +1086,10 @@ fn set_frequency_hertz_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_FREQUENCY_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -1088,7 +1110,7 @@ in kilohertz (kHz).
 ```
 */
 pub fn set_frequency_kilohertz(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	chan: u64,
 	amount: &str,
 	verbose: u64,
@@ -1123,7 +1145,7 @@ pub fn set_frequency_kilohertz(
 }
 
 fn set_frequency_kilohertz_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	chan: u64,
 	amount: f64,
 	verbose: u64,
@@ -1171,8 +1193,10 @@ fn set_frequency_kilohertz_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_FREQUENCY_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -1193,7 +1217,7 @@ in megahertz (MHz).
 ```
 */
 pub fn set_frequency_megahertz(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	chan: u64,
 	amount: &str,
 	verbose: u64,
@@ -1229,7 +1253,7 @@ pub fn set_frequency_megahertz(
 }
 
 fn set_frequency_megahertz_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	chan: u64,
 	amount: f64,
 	verbose: u64,
@@ -1277,8 +1301,10 @@ fn set_frequency_megahertz_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_FREQUENCY_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -1300,7 +1326,7 @@ Return Value (Ok Result):
 ```
 */
 pub fn get_frequency_hertz(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -1330,8 +1356,10 @@ pub fn get_frequency_hertz(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..GET_FREQUENCY_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -1398,7 +1426,7 @@ particular channel.
 ```
 */
 pub fn set_amplitude(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	chan: u64,
 	amount: &str,
 	verbose: u64,
@@ -1433,7 +1461,7 @@ pub fn set_amplitude(
 }
 
 fn set_amplitude_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	chan: u64,
 	amount: f64,
 	verbose: u64,
@@ -1474,8 +1502,10 @@ fn set_amplitude_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_AMPLITUDE_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -1497,7 +1527,7 @@ Return Value (Ok Result):
 ```
 */
 pub fn get_amplitude(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -1527,8 +1557,10 @@ pub fn get_amplitude(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..GET_AMPLITUDE_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -1581,7 +1613,7 @@ particular channel.
 ```
 */
 pub fn set_duty_cycle(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	chan: u64,
 	amount: &str,
 	verbose: u64,
@@ -1616,7 +1648,7 @@ pub fn set_duty_cycle(
 }
 
 fn set_duty_cycle_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	chan: u64,
 	amount: f64,
 	verbose: u64,
@@ -1657,8 +1689,10 @@ fn set_duty_cycle_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_DUTY_CYCLE_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -1680,7 +1714,7 @@ Return Value (Ok Result):
 ```
 */
 pub fn get_duty_cycle(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -1710,8 +1744,10 @@ pub fn get_duty_cycle(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..GET_DUTY_CYCLE_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -1764,7 +1800,7 @@ particular channel.
 ```
 */
 pub fn set_voltage_offset(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	chan: u64,
 	amount: &str,
 	verbose: u64,
@@ -1799,7 +1835,7 @@ pub fn set_voltage_offset(
 }
 
 fn set_voltage_offset_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	chan: u64,
 	amount: f64,
 	verbose: u64,
@@ -1840,8 +1876,10 @@ fn set_voltage_offset_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_VOLTAGE_OFFSET_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -1863,7 +1901,7 @@ Return Value (Ok Result):
 ```
 */
 pub fn get_voltage_offset(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -1898,8 +1936,10 @@ pub fn get_voltage_offset(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..GET_VOLTAGE_OFFSET_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -1951,7 +1991,7 @@ pub fn get_voltage_offset(
 ```
 */
 pub fn set_phase(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -1985,7 +2025,7 @@ pub fn set_phase(
 }
 
 fn set_phase_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	amount: f64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -2010,8 +2050,10 @@ fn set_phase_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_PHASE_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2031,7 +2073,7 @@ Return Value (Ok Result):
 "180"
 ```
 */
-pub fn get_phase(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String, clap::Error> {
+pub fn get_phase(port: &mut SerialPortType, verbose: u64) -> Result<String, clap::Error> {
 	let command: String;
 
 	command = format!(
@@ -2051,8 +2093,10 @@ pub fn get_phase(port: &mut Box<dyn SerialPort>, verbose: u64) -> Result<String,
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..GET_PHASE_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2134,7 +2178,7 @@ You can also separate the values with commas if you prefer: "1,0,1"
 ```
 */
 pub fn set_tracking(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	track: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -2228,7 +2272,7 @@ pub fn set_tracking(
 }
 
 fn set_tracking_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	track: TrackingArg,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -2257,8 +2301,10 @@ fn set_tracking_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_TRACKING_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2283,7 +2329,7 @@ Channel 2 at the top:
 ```
 */
 pub fn switch_function_panel_main(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -2311,8 +2357,10 @@ pub fn switch_function_panel_main(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SWITCH_FUNCTION_PANEL_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2327,7 +2375,7 @@ pub fn switch_function_panel_main(
 /** Switch the device's display panel to the system (SYS)
 screen. */
 pub fn switch_function_panel_sys(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = SWITCH_FUNCTION_PANEL_SYS;
@@ -2342,8 +2390,10 @@ pub fn switch_function_panel_sys(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SWITCH_FUNCTION_PANEL_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2358,7 +2408,7 @@ pub fn switch_function_panel_sys(
 /** Switch the device's display panel to the measure 
 subsection on the measure mode (MEAS) screen. */
 pub fn switch_function_panel_measurement(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = SWITCH_FUNCTION_PANEL_MEASUREMENT;
@@ -2373,8 +2423,10 @@ pub fn switch_function_panel_measurement(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SWITCH_FUNCTION_PANEL_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2400,7 +2452,7 @@ burst
 ```
 */
 pub fn start_measuring(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = START_MEASURING;
@@ -2415,8 +2467,10 @@ pub fn start_measuring(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_EXTENDED_FUNCTION_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2431,7 +2485,7 @@ pub fn start_measuring(
 /** Switch the device's display panel to the counting
 subsection on the measure mode (MEAS) screen. */
 pub fn switch_function_panel_counting(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = SWITCH_FUNCTION_PANEL_COUNTING;
@@ -2443,8 +2497,10 @@ pub fn switch_function_panel_counting(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SWITCH_FUNCTION_PANEL_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2458,7 +2514,7 @@ pub fn switch_function_panel_counting(
 
 /** Start counting, using the device's input (Ext. IN) channel. */
 pub fn start_counting(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = START_COUNTING;
@@ -2470,8 +2526,10 @@ pub fn start_counting(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_EXTENDED_FUNCTION_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2497,7 +2555,7 @@ Sweep Frequency (CH2):
 ```
 */
 pub fn switch_function_panel_sweep(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -2525,8 +2583,10 @@ pub fn switch_function_panel_sweep(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SWITCH_FUNCTION_PANEL_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2550,7 +2610,7 @@ Sweep Frequency (CH2):
 ```
 */
 pub fn start_sweeping(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -2565,8 +2625,10 @@ pub fn start_sweeping(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_EXTENDED_FUNCTION_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2581,7 +2643,7 @@ pub fn start_sweeping(
 /** Switch the device's display panel to the pulse generator
 subsection of the modulation mode screen. */
 pub fn switch_function_panel_pulse(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = SWITCH_FUNCTION_PANEL_PULSE;
@@ -2593,8 +2655,10 @@ pub fn switch_function_panel_pulse(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SWITCH_FUNCTION_PANEL_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2608,7 +2672,7 @@ pub fn switch_function_panel_pulse(
 
 /** Start the device's pulsing output on channel 1. */
 pub fn start_pulsing(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = START_PULSING;
@@ -2620,8 +2684,10 @@ pub fn start_pulsing(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_EXTENDED_FUNCTION_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2636,7 +2702,7 @@ pub fn start_pulsing(
 /** Switch the device's display panel to the burst subsection
 of the modulation mode screen. */
 pub fn switch_function_panel_bursting(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = SWITCH_FUNCTION_PANEL_BURST;
@@ -2648,8 +2714,10 @@ pub fn switch_function_panel_bursting(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SWITCH_FUNCTION_PANEL_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2663,7 +2731,7 @@ pub fn switch_function_panel_bursting(
 
 /** Start the device's bursting output on channel 1. */
 pub fn start_bursting(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = START_BURSTING;
@@ -2675,8 +2743,10 @@ pub fn start_bursting(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_EXTENDED_FUNCTION_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2692,7 +2762,7 @@ pub fn start_bursting(
 AC (Ext. IN).
 */
 pub fn set_measurement_coupling_ac(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = SET_MEASUREMENT_COUPLING_AC;
@@ -2704,8 +2774,10 @@ pub fn set_measurement_coupling_ac(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_MEASUREMENT_COUPLING_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2721,7 +2793,7 @@ pub fn set_measurement_coupling_ac(
 DC (Ext. IN).
 */
 pub fn set_measurement_coupling_dc(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = SET_MEASUREMENT_COUPLING_DC;
@@ -2733,8 +2805,10 @@ pub fn set_measurement_coupling_dc(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_MEASUREMENT_COUPLING_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2755,7 +2829,7 @@ in seconds.
 ```
 */
 pub fn set_measurement_gate_time(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -2789,7 +2863,7 @@ pub fn set_measurement_gate_time(
 }
 
 fn set_measurement_gate_time_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	amount: f64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -2819,8 +2893,10 @@ fn set_measurement_gate_time_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_MEASUREMENT_GATE_TIME_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2835,7 +2911,7 @@ fn set_measurement_gate_time_inner(
 /** Set the device's measurement mode to measure count 
 frequency in hertz (Hz). */
 pub fn set_measurement_mode_count_frequency(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = SET_MEASUREMENT_MODE_COUNT_FREQUENCY;
@@ -2850,8 +2926,10 @@ pub fn set_measurement_mode_count_frequency(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_MEASUREMENT_MODE_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2866,7 +2944,7 @@ pub fn set_measurement_mode_count_frequency(
 /** Set the device's measurement mode to measure counting 
 period in hertz (Hz). */
 pub fn set_measurement_mode_counting_period(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = SET_MEASUREMENT_MODE_COUNTING_PERIOD;
@@ -2881,8 +2959,10 @@ pub fn set_measurement_mode_counting_period(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_MEASUREMENT_MODE_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2896,7 +2976,7 @@ pub fn set_measurement_mode_counting_period(
 
 /** Clear the measure mode counter's count number (Cnt. Num). */
 pub fn set_measurement_count_clear(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = SET_MEASUREMENT_COUNT_CLEAR;
@@ -2908,8 +2988,10 @@ pub fn set_measurement_count_clear(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_MEASUREMENT_COUNT_CLEAR_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2923,7 +3005,7 @@ pub fn set_measurement_count_clear(
 
 /** Get the measure mode counter's count number (Cnt. Num). */
 pub fn get_measurement_count(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = GET_MEASUREMENT_COUNT;
@@ -2938,8 +3020,10 @@ pub fn get_measurement_count(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..GET_MEASUREMENT_COUNT_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -2984,7 +3068,7 @@ pub fn get_measurement_count(
 /** Get the measure mode's measure frequency in frequency mode 
 (hertz). */
 pub fn get_measurement_frequency(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = GET_MEASUREMENT_FREQUENCY;
@@ -2999,8 +3083,10 @@ pub fn get_measurement_frequency(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..GET_MEASUREMENT_FREQUENCY_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -3045,7 +3131,7 @@ pub fn get_measurement_frequency(
 /** Get the measure mode's measure frequency in period mode 
 (hertz). */
 pub fn get_measurement_frequency_period(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = GET_MEASUREMENT_FREQUENCY_PERIOD;
@@ -3060,8 +3146,10 @@ pub fn get_measurement_frequency_period(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..GET_MEASUREMENT_FREQUENCY_PERIOD_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -3108,7 +3196,7 @@ pub fn get_measurement_frequency_period(
 
 /** Get the measure mode's measure pulse width (positive). */
 pub fn get_measurement_pulse_width_positive(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = GET_MEASUREMENT_PULSE_WIDTH_POSITIVE;
@@ -3123,8 +3211,10 @@ pub fn get_measurement_pulse_width_positive(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..GET_MEASUREMENT_PULSE_WIDTH_POSITIVE_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -3171,7 +3261,7 @@ pub fn get_measurement_pulse_width_positive(
 
 /** Get the measure mode's measure pulse width (negative). */
 pub fn get_measurement_pulse_width_negative(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = GET_MEASUREMENT_PULSE_WIDTH_NEGATIVE;
@@ -3186,8 +3276,10 @@ pub fn get_measurement_pulse_width_negative(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..GET_MEASUREMENT_PULSE_WIDTH_NEGATIVE_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -3234,7 +3326,7 @@ pub fn get_measurement_pulse_width_negative(
 
 /** Get the measure mode's measure period. */
 pub fn get_measurement_period(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = GET_MEASUREMENT_PERIOD;
@@ -3249,8 +3341,10 @@ pub fn get_measurement_period(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..GET_MEASUREMENT_PERIOD_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -3297,7 +3391,7 @@ pub fn get_measurement_period(
 
 /** Get the measure mode's measure duty cycle. */
 pub fn get_measurement_duty_cycle(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command: &'static str = GET_MEASUREMENT_DUTY_CYCLE;
@@ -3312,8 +3406,10 @@ pub fn get_measurement_duty_cycle(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..GET_MEASUREMENT_DUTY_CYCLE_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -3367,7 +3463,7 @@ pub fn get_measurement_duty_cycle(
 ```
 */
 pub fn set_burst_pulse_number(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -3399,7 +3495,7 @@ pub fn set_burst_pulse_number(
 }
 
 fn set_burst_pulse_number_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	amount: f64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -3429,8 +3525,10 @@ fn set_burst_pulse_number_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_BURST_PULSE_NUMBER_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -3444,7 +3542,7 @@ fn set_burst_pulse_number_inner(
 
 /** Perform a single burst pulse immediately. */
 pub fn start_burst_pulse_once(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command = START_BURST_PULSE_ONCE;
@@ -3456,8 +3554,10 @@ pub fn start_burst_pulse_once(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..START_BURST_PULSE_ONCE_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -3473,7 +3573,7 @@ pub fn start_burst_pulse_once(
 (Manual Trig.).
 */
 pub fn set_burst_mode_manual_trigger(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command = SET_BURST_MODE_MANUAL_TRIGGER;
@@ -3485,8 +3585,10 @@ pub fn set_burst_mode_manual_trigger(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_BURST_MODE_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -3502,7 +3604,7 @@ pub fn set_burst_mode_manual_trigger(
 (CH2 Trig.).
 */
 pub fn set_burst_mode_ch2_burst(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command = SET_BURST_MODE_CH2_BURST;
@@ -3514,8 +3616,10 @@ pub fn set_burst_mode_ch2_burst(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_BURST_MODE_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -3531,7 +3635,7 @@ pub fn set_burst_mode_ch2_burst(
 trigger AC (Ext. Trig (AC)).
 */
 pub fn set_burst_mode_external_burst_ac(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command = SET_BURST_MODE_EXTERNAL_BURST_AC;
@@ -3543,8 +3647,10 @@ pub fn set_burst_mode_external_burst_ac(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_BURST_MODE_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -3560,7 +3666,7 @@ pub fn set_burst_mode_external_burst_ac(
 trigger DC (Ext. Trig (DC)).
 */
 pub fn set_burst_mode_external_burst_dc(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command = SET_BURST_MODE_EXTERNAL_BURST_DC;
@@ -3572,8 +3678,10 @@ pub fn set_burst_mode_external_burst_dc(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_BURST_MODE_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -3595,7 +3703,7 @@ frequency in hertz (Hz).
 ```
 */
 pub fn set_sweep_starting_frequency(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -3629,7 +3737,7 @@ pub fn set_sweep_starting_frequency(
 }
 
 fn set_sweep_starting_frequency_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	amount: f64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -3662,8 +3770,10 @@ fn set_sweep_starting_frequency_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_SWEEP_STARTING_FREQUENCY_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -3685,7 +3795,7 @@ frequency in hertz (Hz).
 ```
 */
 pub fn set_sweep_end_frequency(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -3719,7 +3829,7 @@ pub fn set_sweep_end_frequency(
 }
 
 fn set_sweep_end_frequency_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	amount: f64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -3752,8 +3862,10 @@ fn set_sweep_end_frequency_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_SWEEP_END_FREQUENCY_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -3775,7 +3887,7 @@ in seconds.
 ```
 */
 pub fn set_sweep_time(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -3809,7 +3921,7 @@ pub fn set_sweep_time(
 }
 
 fn set_sweep_time_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	amount: f64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -3839,8 +3951,10 @@ fn set_sweep_time_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_SWEEP_TIME_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -3856,7 +3970,7 @@ fn set_sweep_time_inner(
 `Rise`
 */
 pub fn set_sweep_direction_rise(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command = SET_SWEEP_DIRECTION_RISE;
@@ -3868,8 +3982,10 @@ pub fn set_sweep_direction_rise(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_SWEEP_DIRECTION_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -3885,7 +4001,7 @@ pub fn set_sweep_direction_rise(
 `Fall`
 */
 pub fn set_sweep_direction_fall(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command = SET_SWEEP_DIRECTION_FALL;
@@ -3897,8 +4013,10 @@ pub fn set_sweep_direction_fall(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_SWEEP_DIRECTION_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -3914,7 +4032,7 @@ pub fn set_sweep_direction_fall(
 `Rise & Fall`
 */
 pub fn set_sweep_direction_rise_fall(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command = SET_SWEEP_DIRECTION_RISE_FALL;
@@ -3926,8 +4044,10 @@ pub fn set_sweep_direction_rise_fall(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_SWEEP_DIRECTION_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -3941,7 +4061,7 @@ pub fn set_sweep_direction_rise_fall(
 
 /** Set the modulation mode sweep frequency's mode to linear. */
 pub fn set_sweep_mode_linear(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command = SET_SWEEP_MODE_LINEAR;
@@ -3953,8 +4073,10 @@ pub fn set_sweep_mode_linear(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_SWEEP_MODE_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -3968,7 +4090,7 @@ pub fn set_sweep_mode_linear(
 
 /** Set the modulation mode sweep frequency's mode to logarithm. */
 pub fn set_sweep_mode_logarithm(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
 	let command = SET_SWEEP_MODE_LOGARITHM;
@@ -3980,8 +4102,10 @@ pub fn set_sweep_mode_logarithm(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_SWEEP_MODE_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -4020,7 +4144,7 @@ use this serial program to get back to the default nanoseconds mode.
 ```
 */
 pub fn set_pulse_width(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	amount: &str,
 	microseconds: bool,
 	verbose: u64,
@@ -4070,7 +4194,7 @@ pub fn set_pulse_width(
 }
 
 fn set_pulse_width_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	amount: f64,
 	microseconds: bool,
 	verbose: u64,
@@ -4131,8 +4255,10 @@ fn set_pulse_width_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_PULSE_WIDTH_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -4171,7 +4297,7 @@ use this serial program to get back to the default nanoseconds mode.
 ```
 */
 pub fn set_pulse_period(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	amount: &str,
 	microseconds: bool,
 	verbose: u64,
@@ -4221,7 +4347,7 @@ pub fn set_pulse_period(
 }
 
 fn set_pulse_period_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	amount: f64,
 	microseconds: bool,
 	verbose: u64,
@@ -4282,8 +4408,10 @@ fn set_pulse_period_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_PULSE_PERIOD_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -4304,7 +4432,7 @@ fn set_pulse_period_inner(
 ```
 */
 pub fn set_pulse_offset(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -4338,7 +4466,7 @@ pub fn set_pulse_offset(
 }
 
 fn set_pulse_offset_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	amount: f64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -4371,8 +4499,10 @@ fn set_pulse_offset_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_PULSE_OFFSET_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -4393,7 +4523,7 @@ fn set_pulse_offset_inner(
 ```
 */
 pub fn set_pulse_amplitude(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -4429,7 +4559,7 @@ pub fn set_pulse_amplitude(
 }
 
 fn set_pulse_amplitude_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	amount: f64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -4464,8 +4594,10 @@ fn set_pulse_amplitude_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_PULSE_AMPLITUDE_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -4486,7 +4618,7 @@ save as preset 0:
 ```
 */
 pub fn save_preset(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -4528,7 +4660,7 @@ pub fn save_preset(
 }
 
 fn save_preset_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	amount: f64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -4561,8 +4693,10 @@ fn save_preset_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SAVE_PRESET_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -4583,7 +4717,7 @@ save as preset 0:
 ```
 */
 pub fn load_preset(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -4617,7 +4751,7 @@ pub fn load_preset(
 }
 
 fn load_preset_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	amount: f64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -4653,8 +4787,10 @@ fn load_preset_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..LOAD_PRESET_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -4974,7 +5110,7 @@ followed by one extra blank line. For example:
 ```
 */
 pub fn set_arbitrary_wave(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	amount: f64,
 	data: &[String],
 	verbose: u64,
@@ -5054,8 +5190,10 @@ pub fn set_arbitrary_wave(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..SET_ARBITRARY_WAVE_RES_LEN).collect();
 
-	port.write(&inbuf[..])?;
-	port.read(&mut outbuf[..])?;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
 
@@ -5077,7 +5215,7 @@ Save the wav file into preset 1:
 ```
 */
 pub fn set_arbitrary_wavecad(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	arg: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -5153,7 +5291,7 @@ followed by one extra blank line. For example:
 ```
 */
 pub fn set_arbitrary_wave_stdin(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -5187,7 +5325,7 @@ pub fn set_arbitrary_wave_stdin(
 }
 
 fn set_arbitrary_wave_stdin_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	amount: f64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -5216,7 +5354,7 @@ Get the waveform data which is stored in preset 1:
 ```
 */
 pub fn get_arbitrary_wave(
-	mut port: &mut Box<dyn SerialPort>,
+	mut port: &mut SerialPortType,
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -5250,7 +5388,7 @@ pub fn get_arbitrary_wave(
 }
 
 fn get_arbitrary_wave_inner(
-	port: &mut Box<dyn SerialPort>,
+	port: &mut SerialPortType,
 	amount: f64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
@@ -5288,52 +5426,58 @@ fn get_arbitrary_wave_inner(
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
 	let mut outbuf: Vec<u8> = (0..GET_ARBITRARY_WAVE_RES_LEN).map(|_val| 0u8).collect();
 
-	port.write(&inbuf[..])?;
+	let mut res: &str = "";
+	let mut res_str: String = "".to_string();
 	let mut n = 0;
-	let mut chunk: &str;
 
-	while n < GET_ARBITRARY_WAVE_RES_LEN as usize {
-		match port.read(&mut outbuf[n..]) {
-			Ok(val) => {
-				// Track buffer position.
-				n += val;
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		n = 0;
+		let mut chunk: &str;
 
-				// Count number of commas to detect end of buffer.
-				chunk = str::from_utf8(&outbuf[..]).unwrap();
-				let num_commas = chunk.matches(',').count();
-				if num_commas == 2048 {
-					if verbose > 0 {
-						println!("\nReached end of buffer: Detected all expected commas\n");
+		while n < GET_ARBITRARY_WAVE_RES_LEN as usize {
+			match port.port.as_mut().unwrap().read(&mut outbuf[n..]) {
+				Ok(val) => {
+					// Track buffer position.
+					n += val;
+
+					// Count number of commas to detect end of buffer.
+					chunk = str::from_utf8(&outbuf[..]).unwrap();
+					let num_commas = chunk.matches(',').count();
+					if num_commas == 2048 {
+						if verbose > 0 {
+							println!("\nReached end of buffer: Detected all expected commas\n");
+						}
+
+						break;
 					}
+				}
 
-					break;
+				Err(e) => {
+					return Err(Error::with_description(
+						&format!("Reached end of buffer unexpectedly: {}.", e),
+						ErrorKind::InvalidValue,
+					));
 				}
 			}
-
-			Err(e) => {
-				return Err(Error::with_description(
-					&format!("Reached end of buffer unexpectedly: {}.", e),
-					ErrorKind::InvalidValue,
-				));
-			}
 		}
+
+		res = str::from_utf8(&outbuf[..n]).unwrap();
+
+		let res_parts: Vec<&str> = res.split("=").collect();
+
+		if res_parts.len() < 2 {
+			return Err(Error::with_description(
+				&format!("Invalid response from device: {}", res),
+				ErrorKind::Io,
+			));
+		}
+
+		let res_data: Vec<&str> = res_parts[1].split(",").collect();
+		let res_data = &res_data[..res_data.len() - 1];
+
+		res_str = res_data.join("\n");
 	}
-
-	let res = str::from_utf8(&outbuf[..n]).unwrap();
-
-	let res_parts: Vec<&str> = res.split("=").collect();
-
-	if res_parts.len() < 2 {
-		return Err(Error::with_description(
-			&format!("Invalid response from device: {}", res),
-			ErrorKind::Io,
-		));
-	}
-
-	let res_data: Vec<&str> = res_parts[1].split(",").collect();
-	let res_data = &res_data[..res_data.len() - 1];
-
-	let res_str = res_data.join("\n");
 
 	if verbose > 0 {
 		println!("Response size: {} bytes\n", n);

@@ -13,8 +13,8 @@ software.
 mod test {
     // use super::*;
 
-	#[test]
-	pub fn it_works() {
-		assert_eq!(2 + 2, 4);
-	}
+	// #[test]
+	// pub fn it_works() {
+	// 	assert_eq!(2 + 2, 4);
+	// }
 }

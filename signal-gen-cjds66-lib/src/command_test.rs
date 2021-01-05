@@ -11,10 +11,31 @@ software.
 
 #[cfg(test)]
 mod test {
-    // use super::*;
+	use super::super::serial;
+	use self::serial::*;
+
+	use super::super::command;
+	use self::command::*;
+	
+	#[test]
+	pub fn get_model_ok() {
+		let device: &str = "";
+		let mock = true;
+		let verbose = 1;
+
+		let mut port = SerialPortType::new(device, mock).unwrap();
+
+		get_model(&mut port, verbose).unwrap();
+	}
 
 	#[test]
-	pub fn it_works() {
-		assert_eq!(2 + 2, 4);
+	pub fn get_serial_ok() {
+		let device: &str = "";
+		let mock = true;
+		let verbose = 1;
+
+		let mut port = SerialPortType::new(device, mock).unwrap();
+
+		get_model(&mut port, verbose).unwrap();
 	}
 }
