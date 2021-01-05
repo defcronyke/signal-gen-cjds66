@@ -655,6 +655,9 @@ pub fn get_waveform_preset(
 	if !port.mock {
 		port.port.as_mut().unwrap().write(&inbuf[..])?;
 		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	
+	} else {	// Mock data for testing.
+		outbuf = Vec::from(&format!(":r2{}=0.\r\n", chan) as &str);
 	}
 
 	let res = str::from_utf8(&outbuf).unwrap();

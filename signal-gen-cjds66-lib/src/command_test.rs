@@ -122,7 +122,6 @@ mod test {
 	pub fn set_waveform_preset_ok() {
 		let mut port = SerialPortType::new("", true).unwrap();
 		let verbose_max = 1;
-
 		let chans = 2;
 		let presets = 16;
 
@@ -244,7 +243,6 @@ mod test {
 	pub fn set_waveform_preset_err() {
 		let mut port = SerialPortType::new("", true).unwrap();
 		let verbose_max = 1;
-
 		let chans = 2;
 		let presets = 16;
 
@@ -268,6 +266,31 @@ mod test {
 		// Test invalid channels.
 		for verbose in 0..(verbose_max + 1) {
 			set_waveform_preset(&mut port, chans + 1, &presets.to_string(), verbose).unwrap_err();
+		}
+	}
+
+	#[test]
+	pub fn get_waveform_preset_ok() {
+		let mut port = SerialPortType::new("", true).unwrap();
+		let verbose_max = 1;
+		let chans = 2;
+
+		for verbose in 0..(verbose_max + 1) {
+			for chan in 1..(chans + 1) {
+				get_waveform_preset(&mut port, chan, verbose).unwrap();
+			}
+		}
+	}
+
+	#[test]
+	pub fn get_waveform_preset_err() {
+		let mut port = SerialPortType::new("", true).unwrap();
+		let verbose_max = 1;
+		let chans = 2;
+
+		// Test invalid channels
+		for verbose in 0..(verbose_max + 1) {
+			get_waveform_preset(&mut port, chans + 1, verbose).unwrap_err();
 		}
 	}
 }
