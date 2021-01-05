@@ -20,147 +20,254 @@ mod test {
 	#[test]
 	pub fn get_model_ok() {
 		let mut port = SerialPortType::new("", true).unwrap();
+		let verbose_max = 1;
 
-		get_model(&mut port, 0).unwrap();
+		for verbose in 0..(verbose_max + 1) {
+			get_model(&mut port, verbose).unwrap();
+		}
 	}
-
-	#[test]
-	pub fn get_model_verbose_ok() {
-		let mut port = SerialPortType::new("", true).unwrap();
-
-		get_model(&mut port, 1).unwrap();
-	}
-
 
 	#[test]
 	pub fn get_serial_ok() {
 		let mut port = SerialPortType::new("", true).unwrap();
+		let verbose_max = 1;
 
-		get_serial(&mut port, 0).unwrap();
+		for verbose in 0..(verbose_max + 1) {
+			get_serial(&mut port, verbose).unwrap();
+		}
 	}
-
-	#[test]
-	pub fn get_serial_verbose_ok() {
-		let mut port = SerialPortType::new("", true).unwrap();
-
-		get_serial(&mut port, 1).unwrap();
-	}
-
 
 	#[test]
 	pub fn get_model_and_serial_ok() {
 		let mut port = SerialPortType::new("", true).unwrap();
+		let verbose_max = 1;
 
-		get_model_and_serial(&mut port, 0).unwrap();
+		for verbose in 0..(verbose_max + 1) {
+			get_model_and_serial(&mut port, verbose).unwrap();
+		}
 	}
-
-	#[test]
-	pub fn get_model_and_serial_verbose_ok() {
-		let mut port = SerialPortType::new("", true).unwrap();
-
-		get_model_and_serial(&mut port, 1).unwrap();
-	}
-
 
 	#[test]
 	pub fn set_channel_output_ok() {
-		set_channel_output_ok_inner(0);
-	}
-
-	#[test]
-	pub fn set_channel_output_verbose_ok() {
-		set_channel_output_ok_inner(1);
-	}
-
-	fn set_channel_output_ok_inner(verbose: u64) {
 		let mut port = SerialPortType::new("", true).unwrap();
+		let verbose_max = 1;
 
-		let zero = "0";
-		let one = "1";
-		let zero_zero = "00";
-		let zero_one = "01";
-		let one_one = "11";
-		let one_zero = "10";
-		let zero_c_zero = "0,0";
-		let zero_c_one = "0,1";
-		let one_c_one = "1,1";
-		let one_c_zero = "1,0";
-		let off = "off";
-		let on = "on";
-		let off_off = "off,off";
-		let off_on = "off,on";
-		let on_on = "on,on";
-		let on_off = "on,off";
+		let args = [
+			"0",
+			"1",
+			
+			"00",
+			"01",
+			"11",
+			"10",
+			
+			"0,0",
+			"0,1",
+			"1,1",
+			"1,0",
+			
+			"off",
+			"on",
 
-		set_channel_output(&mut port, zero, verbose).unwrap();
-		set_channel_output(&mut port, one, verbose).unwrap();
-		set_channel_output(&mut port, zero_zero, verbose).unwrap();
-		set_channel_output(&mut port, zero_one, verbose).unwrap();
-		set_channel_output(&mut port, one_one, verbose).unwrap();
-		set_channel_output(&mut port, one_zero, verbose).unwrap();
-		set_channel_output(&mut port, zero_c_zero, verbose).unwrap();
-		set_channel_output(&mut port, zero_c_one, verbose).unwrap();
-		set_channel_output(&mut port, one_c_one, verbose).unwrap();
-		set_channel_output(&mut port, one_c_zero, verbose).unwrap();
-		set_channel_output(&mut port, off, verbose).unwrap();
-		set_channel_output(&mut port, on, verbose).unwrap();
-		set_channel_output(&mut port, off_off, verbose).unwrap();
-		set_channel_output(&mut port, off_on, verbose).unwrap();
-		set_channel_output(&mut port, on_on, verbose).unwrap();
-		set_channel_output(&mut port, on_off, verbose).unwrap();
+			"off,off",
+			"off,on",
+			"on,on",
+			"on,off",
+		];
+
+		for verbose in 0..(verbose_max + 1) {
+			for arg in args.iter() {
+				set_channel_output(&mut port, arg, verbose).unwrap();
+			}
+		}
 	}
-
 
 	#[test]
 	pub fn set_channel_output_err() {
-		set_channel_output_err_inner(0);
-	}
-
-	#[test]
-	pub fn set_channel_output_verbose_err() {
-		set_channel_output_err_inner(1);
-	}
-
-	fn set_channel_output_err_inner(verbose: u64) {
 		let mut port = SerialPortType::new("", true).unwrap();
+		let verbose_max = 1;
 
-		let too_many_digits = "012";
-		let too_many_digits_comma = "01,2";
-		let invalid_digit = "2";
-		let invalid_digits = "02";
-		let invalid_decimal = "1.0";
-		let invalid_decimals_comma = "1.0,0";
-		let invalid_digit_comma = "0,2";
-		let too_many_words = "off,on,on";
-		let invalid_word = "fonff";
-		let invalid_words = "off,fonff";
-		let mixed_digit_word = "1,off";
+		let args = [
+			"012",			// too many digits
+			"01,2",			// too many digits comma
+			"2",			// invalid digit
+			"02",			// invalid digits
+			"1.0",			// invalid decimal
+			"1.0,0",		// invalid decimals comma
+			"0,2",			// invalid digit comma
+			"off,on,on",	// too many words
+			"fonff",		// invalid word
+			"off,fonff",	// invalid words
+			"1,off",		// mixed digit word
+		];
 		
-		set_channel_output(&mut port, too_many_digits, verbose).unwrap_err();
-		set_channel_output(&mut port, too_many_digits_comma, verbose).unwrap_err();
-		set_channel_output(&mut port, invalid_digit, verbose).unwrap_err();
-		set_channel_output(&mut port, invalid_digits, verbose).unwrap_err();
-		set_channel_output(&mut port, invalid_decimal, verbose).unwrap_err();
-		set_channel_output(&mut port, invalid_decimals_comma, verbose).unwrap_err();
-		set_channel_output(&mut port, invalid_digit_comma, verbose).unwrap_err();
-		set_channel_output(&mut port, too_many_words, verbose).unwrap_err();
-		set_channel_output(&mut port, invalid_word, verbose).unwrap_err();
-		set_channel_output(&mut port, invalid_words, verbose).unwrap_err();
-		set_channel_output(&mut port, mixed_digit_word, verbose).unwrap_err();
+		for verbose in 0..(verbose_max + 1) {
+			for arg in args.iter() {
+				set_channel_output(&mut port, arg, verbose).unwrap_err();
+			}
+		}
 	}
-	
 
 	#[test]
 	pub fn get_channel_output_ok() {
 		let mut port = SerialPortType::new("", true).unwrap();
+		let verbose_max = 1;
 
-		get_channel_output(&mut port, 0).unwrap();
+		for verbose in 0..(verbose_max + 1) {
+			get_channel_output(&mut port, verbose).unwrap();
+		}
 	}
 
 	#[test]
-	pub fn get_channel_output_verbose_ok() {
+	pub fn set_waveform_preset_ok() {
 		let mut port = SerialPortType::new("", true).unwrap();
+		let verbose_max = 1;
 
-		get_channel_output(&mut port, 1).unwrap();
+		let chans = 2;
+		let presets = 16;
+
+		let words = [
+			"sine",
+			"sin",
+
+			"square",
+			"sq",
+
+			"pulse",
+			"pul",
+
+			"triangle",
+			"tri",
+
+			"partialsine",
+			"partial-sine",
+			"parsine",
+			"par-sine",
+			"parsin",
+			"par-sin",
+			"psine",
+			"p-sine",
+			"psin",
+			"p-sin",
+
+			"cmos",
+			"cm",
+
+			"dc",
+
+			"halfwave",
+			"half-wave",
+			"hw",
+			"h-w",
+
+			"fullwave",
+			"full-wave",
+			"fw",
+			"f-w",
+
+			"posladder",
+			"pos-ladder",
+			"poslad",
+			"pos-lad",
+			"positiveladder",
+			"positive-ladder",
+			"pl",
+
+			"negladder",
+			"neg-ladder",
+			"neglad",
+			"neg-lad",
+			"negativeladder",
+			"negative-ladder",
+			"nl",
+
+			"noise",
+			"nois",
+			"noi",
+			"no",
+			"n",
+
+			"exprise",
+			"exp-rise",
+			"er",
+			"e-r",
+			"erise",
+			"e-rise",
+			"eris",
+			"e-ris",
+
+			"expdecay",
+			"exp-decay",
+			"ed",
+			"e-d",
+			"edecay",
+			"e-decay",
+			"edec",
+			"e-dec",
+
+			"multitone",
+			"multi-tone",
+			"mt",
+			"m-t",
+			"mtone",
+			"m-tone",
+
+			"sinc",
+			"sc",
+
+			"lorenz",
+			"loren",
+			"lor",
+			"lz",
+		];
+
+		// Test word inputs.
+		for verbose in 0..(verbose_max + 1) {
+			for chan in 1..(chans + 1) {
+				for word in words.iter() {
+					set_waveform_preset(&mut port, chan, word, verbose).unwrap();
+				}
+			}
+		}
+
+		// Test number inputs.
+		for verbose in 0..(verbose_max + 1) {
+			for chan in 1..(chans + 1) {
+				for preset in 0..(presets + 1) {
+					set_waveform_preset(&mut port, chan, &preset.to_string(), verbose).unwrap();
+				}
+			}
+		}
+	}
+
+	#[test]
+	pub fn set_waveform_preset_err() {
+		let mut port = SerialPortType::new("", true).unwrap();
+		let verbose_max = 1;
+
+		let chans = 2;
+		let presets = 16;
+
+		let words = [
+			"grampn",	// invalid word
+			"",			// empty string
+		];
+
+		// Test invalid word inputs.
+		for verbose in 0..(verbose_max + 1) {
+			for word in words.iter() {
+				set_waveform_preset(&mut port, chans, word, verbose).unwrap_err();
+			}
+		}
+
+		// Test invalid number inputs.
+		for verbose in 0..(verbose_max + 1) {
+			set_waveform_preset(&mut port, chans, &(presets + 1).to_string(), verbose).unwrap_err();
+		}
+
+		// Test invalid channels.
+		for verbose in 0..(verbose_max + 1) {
+			set_waveform_preset(&mut port, chans + 1, &presets.to_string(), verbose).unwrap_err();
+		}
 	}
 }
