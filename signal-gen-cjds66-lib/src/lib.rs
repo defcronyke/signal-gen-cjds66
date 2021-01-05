@@ -51,9 +51,16 @@ pub mod util;
 
 /* Unit Test Modules */
 
+#[cfg(test)]
 mod command_test;
+
+#[cfg(test)]
 mod error_test;
+
+#[cfg(test)]
 mod serial_test;
+
+#[cfg(test)]
 mod util_test;
 
 /* END Unit Test Modules */
