@@ -1,4 +1,3 @@
 #!/bin/bash
 
-cargo test --workspace
-
+cargo test --workspace -- $@
