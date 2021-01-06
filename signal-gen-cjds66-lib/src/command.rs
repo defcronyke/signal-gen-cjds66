@@ -818,24 +818,24 @@ pub fn set_frequency_microhertz(
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"set frequency uHz\" argument (must be 0.01-80000000.0): {}: too many decimal places (2 max)", amount), ErrorKind::InvalidValue));
+		return Err(Error::with_description(&format!("unsupported value passed to \"set frequency uHz\" argument (must be {}-{}): {}: too many decimal places (2 max)", SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MAX, amount), ErrorKind::InvalidValue));
 	}
 
 	let res: Result<String, clap::Error>;
 
 	match amount.parse::<f64>() {
 		Ok(amount) => match amount {
-			_y if amount >= 0.01 && amount <= 80000000.0 => {
-				res = set_frequency_microhertz_inner(&mut port, chan, amount * 100.0, verbose);
+			_y if amount >= SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MIN && amount <= SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MAX => {
+				res = set_frequency_microhertz_inner(&mut port, chan, amount * SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MULTIPLIER, verbose);
 			}
 
 			_ => {
-				res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency uHz\" argument (must be 0.01-80000000.0): {}", amount), ErrorKind::InvalidValue));
+				res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency uHz\" argument (must be {}-{}): {}", SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MAX, amount), ErrorKind::InvalidValue));
 			}
 		},
 
 		Err(e) => {
-			res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency uHz\" argument (must be 0.01-80000000.0): {}: {}", amount, e), ErrorKind::InvalidValue));
+			res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency uHz\" argument (must be {}-{}): {}: {}", SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MAX, amount, e), ErrorKind::InvalidValue));
 		}
 	}
 
@@ -862,9 +862,9 @@ fn set_frequency_microhertz_inner(
 		));
 	}
 
-	if amount < 1.0 || amount > 8000000000.0 {
+	if amount < SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MIN * SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MULTIPLIER || amount > SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MAX * SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MULTIPLIER {
 		return Err(Error::with_description(
-			"Unsupported amount of uHz. Must be 0.01-80000000.0.",
+			&format!("Unsupported amount of uHz. Must be {}-{}: {}", SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MAX, amount / SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MULTIPLIER),
 			ErrorKind::InvalidValue,
 		));
 	}
