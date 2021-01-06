@@ -19,8 +19,8 @@ image: "rust:latest"
 stages:
   - test
   - docs
-  - build-debug
-  - build-release
+  - debug
+  - build
 
 # Use cargo to test the project
 test:
@@ -31,7 +31,7 @@ test:
     - apt-get update && apt-get install -t unstable -y kcov
     - rustc --version && cargo --version  # Print version info for debugging
     - cargo test --workspace --verbose
-    - cargo build --workspace --verbose   # Needed for kcov
+    - cargo build --verbose   # Needed for kcov
     - kcov target/cov target/debug/signal-gen-cjds66 || true
     - "COVERAGE=$(grep -Po 'percent_covered\":\\s+\\\"\\d+.\\d+\\\"' target/cov/signal-gen-cjds66.*/coverage.json | grep -Po '\\d+.\\d+' | tail -n 1)"
     - echo "Coverage:" $COVERAGE
@@ -48,23 +48,23 @@ docs:
       - target/doc
 
 # Use cargo to build the debug project
-build-debug:
-  stage: build-debug
+debug:
+  stage: debug
   script:
     - rustc --version && cargo --version  # Print version info for debugging
     - cargo build --verbose
   artifacts:
     expire_in: never
     paths:
-      - target/debug/signal-gen-cjds66
+      - target/debug
 
 # Use cargo to build the release project
-build-release:
-  stage: build-release
+build:
+  stage: build
   script:
     - rustc --version && cargo --version  # Print version info for debugging
     - cargo build --release --verbose
   artifacts:
     expire_in: never
     paths:
-      - target/release/signal-gen-cjds66
+      - target/release
