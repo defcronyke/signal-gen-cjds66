@@ -36,7 +36,7 @@ docs:
     - rustc --version && cargo --version  # Print version info for debugging
     - cargo doc --workspace --verbose
   artifacts:
-    expire_in: "0"
+    expire_in: never
     paths:
       - target/doc
 
@@ -47,7 +47,7 @@ build-debug:
     - rustc --version && cargo --version  # Print version info for debugging
     - cargo build --verbose
   artifacts:
-    expire_in: "0 weeks"
+    expire_in: never
     paths:
       - target/debug/signal-gen-cjds66
       - target/debug/signal-gen-cjds66.d
@@ -60,7 +60,7 @@ build-release:
     - rustc --version && cargo --version  # Print version info for debugging
     - cargo build --release --verbose
   artifacts:
-    expire_in: "0 weeks"
+    expire_in: never
     paths:
       - target/release/signal-gen-cjds66
       - target/release/signal-gen-cjds66.d
