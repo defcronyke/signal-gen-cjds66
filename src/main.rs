@@ -7,6 +7,8 @@ to the LICENSE TERMS, you aren't allowed to use this
 software.
 */
 
+/*! See the crate docs here: [signal_gen_cjds66_lib](../signal_gen_cjds66_lib/index.html) */
+
 extern crate signal_gen_cjds66_lib;
 #[macro_use]
 extern crate clap;

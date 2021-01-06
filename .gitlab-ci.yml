@@ -16,8 +16,51 @@ image: "rust:latest"
 #   - apt-get update -yqq
 #   - apt-get install -yqq --no-install-recommends build-essential
 
+stages:
+  - test
+  - docs
+  - build-debug
+  - build-release
+
 # Use cargo to test the project
-test:cargo:
+test:
+  stage: test
   script:
     - rustc --version && cargo --version  # Print version info for debugging
     - cargo test --workspace --verbose
+
+# Use cargo to build the docs
+docs:
+  stage: docs
+  script:
+    - rustc --version && cargo --version  # Print version info for debugging
+    - cargo doc --workspace --verbose
+  artifacts:
+    expire_in: "0"
+    paths:
+      - target/doc
+
+# Use cargo to build the debug project
+build-debug:
+  stage: build-debug
+  script:
+    - rustc --version && cargo --version  # Print version info for debugging
+    - cargo build --verbose
+  artifacts:
+    expire_in: "0"
+    paths:
+      - target/debug/signal-gen-cjds66
+      - target/debug/signal-gen-cjds66.d
+      - target/package/signal-gen-cjds66-lib-*/target/debug/libsignal_gen_cjds66_lib.*
+
+# Use cargo to build the release project
+build-release:
+  stage: build-release
+  script:
+    - rustc --version && cargo --version  # Print version info for debugging
+    - cargo build --release --verbose
+  artifacts:
+    expire_in: "0"
+    paths:
+      - target/release/signal-gen-cjds66
+      - target/release/signal-gen-cjds66.d
