@@ -39,6 +39,7 @@ test:
 # Use cargo to build the docs
 docs:
   stage: docs
+  needs: ["test"]
   script:
     - rustc --version && cargo --version  # Print version info for debugging
     - cargo doc --workspace --verbose
@@ -50,6 +51,7 @@ docs:
 # Use cargo to build the debug project
 debug:
   stage: debug
+  needs: ["test"]
   script:
     - rustc --version && cargo --version  # Print version info for debugging
     - cargo build --verbose
@@ -61,6 +63,7 @@ debug:
 # Use cargo to build the release project
 build:
   stage: build
+  needs: ["test"]
   script:
     - rustc --version && cargo --version  # Print version info for debugging
     - cargo build --release --verbose
