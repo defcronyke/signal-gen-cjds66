@@ -47,19 +47,26 @@ ID 1a86:7523 QinHeng Electronics CH340 serial converter
   
 HOW TO INSTALL AND USE:  
 ----------------------  
-You can download the latest Linux x86_64 development build here:
-[signal-gen-cjds66 Linux x86_64 binary (latest build)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/master/download?job=build)  
+You can download the latest Linux x86_64 numbered release build here:
+[signal-gen-cjds66 Linux x86_64 binary (latest release build)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/v0.1.5/download?job=build)  
   
-It passed all the automated tests, but it should be considered
-somewhat experimental, since it's not a numbered release version.
-Feel free to try it if you aren't concerned about potential bugs
-and you just want to get going quickly with the newest version
+You can download the latest Linux x86_64 development build here:
+[signal-gen-cjds66 Linux x86_64 binary (latest development build)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/master/download?job=build)  
+  
+The development build passed all the automated tests, but it should 
+be considered somewhat experimental, since it's not a numbered release 
+version. Feel free to try it if you aren't concerned about potential 
+bugs and you just want to get going quickly with the newest version
 of the program.  
   
-Binary releases for the numbered release versions may be available 
-at some point, but this is written in the Rust programming language, 
-which makes it easy enough to compile the project from source yourself, 
-and it's recommended you do that anyway for less chance of problems.  
+Binary releases for other platforms may be available at some point, 
+but this is written in the Rust programming language, which makes 
+it easy enough to compile the project from source yourself, and it's 
+recommended you do that anyway for less chance of problems. This
+program is tested and working on Windows also, you just have to
+compile it yourself for now.  
+  
+Here's how to compile it yourself:  
   
 1. Install the Rust programming language toolchain from:  
 [https://rustup.rs](https://rustup.rs)  
