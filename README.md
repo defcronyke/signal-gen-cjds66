@@ -1,6 +1,10 @@
 Control the GH-CJDS66 60MHz Signal Generator  
 --------------------------------------------  
   
+[![pipeline status](https://gitlab.com/defcronyke/signal-gen-cjds66/badges/master/pipeline.svg)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/commits/master)
+
+[![coverage report](https://gitlab.com/defcronyke/signal-gen-cjds66/badges/master/coverage.svg)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/commits/master)
+  
 https://gitlab.com/defcronyke/signal-gen-cjds66  
   
 Copyright © 2020-2021 Jeremy Carter <jeremy@jeremycarter.ca>  
@@ -28,7 +32,7 @@ communication spec for the DDS Signal Generator and Counter device
 known as the "Koolertron Upgraded 60MHz DDS Signal Generator Counter, 
 High Precision Dual-channel Arbitrary Waveform Function Generator 
 Frequency Meter 200MSa/s (60MHz) Model: GH-CJDS66-FU" (less a few spec 
-errata, which you can read about in a commit message here:  
+errata, which you can read about in a commit message here:
 [713b026a4e10807d23f7436d26649dcc4c584019](https://gitlab.com/defcronyke/signal-gen-cjds66/-/commit/713b026a4e10807d23f7436d26649dcc4c584019))  
   
   
