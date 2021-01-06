@@ -359,17 +359,12 @@ pub fn set_frequency_microhertz_ok() {
 		}
 	}
 
-	// Test single decimal place.
+	// Test decimal places.
 	for verbose in 0..(verbose_max + 1) {
 		for chan in 1..(chans + 1) {
-			set_frequency_microhertz(&mut port, chan, &(SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MIN + 0.1).to_string(), verbose).unwrap();
-		}
-	}
-
-	// Test two decimal places.
-	for verbose in 0..(verbose_max + 1) {
-		for chan in 1..(chans + 1) {
-			set_frequency_microhertz(&mut port, chan, &(SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MIN + 0.12).to_string(), verbose).unwrap();
+			for decimal in 1..SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MAX_DECIMAL_PLACES {
+				set_frequency_microhertz(&mut port, chan, &(SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MIN + (1.0 / ((10.0 as f64).powf(decimal as f64)))).to_string(), verbose).unwrap();
+			}
 		}
 	}
 }
@@ -392,11 +387,271 @@ pub fn set_frequency_microhertz_err() {
 
 	// Test too many decimal places.
 	for verbose in 0..(verbose_max + 1) {
-		set_frequency_microhertz(&mut port, chans, &(SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MIN + 0.231).to_string(), verbose).unwrap_err();
+		set_frequency_microhertz(&mut port, chans, &(SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MIN + (1.0 / ((10.0 as f64).powf((SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MAX_DECIMAL_PLACES + 1) as f64)))).to_string(), verbose).unwrap_err();
 	}
 
 	// Test invalid channel.
 	for verbose in 0..(verbose_max + 1) {
 		set_frequency_microhertz(&mut port, chans + 1, &(SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MIN).to_string(), verbose).unwrap_err();
+	}
+}
+
+
+#[test]
+pub fn set_frequency_millihertz_ok() {
+	let mut port = SerialPortType::new("", true).unwrap();
+	let verbose_max = 1;
+	let chans = 2;
+
+	// Test arg min.
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			set_frequency_millihertz(&mut port, chan, &SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MIN.to_string(), verbose).unwrap();
+		}
+	}
+
+	// Test arg max.
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			set_frequency_millihertz(&mut port, chan, &SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MAX.to_string(), verbose).unwrap();
+		}
+	}
+
+	// Test arg middle.
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			set_frequency_millihertz(&mut port, chan, &(SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MAX / 2.0).to_string(), verbose).unwrap();
+		}
+	}
+
+	// Test decimal places.
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			for decimal in 1..SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MAX_DECIMAL_PLACES {
+				set_frequency_millihertz(&mut port, chan, &(SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MIN + (1.0 / ((10.0 as f64).powf(decimal as f64)))).to_string(), verbose).unwrap();
+			}
+		}
+	}
+}
+
+#[test]
+pub fn set_frequency_millihertz_err() {
+	let mut port = SerialPortType::new("", true).unwrap();
+	let verbose_max = 1;
+	let chans = 2;
+
+	// Test greater than arg max.
+	for verbose in 0..(verbose_max + 1) {
+		set_frequency_millihertz(&mut port, chans, &(SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MAX + 1.0).to_string(), verbose).unwrap_err();
+	}
+
+	// Test less than arg min.
+	for verbose in 0..(verbose_max + 1) {
+		set_frequency_millihertz(&mut port, chans, &(SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MIN - 1.0).to_string(), verbose).unwrap_err();
+	}
+
+	// Test too many decimal places.
+	for verbose in 0..(verbose_max + 1) {
+		set_frequency_millihertz(&mut port, chans, &(SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MIN + (1.0 / ((10.0 as f64).powf((SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MAX_DECIMAL_PLACES + 1) as f64)))).to_string(), verbose).unwrap_err();
+	}
+
+	// Test invalid channel.
+	for verbose in 0..(verbose_max + 1) {
+		set_frequency_millihertz(&mut port, chans + 1, &(SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MIN).to_string(), verbose).unwrap_err();
+	}
+}
+
+
+#[test]
+pub fn set_frequency_hertz_ok() {
+	let mut port = SerialPortType::new("", true).unwrap();
+	let verbose_max = 1;
+	let chans = 2;
+
+	// Test arg min.
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			set_frequency_hertz(&mut port, chan, &SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MIN.to_string(), verbose).unwrap();
+		}
+	}
+
+	// Test arg max.
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			set_frequency_hertz(&mut port, chan, &SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MAX.to_string(), verbose).unwrap();
+		}
+	}
+
+	// Test arg middle.
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			set_frequency_hertz(&mut port, chan, &(SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MAX / 2.0).to_string(), verbose).unwrap();
+		}
+	}
+
+	// Test decimal places.
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			for decimal in 1..SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MAX_DECIMAL_PLACES {
+				set_frequency_hertz(&mut port, chan, &(SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MIN + (1.0 / ((10.0 as f64).powf(decimal as f64)))).to_string(), verbose).unwrap();
+			}
+		}
+	}
+}
+
+#[test]
+pub fn set_frequency_hertz_err() {
+	let mut port = SerialPortType::new("", true).unwrap();
+	let verbose_max = 1;
+	let chans = 2;
+
+	// Test greater than arg max.
+	for verbose in 0..(verbose_max + 1) {
+		set_frequency_hertz(&mut port, chans, &(SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MAX + 1.0).to_string(), verbose).unwrap_err();
+	}
+
+	// Test less than arg min.
+	for verbose in 0..(verbose_max + 1) {
+		set_frequency_hertz(&mut port, chans, &(SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MIN - 1.0).to_string(), verbose).unwrap_err();
+	}
+
+	// Test too many decimal places.
+	for verbose in 0..(verbose_max + 1) {
+		set_frequency_hertz(&mut port, chans, &(SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MIN + (1.0 / ((10.0 as f64).powf((SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MAX_DECIMAL_PLACES + 1) as f64)))).to_string(), verbose).unwrap_err();
+	}
+
+	// Test invalid channel.
+	for verbose in 0..(verbose_max + 1) {
+		set_frequency_hertz(&mut port, chans + 1, &(SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MIN).to_string(), verbose).unwrap_err();
+	}
+}
+
+
+#[test]
+pub fn set_frequency_kilohertz_ok() {
+	let mut port = SerialPortType::new("", true).unwrap();
+	let verbose_max = 1;
+	let chans = 2;
+
+	// Test arg min.
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			set_frequency_kilohertz(&mut port, chan, &SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MIN.to_string(), verbose).unwrap();
+		}
+	}
+
+	// Test arg max.
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			set_frequency_kilohertz(&mut port, chan, &SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MAX.to_string(), verbose).unwrap();
+		}
+	}
+
+	// Test arg middle.
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			set_frequency_kilohertz(&mut port, chan, &(SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MAX / 2.0).to_string(), verbose).unwrap();
+		}
+	}
+
+	// Test decimal places.
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			for decimal in 1..SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MAX_DECIMAL_PLACES {
+				set_frequency_kilohertz(&mut port, chan, &(SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MIN + (1.0 / ((10.0 as f64).powf(decimal as f64)))).to_string(), verbose).unwrap();
+			}
+		}
+	}
+}
+
+#[test]
+pub fn set_frequency_kilohertz_err() {
+	let mut port = SerialPortType::new("", true).unwrap();
+	let verbose_max = 1;
+	let chans = 2;
+
+	// Test greater than arg max.
+	for verbose in 0..(verbose_max + 1) {
+		set_frequency_kilohertz(&mut port, chans, &(SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MAX + 1.0).to_string(), verbose).unwrap_err();
+	}
+
+	// Test less than arg min.
+	for verbose in 0..(verbose_max + 1) {
+		set_frequency_kilohertz(&mut port, chans, &(SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MIN - 1.0).to_string(), verbose).unwrap_err();
+	}
+
+	// Test too many decimal places.
+	for verbose in 0..(verbose_max + 1) {
+		set_frequency_kilohertz(&mut port, chans, &(SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MIN + (1.0 / ((10.0 as f64).powf((SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MAX_DECIMAL_PLACES + 1) as f64)))).to_string(), verbose).unwrap_err();
+	}
+
+	// Test invalid channel.
+	for verbose in 0..(verbose_max + 1) {
+		set_frequency_kilohertz(&mut port, chans + 1, &(SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MIN).to_string(), verbose).unwrap_err();
+	}
+}
+
+
+#[test]
+pub fn set_frequency_megahertz_ok() {
+	let mut port = SerialPortType::new("", true).unwrap();
+	let verbose_max = 1;
+	let chans = 2;
+
+	// Test arg min.
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			set_frequency_megahertz(&mut port, chan, &SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MIN.to_string(), verbose).unwrap();
+		}
+	}
+
+	// Test arg max.
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			set_frequency_megahertz(&mut port, chan, &SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MAX.to_string(), verbose).unwrap();
+		}
+	}
+
+	// Test arg middle.
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			set_frequency_megahertz(&mut port, chan, &(SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MAX / 2.0).to_string(), verbose).unwrap();
+		}
+	}
+
+	// Test decimal places.
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			for decimal in 1..SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MAX_DECIMAL_PLACES {
+				set_frequency_megahertz(&mut port, chan, &(SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MIN + (1.0 / ((10.0 as f64).powf(decimal as f64)))).to_string(), verbose).unwrap();
+			}
+		}
+	}
+}
+
+#[test]
+pub fn set_frequency_megahertz_err() {
+	let mut port = SerialPortType::new("", true).unwrap();
+	let verbose_max = 1;
+	let chans = 2;
+
+	// Test greater than arg max.
+	for verbose in 0..(verbose_max + 1) {
+		set_frequency_megahertz(&mut port, chans, &(SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MAX + 1.0).to_string(), verbose).unwrap_err();
+	}
+
+	// Test less than arg min.
+	for verbose in 0..(verbose_max + 1) {
+		set_frequency_megahertz(&mut port, chans, &(SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MIN - 1.0).to_string(), verbose).unwrap_err();
+	}
+
+	// Test too many decimal places.
+	for verbose in 0..(verbose_max + 1) {
+		set_frequency_megahertz(&mut port, chans, &(SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MIN + (1.0 / ((10.0 as f64).powf((SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MAX_DECIMAL_PLACES + 1) as f64)))).to_string(), verbose).unwrap_err();
+	}
+
+	// Test invalid channel.
+	for verbose in 0..(verbose_max + 1) {
+		set_frequency_megahertz(&mut port, chans + 1, &(SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MIN).to_string(), verbose).unwrap_err();
 	}
 }

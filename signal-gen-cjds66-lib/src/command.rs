@@ -806,7 +806,7 @@ in microhertz (µHz).
   
 "amount" parameter:
 ```ignore
-"0.01" - "80000000.0"
+"0.00" - "80000000.0"
 ```
 */
 pub fn set_frequency_microhertz(
@@ -817,8 +817,8 @@ pub fn set_frequency_microhertz(
 ) -> Result<String, clap::Error> {
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
-	if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"set frequency uHz\" argument (must be {}-{}): {}: too many decimal places (2 max)", SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MAX, amount), ErrorKind::InvalidValue));
+	if amount_parts.len() > 1 && amount_parts[1].len() > SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MAX_DECIMAL_PLACES {
+		return Err(Error::with_description(&format!("unsupported value passed to \"set frequency uHz\" argument (must be {}-{}): {}: too many decimal places ({} max)", SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MAX, amount, SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MAX_DECIMAL_PLACES), ErrorKind::InvalidValue));
 	}
 
 	let res: Result<String, clap::Error>;
@@ -911,7 +911,7 @@ in millihertz (mHz).
   
 "amount" parameter:
 ```ignore
-"0.01" - "80000000.0"
+"0.00" - "80000000.0"
 ```
 */
 pub fn set_frequency_millihertz(
@@ -922,25 +922,25 @@ pub fn set_frequency_millihertz(
 ) -> Result<String, clap::Error> {
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
-	if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-80000000.0): {}: too many decimal places (2 max)", amount), ErrorKind::InvalidValue));
+	if amount_parts.len() > 1 && amount_parts[1].len() > SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MAX_DECIMAL_PLACES {
+		return Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be {}-{}): {}: too many decimal places ({} max)", SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MAX, amount, SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MAX_DECIMAL_PLACES), ErrorKind::InvalidValue));
 	}
 
 	let res: Result<String, clap::Error>;
 
 	match amount.parse::<f64>() {
 		Ok(amount) => match amount {
-			_y if amount >= 0.01 && amount <= 80000000.0 => {
-				res = set_frequency_millihertz_inner(&mut port, chan, amount * 100.0, verbose);
+			_y if amount >= SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MIN && amount <= SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MAX => {
+				res = set_frequency_millihertz_inner(&mut port, chan, amount * SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MULTIPLIER, verbose);
 			}
 
 			_ => {
-				res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-80000000.0): {}", amount), ErrorKind::InvalidValue));
+				res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be {}-{}): {}", SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MAX, amount), ErrorKind::InvalidValue));
 			}
 		},
 
 		Err(e) => {
-			res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-80000000.0): {}: {}", amount, e), ErrorKind::InvalidValue));
+			res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be {}-{}): {}: {}", SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MAX, amount, e), ErrorKind::InvalidValue));
 		}
 	}
 
@@ -967,9 +967,9 @@ fn set_frequency_millihertz_inner(
 		));
 	}
 
-	if amount < 1.0 || amount > 8000000000.0 {
+	if amount < SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MIN * SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MULTIPLIER || amount > SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MAX * SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MULTIPLIER {
 		return Err(Error::with_description(
-			"Unsupported amount of mHz. Must be 0.01-80000000.0.",
+			&format!("Unsupported amount of mHz. Must be {}-{}: {}", SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MAX, amount / SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MULTIPLIER),
 			ErrorKind::InvalidValue,
 		));
 	}
@@ -1016,7 +1016,7 @@ in hertz (Hz).
   
 "amount" parameter:
 ```ignore
-"0.01" - "60000000.0"
+"0.00" - "60000000.0"
 ```
 */
 pub fn set_frequency_hertz(
@@ -1027,25 +1027,25 @@ pub fn set_frequency_hertz(
 ) -> Result<String, clap::Error> {
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
-	if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"set frequency Hz\" argument (must be 0.01-60000000.0): {}: too many decimal places (2 max)", amount), ErrorKind::InvalidValue));
+	if amount_parts.len() > 1 && amount_parts[1].len() > SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MAX_DECIMAL_PLACES {
+		return Err(Error::with_description(&format!("unsupported value passed to \"set frequency Hz\" argument (must be {}-{}): {}: too many decimal places ({} max)", SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MAX, amount, SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MAX_DECIMAL_PLACES), ErrorKind::InvalidValue));
 	}
 
 	let res: Result<String, clap::Error>;
 
 	match amount.parse::<f64>() {
 		Ok(amount) => match amount {
-			_y if amount >= 0.01 && amount <= 60000000.0 => {
-				res = set_frequency_hertz_inner(&mut port, chan, amount * 100.0, verbose);
+			_y if amount >= SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MIN && amount <= SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MAX => {
+				res = set_frequency_hertz_inner(&mut port, chan, amount * SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MULTIPLIER, verbose);
 			}
 
 			_ => {
-				res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-60000000.0): {}", amount), ErrorKind::InvalidValue));
+				res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be {}-{}): {}", SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MAX, amount), ErrorKind::InvalidValue));
 			}
 		},
 
 		Err(e) => {
-			res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be 0.01-60000000.0): {}: {}", amount, e), ErrorKind::InvalidValue));
+			res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency mHz\" argument (must be {}-{}): {}: {}", SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MAX, amount, e), ErrorKind::InvalidValue));
 		}
 	}
 
@@ -1072,9 +1072,9 @@ fn set_frequency_hertz_inner(
 		));
 	}
 
-	if amount < 1.0 || amount > 6000000000.0 {
+	if amount < SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MIN * SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MULTIPLIER || amount > SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MAX * SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MULTIPLIER {
 		return Err(Error::with_description(
-			"Unsupported amount of Hz. Must be 0.01-60000000.0.",
+			&format!("Unsupported amount of Hz. Must be {}-{}: {}", SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MAX, amount / SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MULTIPLIER),
 			ErrorKind::InvalidValue,
 		));
 	}
@@ -1121,7 +1121,7 @@ in kilohertz (kHz).
   
 "amount" parameter:
 ```ignore
-"0.00001" - "60000.0"
+"0.00000" - "60000.0"
 ```
 */
 pub fn set_frequency_kilohertz(
@@ -1132,27 +1132,27 @@ pub fn set_frequency_kilohertz(
 ) -> Result<String, clap::Error> {
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
-	if amount_parts.len() > 1 && amount_parts[1].len() > 5 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"set frequency kHz\" argument (must be 0.00001-60000.0): {}: too many decimal places (5 max)", amount), ErrorKind::InvalidValue));
+	if amount_parts.len() > 1 && amount_parts[1].len() > SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MAX_DECIMAL_PLACES {
+		return Err(Error::with_description(&format!("unsupported value passed to \"set frequency kHz\" argument (must be {}-{}): {}: too many decimal places ({} max)", SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MAX, amount, SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MAX_DECIMAL_PLACES), ErrorKind::InvalidValue));
 	}
 
 	let res: Result<String, clap::Error>;
 
 	match amount.parse::<f64>() {
 		Ok(amount) => match amount {
-			_y if amount >= 0.00001 && amount <= 60000.0 => {
-				let amount_rounded = ((amount * 100000.0 * 100000.0).round() / 100000.0).round();
+			_y if amount >= SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MIN && amount <= SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MAX => {
+				let amount_rounded = ((amount * SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MULTIPLIER * SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MULTIPLIER).round() / SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MULTIPLIER).round();
 
 				res = set_frequency_kilohertz_inner(&mut port, chan, amount_rounded, verbose);
 			}
 
 			_ => {
-				res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency kHz\" argument (must be 0.00001-60000.0): {}", amount), ErrorKind::InvalidValue));
+				res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency kHz\" argument (must be {}-{}): {}", SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MAX, amount), ErrorKind::InvalidValue));
 			}
 		},
 
 		Err(e) => {
-			res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency kHz\" argument (must be 0.00001-60000.0): {}: {}", amount, e), ErrorKind::InvalidValue));
+			res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency kHz\" argument (must be {}-{}): {}: {}", SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MAX, amount, e), ErrorKind::InvalidValue));
 		}
 	}
 
@@ -1179,9 +1179,9 @@ fn set_frequency_kilohertz_inner(
 		));
 	}
 
-	if amount < 1.0 || amount > 6000000000.0 {
+	if amount < SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MIN * SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MULTIPLIER || amount > SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MAX * SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MULTIPLIER {
 		return Err(Error::with_description(
-			"Unsupported amount of kHz. Must be 0.00001-60000.0.",
+			&format!("Unsupported amount of kHz. Must be {}-{}: {}", SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MAX, amount / SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MULTIPLIER),
 			ErrorKind::InvalidValue,
 		));
 	}
@@ -1228,7 +1228,7 @@ in megahertz (MHz).
   
 "amount" parameter:
 ```ignore
-"0.00000001" - "60.0"
+"0.00000000" - "60.0"
 ```
 */
 pub fn set_frequency_megahertz(
@@ -1239,28 +1239,28 @@ pub fn set_frequency_megahertz(
 ) -> Result<String, clap::Error> {
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
-	if amount_parts.len() > 1 && amount_parts[1].len() > 8 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"set frequency MHz\" argument (must be 0.00000001-60.0): {}: too many decimal places (8 max)", amount), ErrorKind::InvalidValue));
+	if amount_parts.len() > 1 && amount_parts[1].len() > SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MAX_DECIMAL_PLACES {
+		return Err(Error::with_description(&format!("unsupported value passed to \"set frequency MHz\" argument (must be {}-{}): {}: too many decimal places ({} max)", SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MAX, amount, SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MAX_DECIMAL_PLACES), ErrorKind::InvalidValue));
 	}
 
 	let res: Result<String, clap::Error>;
 
 	match amount.parse::<f64>() {
 		Ok(amount) => match amount {
-			_y if amount >= 0.00000001 && amount <= 60.0 => {
+			_y if amount >= SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MIN && amount <= SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MAX => {
 				let amount_rounded =
-					((amount * 100000000.0 * 10000000.0).round() / 10000000.0).round();
+					((amount * SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MULTIPLIER * (SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MULTIPLIER / 10.0)).round() / (SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MULTIPLIER / 10.0)).round();
 
 				res = set_frequency_megahertz_inner(&mut port, chan, amount_rounded, verbose);
 			}
 
 			_ => {
-				res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency MHz\" argument (must be 0.00000001-60.0): {}", amount), ErrorKind::InvalidValue));
+				res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency MHz\" argument (must be {}-{}): {}", SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MAX, amount), ErrorKind::InvalidValue));
 			}
 		},
 
 		Err(e) => {
-			res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency MHz\" argument (must be 0.00000001-60.0): {}: {}", amount, e), ErrorKind::InvalidValue));
+			res = Err(Error::with_description(&format!("unsupported value passed to \"set frequency MHz\" argument (must be {}-{}): {}: {}", SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MAX, amount, e), ErrorKind::InvalidValue));
 		}
 	}
 
@@ -1287,9 +1287,9 @@ fn set_frequency_megahertz_inner(
 		));
 	}
 
-	if amount < 1.0 || amount > 6000000000.0 {
+	if amount < SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MIN * SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MULTIPLIER || amount > SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MAX * SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MULTIPLIER {
 		return Err(Error::with_description(
-			"Unsupported amount of MHz. Must be 0.00000001-60.0.",
+			&format!("Unsupported amount of MHz. Must be {}-{}: {}", SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MIN, SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MAX, amount / SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MULTIPLIER),
 			ErrorKind::InvalidValue,
 		));
 	}
