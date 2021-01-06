@@ -1,7 +1,7 @@
 Control the GH-CJDS66 60MHz Signal Generator  
 --------------------------------------------  
   
-[![docs](https://docs.rs/signal-gen-cjds66-lib/badge.svg)](https://docs.rs/signal-gen-cjds66-lib) [![crate](https://img.shields.io/crates/v/signal_gen_cjds66_lib)](https://crates.io/crates/signal-gen-cjds66-lib) [![pipeline status](https://gitlab.com/defcronyke/signal-gen-cjds66/badges/master/pipeline.svg)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/commits/master) [![coverage report](https://gitlab.com/defcronyke/signal-gen-cjds66/badges/master/coverage.svg)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/commits/master)  
+[![docs](https://docs.rs/signal-gen-cjds66-lib/badge.svg)](https://docs.rs/signal-gen-cjds66-lib) [![crate](https://img.shields.io/crates/v/signal_gen_cjds66_lib)](https://crates.io/crates/signal-gen-cjds66-lib) [![pipeline status](https://gitlab.com/defcronyke/signal-gen-cjds66/badges/master/pipeline.svg)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/commits/master) [![coverage report](https://gitlab.com/defcronyke/signal-gen-cjds66/badges/master/coverage.svg)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/commits/master) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/blob/master/LICENSE.md)  
   
 https://gitlab.com/defcronyke/signal-gen-cjds66  
   
@@ -47,10 +47,19 @@ ID 1a86:7523 QinHeng Electronics CH340 serial converter
   
 HOW TO INSTALL AND USE:  
 ----------------------  
-Binary releases may be available at some point, but this is written in 
-the Rust programming language, which makes it easy enough to compile the 
-project from source yourself, and it's recommended you do that anyway 
-for less chance of problems.  
+The latest Linux x86_64 development build is always available here:
+[Linux x86_64 binary version (latest master branch build)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/master/download?job=build)  
+  
+It passed all the automated tests, but it should be considered
+somewhat experimental, since it's not a numbered release version.
+Feel free to try it if you aren't concerned about potential bugs
+and you just want to get going quickly with the newest version
+of the program.  
+  
+Binary releases for the numbered release versions may be available 
+at some point, but this is written in the Rust programming language, 
+which makes it easy enough to compile the project from source yourself, 
+and it's recommended you do that anyway for less chance of problems.  
   
 1. Install the Rust programming language toolchain from:  
 [https://rustup.rs](https://rustup.rs)  
