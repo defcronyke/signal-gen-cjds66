@@ -47,10 +47,10 @@ ID 1a86:7523 QinHeng Electronics CH340 serial converter
   
 HOW TO INSTALL AND USE:  
 ----------------------  
-You can download the latest Linux x86_64 numbered release build here:
+You can download the latest Linux x86_64 numbered release build here:  
 [signal-gen-cjds66 Linux x86_64 binary (latest release build)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/v0.1.5/download?job=build)  
   
-You can download the latest Linux x86_64 development build here:
+You can download the latest Linux x86_64 development build here:  
 [signal-gen-cjds66 Linux x86_64 binary (latest development build)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/master/download?job=build)  
   
 The development build passed all the automated tests, but it should 
