@@ -26,8 +26,12 @@ stages:
 test:
   stage: test
   script:
+    - apt-get update && apt-get install -f kcov
     - rustc --version && cargo --version  # Print version info for debugging
     - cargo test --workspace --verbose
+    - kcov target/cov target/debug/signal-gen-cjds66
+    - "COVERAGE=$(grep -Po 'percent_covered\":\\s+\\\"\\d+.\\d+\\\"' target/cov/signal-gen-cjds66.*/coverage.json | grep -Po '\\d+.\\d+' | tail -n 1)"
+    - echo "Coverage:" $COVERAGE
 
 # Use cargo to build the docs
 docs:
@@ -50,8 +54,6 @@ build-debug:
     expire_in: never
     paths:
       - target/debug/signal-gen-cjds66
-      - target/debug/signal-gen-cjds66.d
-      - target/package/signal-gen-cjds66-lib-*/target/debug/libsignal_gen_cjds66_lib.*
 
 # Use cargo to build the release project
 build-release:
@@ -63,4 +65,3 @@ build-release:
     expire_in: never
     paths:
       - target/release/signal-gen-cjds66
-      - target/release/signal-gen-cjds66.d
