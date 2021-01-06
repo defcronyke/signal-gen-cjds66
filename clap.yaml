@@ -358,14 +358,14 @@ args:
       long: freq-micro-ch1
       takes_value: true
       value_name: ch1_freq_uHz
-      help: "Set the waveform frequency for channel 1 in uHz. The value must be a number 0.01-80000000.0. For example: -u 0.01"
+      help: "Set the waveform frequency for channel 1 in uHz. The value must be a number 0.0-80000000.0. For example: -u 0.01"
 
   - set_frequency_uhz_channel2:
       short: "2"
       long: freq-micro-ch2
       takes_value: true
       value_name: ch2_freq_uHz
-      help: "Set the waveform frequency for channel 2 in uHz. The value must be a number 0.01-80000000.0. For example: -2 0.01"
+      help: "Set the waveform frequency for channel 2 in uHz. The value must be a number 0.0-80000000.0. For example: -2 0.01"
 
   - set_frequency_millihz_channel1:
       short: i
