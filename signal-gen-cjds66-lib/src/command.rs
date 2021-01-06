@@ -1332,15 +1332,36 @@ fn set_frequency_megahertz_inner(
 }
 
 /** Get the device's output frequency for a particular channel,
-in hertz (Hz).  
+in whichever unit the channel is currently set on.  
   
-Return Value (Ok Result):
+Supported units are:  
 ```ignore
+uHz (microhertz)
+mHz (millihertz)
+Hz (hertz)
+kHz (kilohertz)
+MHz (megahertz)
+```  
+  
+Return Value (Ok Result):  
+```ignore
+10,000 uHz:
+"10000 uHz"
+
+10,000 mHz:
+"10000 mHz"
+
 10,000 Hz:
-"10000"
+"10000 Hz"
+
+10 kHz:
+"10 kHz"
+
+0.01 MHz:
+"0.01 MHz"
 ```
 */
-pub fn get_frequency_hertz(
+pub fn get_frequency(
 	port: &mut SerialPortType,
 	chan: u64,
 	verbose: u64,
@@ -1365,7 +1386,7 @@ pub fn get_frequency_hertz(
 	);
 
 	if verbose > 0 {
-		println!("\nGetting frequency in Hz: ch{}:\n{}", chan, command);
+		println!("\nGetting frequency: ch{}:\n{}", chan, command);
 	}
 
 	let inbuf: Vec<u8> = command.as_bytes().to_vec();
@@ -1374,6 +1395,9 @@ pub fn get_frequency_hertz(
 	if !port.mock {
 		port.port.as_mut().unwrap().write(&inbuf[..])?;
 		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	
+	} else {	// Mock data for testing.
+		outbuf = Vec::from(&format!(":r2{}=1000,0.\r\n", chan + 2) as &str);
 	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
@@ -1420,7 +1444,153 @@ pub fn get_frequency_hertz(
 
 	let res4_str = res4_parts[0];
 
-	let res4 = res4_str.parse::<f64>().unwrap() / 100.0;
+	let unit_num = res4_parts[1];
+
+	let mut res4 = res4_str.parse::<f64>().unwrap();
+	let mut res4_str = String::new();
+
+	if unit_num == SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ {
+		res4 /= SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MULTIPLIER;
+		res4_str += &(res4.to_string() + " uHz");
+	
+	} else if unit_num == SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ {
+		res4 /= SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MULTIPLIER;
+		res4_str += &(res4.to_string() + " mHz");
+	
+	} else if unit_num == SET_FREQUENCY_COMMAND_UNIT_HERTZ {
+		res4 /= SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MULTIPLIER;
+		res4_str += &(res4.to_string() + " Hz");
+	
+	} else if unit_num == SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ {
+		res4 /= SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MULTIPLIER;
+		res4_str += &(res4.to_string() + " kHz");
+	
+	} else if unit_num == SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ {
+		res4 /= SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MULTIPLIER;
+		res4_str += &(res4.to_string() + " MHz");
+	}
+
+	if verbose > 0 {
+		println!("Response:");
+		println!("{}", res);
+	} else {
+		println!("{}", res4_str);
+	}
+
+	Ok(res4_str)
+}
+
+/** Get the device's output frequency for a particular channel,
+in hertz (Hz).  
+  
+Return Value (Ok Result):  
+```ignore
+10,000 Hz:
+"10000"
+```
+*/
+pub fn get_frequency_hertz(
+	port: &mut SerialPortType,
+	chan: u64,
+	verbose: u64,
+) -> Result<String, clap::Error> {
+	let command: String;
+	let chan_out: &str;
+
+	if chan == 1 {
+		chan_out = GET_FREQUENCY_COMMAND_CH1;
+	} else if chan == 2 {
+		chan_out = GET_FREQUENCY_COMMAND_CH2;
+	} else {
+		return Err(Error::with_description(
+			"Unsupported channel number. Must be 1 or 2.",
+			ErrorKind::InvalidValue,
+		));
+	}
+
+	command = format!(
+		"{}{}{}{}{}{}",
+		COMMAND_BEGIN, COMMAND_GET, chan_out, COMMAND_SEPARATOR, GET_FREQUENCY_ARG, COMMAND_END,
+	);
+
+	if verbose > 0 {
+		println!("\nGetting frequency in hertz (Hz): ch{}:\n{}", chan, command);
+	}
+
+	let inbuf: Vec<u8> = command.as_bytes().to_vec();
+	let mut outbuf: Vec<u8> = (0..GET_FREQUENCY_RES_LEN).collect();
+
+	if !port.mock {
+		port.port.as_mut().unwrap().write(&inbuf[..])?;
+		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	
+	} else {	// Mock data for testing.
+		outbuf = Vec::from(&format!(":r2{}=1000,0.\r\n", chan + 2) as &str);
+	}
+
+	let res = str::from_utf8(&outbuf).unwrap();
+
+	let res2_parts: Vec<&str> = res.split("=").collect();
+
+	if res2_parts.len() < 2 {
+		return Err(Error::with_description(
+			&format!(
+				"unexpected response from device: missing equals (=): {}",
+				res
+			),
+			ErrorKind::Io,
+		));
+	}
+
+	let res2 = res2_parts[1];
+
+	let res3_parts: Vec<&str> = res2.split(".").collect();
+
+	if res3_parts.len() < 2 {
+		return Err(Error::with_description(
+			&format!(
+				"unexpected response from device: missing period (.): {}",
+				res
+			),
+			ErrorKind::Io,
+		));
+	}
+
+	let res3 = res3_parts[0];
+
+	let res4_parts: Vec<&str> = res3.split(",").collect();
+
+	if res4_parts.len() < 2 {
+		return Err(Error::with_description(
+			&format!(
+				"unexpected response from device: missing comma (,): {}",
+				res
+			),
+			ErrorKind::Io,
+		));
+	}
+
+	let res4_str = res4_parts[0];
+
+	let unit_num = res4_parts[1];
+
+	let mut res4 = res4_str.parse::<f64>().unwrap();
+
+	if unit_num == SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ {
+		res4 /= SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MULTIPLIER * (10.0 as f64).powf(6.0);
+	
+	} else if unit_num == SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ {
+		res4 /= SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MULTIPLIER * (10.0 as f64).powf(3.0);
+	
+	} else if unit_num == SET_FREQUENCY_COMMAND_UNIT_HERTZ {
+		res4 /= SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MULTIPLIER;
+	
+	} else if unit_num == SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ {
+		res4 = (((res4 / SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MULTIPLIER) * (10.0 as f64).powf(3.0)) * 1000000.0).round() / 1000000.0;
+	
+	} else if unit_num == SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ {
+		res4 = (((res4 / SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MULTIPLIER) * (10.0 as f64).powf(6.0)) * 1000.0).round() / 1000.0;
+	}
 
 	if verbose > 0 {
 		println!("Response:");

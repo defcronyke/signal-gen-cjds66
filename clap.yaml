@@ -153,13 +153,21 @@ args:
       long: gx
       help: Get the waveform preset for channel 2.
 
-  - get_frequency_hz_channel1:
+  - get_frequency_channel1:
       long: ge
-      help: Get the signal frequency for channel 1 in Hz.
+      help: "Get the signal frequency for channel 1 in whichever unit the channel is currently set to (one of: uHz, mHz, Hz, kHz, Mhz)."
 
-  - get_frequency_hz_channel2:
+  - get_frequency_channel2:
       long: gf
-      help: Get the signal frequency for channel 2 in Hz.
+      help: "Get the signal frequency for channel 2 in whichever unit the channel is currently set to (one of: uHz, mHz, Hz, kHz, Mhz)."
+
+  - get_frequency_hertz_channel1:
+      long: gez
+      help: "Get the signal frequency for channel 1 in hertz (Hz)."
+
+  - get_frequency_hertz_channel2:
+      long: gfz
+      help: "Get the signal frequency for channel 2 in hertz (Hz)."
 
   - get_amplitude_volts_channel1:
       long: gp

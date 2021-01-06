@@ -220,8 +220,32 @@ fn real_main() -> Result<i32, error::Error> {
 				}
 
 
-				// If get frequency for channel1 in Hz is requested.
-				if matches.is_present("get_frequency_hz_channel1") {
+				// If get frequency for channel1 is requested.
+				if matches.is_present("get_frequency_channel1") {
+					match get_frequency(&mut port, 1, verbose) {
+						Ok(_res) => {},
+						Err(e) => {
+							err = Some(error::Error::from_clap_error(e));
+							println!("{}", err.as_ref().unwrap());
+						},
+					}
+				}
+
+
+				// If get frequency for channel1 is requested.
+				if matches.is_present("get_frequency_channel2") {
+					match get_frequency(&mut port, 2, verbose) {
+						Ok(_res) => {},
+						Err(e) => {
+							err = Some(error::Error::from_clap_error(e));
+							println!("{}", err.as_ref().unwrap());
+						},
+					}
+				}
+
+
+				// If get frequency for channel1 in hertz is requested.
+				if matches.is_present("get_frequency_hertz_channel1") {
 					match get_frequency_hertz(&mut port, 1, verbose) {
 						Ok(_res) => {},
 						Err(e) => {
@@ -232,8 +256,8 @@ fn real_main() -> Result<i32, error::Error> {
 				}
 
 
-				// If get frequency for channel1 in Hz is requested.
-				if matches.is_present("get_frequency_hz_channel2") {
+				// If get frequency for channel1 in hertz is requested.
+				if matches.is_present("get_frequency_hertz_channel2") {
 					match get_frequency_hertz(&mut port, 2, verbose) {
 						Ok(_res) => {},
 						Err(e) => {

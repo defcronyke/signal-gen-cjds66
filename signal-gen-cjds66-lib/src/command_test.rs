@@ -655,3 +655,55 @@ pub fn set_frequency_megahertz_err() {
 		set_frequency_megahertz(&mut port, chans + 1, &(SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MIN).to_string(), verbose).unwrap_err();
 	}
 }
+
+
+#[test]
+pub fn get_frequency_ok() {
+	let mut port = SerialPortType::new("", true).unwrap();
+	let verbose_max = 1;
+	let chans = 2;
+
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			get_frequency(&mut port, chan, verbose).unwrap();
+		}
+	}
+}
+
+#[test]
+pub fn get_frequency_err() {
+	let mut port = SerialPortType::new("", true).unwrap();
+	let verbose_max = 1;
+	let chans = 2;
+
+	// Test invalid channels
+	for verbose in 0..(verbose_max + 1) {
+		get_frequency(&mut port, chans + 1, verbose).unwrap_err();
+	}
+}
+
+
+#[test]
+pub fn get_frequency_hertz_ok() {
+	let mut port = SerialPortType::new("", true).unwrap();
+	let verbose_max = 1;
+	let chans = 2;
+
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			get_frequency_hertz(&mut port, chan, verbose).unwrap();
+		}
+	}
+}
+
+#[test]
+pub fn get_frequency_hertz_err() {
+	let mut port = SerialPortType::new("", true).unwrap();
+	let verbose_max = 1;
+	let chans = 2;
+
+	// Test invalid channels
+	for verbose in 0..(verbose_max + 1) {
+		get_frequency_hertz(&mut port, chans + 1, verbose).unwrap_err();
+	}
+}
