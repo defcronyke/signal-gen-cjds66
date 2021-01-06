@@ -1,6 +1,8 @@
 Control the GH-CJDS66 60MHz Signal Generator  
 --------------------------------------------  
   
+[![docs](https://docs.rs/signal-gen-cjds66-lib/badge.svg)](https://docs.rs/signal-gen-cjds66-lib) [![crate](https://img.shields.io/crates/v/signal_gen_cjds66_lib)](https://crates.io/crates/signal-gen-cjds66-lib) [![pipeline status](https://gitlab.com/defcronyke/signal-gen-cjds66/badges/master/pipeline.svg)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/commits/master) [![coverage report](https://gitlab.com/defcronyke/signal-gen-cjds66/badges/master/coverage.svg)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/commits/master)  
+  
 https://gitlab.com/defcronyke/signal-gen-cjds66  
   
 Copyright © 2020-2021 Jeremy Carter <jeremy@jeremycarter.ca>  

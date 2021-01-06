@@ -31,6 +31,7 @@ test:
     - apt-get update && apt-get install -t unstable -y kcov
     - rustc --version && cargo --version  # Print version info for debugging
     - cargo test --workspace --verbose
+    - cargo build --workspace --verbose   # Needed for kcov
     - kcov target/cov target/debug/signal-gen-cjds66
     - "COVERAGE=$(grep -Po 'percent_covered\":\\s+\\\"\\d+.\\d+\\\"' target/cov/signal-gen-cjds66.*/coverage.json | grep -Po '\\d+.\\d+' | tail -n 1)"
     - echo "Coverage:" $COVERAGE
