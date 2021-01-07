@@ -7,4 +7,13 @@
 # to the LICENSE TERMS, you aren't allowed to use this
 # software.
 
-cargo test -- $@
+pwd="$PWD"
+cd signal-gen-cjds66-lib
+
+cargo run --release --example basic-usage -- $@
+
+exit_code=$?
+
+cd "$pwd"
+
+exit $exit_code

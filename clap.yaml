@@ -10,7 +10,7 @@ name: signal-gen-cjds66
 
 author: Jeremy Carter <jeremy@jeremycarter.ca>
 
-version: "0.1.6"
+version: "0.1.7"
 
 about: |
   An unofficial program to control the CJDS66 60MHz DDS

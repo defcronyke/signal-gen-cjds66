@@ -1,75 +1,12 @@
-signal-gen-cjds66  
-=================  
-**Control the GH-CJDS66 60MHz Signal Generator**  
-  
-[![docs](https://docs.rs/signal-gen-cjds66-lib/badge.svg)](https://docs.rs/signal-gen-cjds66-lib) [![crate](https://img.shields.io/crates/v/signal_gen_cjds66_lib)](https://crates.io/crates/signal-gen-cjds66-lib) [![pipeline status](https://gitlab.com/defcronyke/signal-gen-cjds66/badges/master/pipeline.svg)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/commits/master) [![coverage report](https://gitlab.com/defcronyke/signal-gen-cjds66/badges/master/coverage.svg)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/commits/master) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/blob/master/signal-gen-cjds66-lib/LICENSE.md)  
-  
-https://gitlab.com/defcronyke/signal-gen-cjds66  
-  
-Copyright © 2020-2021 Jeremy Carter <jeremy@jeremycarter.ca>  
-  
-MIT License  
-  
+/* Copyright © 2020-2021 Jeremy Carter <jeremy@jeremycarter.ca>
+
 By using this software, you agree to the LICENSE TERMS 
 outlined in the file titled LICENSE.md contained in the 
 top-level directory of this project. If you don't agree
 to the LICENSE TERMS, you aren't allowed to use this
-software.  
-  
-Purpose:  
--------  
-This is an unofficial project which fully implements the official 
-communication spec for the DDS Signal Generator and Counter device
-known as the "Koolertron Upgraded 60MHz DDS Signal Generator Counter, 
-High Precision Dual-channel Arbitrary Waveform Function Generator 
-Frequency Meter 200MSa/s (60MHz) Model: GH-CJDS66-FU" (less a few spec 
-errata, which you can read about in a commit message here:
-[713b026a4e10807d23f7436d26649dcc4c584019](https://gitlab.com/defcronyke/signal-gen-cjds66/-/commit/713b026a4e10807d23f7436d26649dcc4c584019))  
-  
-Device and USB Interface info:  
------------------------------  
-Manufacturer page with info on where to buy it:  
-[https://www.koolertron.com/koolertron-upgraded-60mhz-dds-signal-generator-counterhigh-precision-dualchannel-arbitrary-waveform-function-generator-frequency-meter-200msas-60mhz-p-867.html](https://www.koolertron.com/koolertron-upgraded-60mhz-dds-signal-generator-counterhigh-precision-dualchannel-arbitrary-waveform-function-generator-frequency-meter-200msas-60mhz-p-867.html)  
-  
-Linux `lsusb` output:  
-```shell
-ID 1a86:7523 QinHeng Electronics CH340 serial converter
-```  
-  
-Basic Usage Code Example:  
-------------------------  
-**Getting Started:**  
-  * This library is published as a Rust crate on crates.io, so 
-  that you can use it in your own projects easily:
-  [https://crates.io/crates/signal-gen-cjds66-lib](https://crates.io/crates/signal-gen-cjds66-lib)
+software.
+*/
 
-  * The crate's auto-generated documentation can be viewed on docs.rs here:
-  [https://docs.rs/signal-gen-cjds66-lib](https://docs.rs/signal-gen-cjds66-lib)
-
-  * You can also download the latest development version docs here if you
-  want the docs for the master branch (development version) of the crate.
-  This version also includes the docs for the associated command line program:
-  [signal-gen-cjds66 docs (Download Development Version)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/master/download?job=docs)
-
-  * To use this crate, put the following lines in your Rust project's
-  `Cargo.toml` file (but substitute the newest version number 
-  listed at the crates.io link above so you're using the 
-  latest version):
-  ```toml
-  [dependencies]
-  signal-gen-cjds66-lib = { version = "0.1" }
-  ```
-
-  * **IMPORTANT:** Note that this crate uses three-part version numbers, 
-  such as `0.1.7`, but it's better to leave off the third part of the 
-  version number in your `Cargo.toml` file, because that way you can more 
-  easily and automatically update to the latest `0.1.x` versions, without 
-  having to update that third number by hand. It would be annoying 
-  otherwise, since that third number may need to change frequently.  
-  
-**Code Example - Print the device's model number and serial number:**  
-`examples/basic-usage.rs`  
-```rust
 /*! A basic usage example for the library.  
   
 Control one signal generator device	on 
@@ -275,11 +212,3 @@ fn real_main() -> Result<i32, error::Error> {
 		Ok(0)
 	}
 }
-```  
-  
-**NOTE:** The above example can be found in the file `examples/basic-usage.rs`,
-and you can try running it by issuing the following command:  
-```shell
-cargo run --release --example basic-usage
-```  
-  

@@ -7,9 +7,4 @@ REM top-level directory of this project. If you don't agree
 REM to the LICENSE TERMS, you aren't allowed to use this
 REM software.
 
-set pwd=%CD%
-cd signal-gen-cjds66-lib
-
-cargo doc %*
-
-cd %pwd%
+cargo run --release --example basic-usage -- %*

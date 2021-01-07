@@ -7,4 +7,4 @@
 # to the LICENSE TERMS, you aren't allowed to use this
 # software.
 
-cargo test -- $@
+cargo run --release --example basic-usage -- $@

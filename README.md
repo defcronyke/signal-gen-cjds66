@@ -1,11 +1,14 @@
-Control the GH-CJDS66 60MHz Signal Generator  
---------------------------------------------  
+signal-gen-cjds66  
+=================  
+**Control the GH-CJDS66 60MHz Signal Generator**  
   
 [![docs](https://docs.rs/signal-gen-cjds66-lib/badge.svg)](https://docs.rs/signal-gen-cjds66-lib) [![crate](https://img.shields.io/crates/v/signal_gen_cjds66_lib)](https://crates.io/crates/signal-gen-cjds66-lib) [![pipeline status](https://gitlab.com/defcronyke/signal-gen-cjds66/badges/master/pipeline.svg)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/commits/master) [![coverage report](https://gitlab.com/defcronyke/signal-gen-cjds66/badges/master/coverage.svg)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/commits/master) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/blob/master/LICENSE.md)  
   
 https://gitlab.com/defcronyke/signal-gen-cjds66  
   
 Copyright © 2020-2021 Jeremy Carter <jeremy@jeremycarter.ca>  
+  
+MIT License  
   
 By using this software, you agree to the LICENSE TERMS 
 outlined in the file titled LICENSE.md contained in the 
@@ -14,13 +17,13 @@ to the LICENSE TERMS, you aren't allowed to use this
 software.  
   
   
-Usage (Linux): `./signal-gen-cjds66 -h`  
+**Usage (Linux): `./signal-gen-cjds66 -h`**  
   
-Usage (Windows): `signal-gen-cjds66.exe -h`  
+**Usage (Windows): `.\signal-gen-cjds66.exe -h`**  
   
-Usage (when building from source): `cargo run --release -- -h`  
+**Usage (when building from source): `cargo run --release -- -h`**  
   
-[Full Usage Info (from the project Wiki)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/wikis/usage)  
+**[Full Usage Info (from the project Wiki)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/wikis/usage)**  
   
   
 Purpose:  
@@ -51,30 +54,61 @@ ID 1a86:7523 QinHeng Electronics CH340 serial converter
   
 HOW TO INSTALL AND USE:  
 ----------------------  
-Download the latest Linux x86_64 binary release here:  
-[signal-gen-cjds66 Linux x86_64 binary (latest release build)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/v0.1.6/download?job=build-linux-x86_64)  
   
-Download the latest Windows x86_64 binary release here:  
-[signal-gen-cjds66 Windows x86_64 binary (latest release build)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/v0.1.6/download?job=build-windows-x86_64)  
+----------  
   
-Download the latest Linux x86_64 binary development build here:  
-[signal-gen-cjds66 Linux x86_64 binary (latest development build)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/master/download?job=build-linux-x86_64)  
+**Download the latest release version here:**  
   
-Download the latest Windows x86_64 binary development build here:  
-[signal-gen-cjds66 Windows x86_64 binary (latest development build)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/master/download?job=build-windows-x86_64)  
+* **Linux x86_64 Binary:**
+  - [signal-gen-cjds66 (v0.1.7 Linux Release Build)](https://gitlab.com/defcronyke/signal-gen-cjds66/builds/artifacts/v0.1.7/raw/target/release/signal-gen-cjds66?job=release-linux-x86_64)
+
+  - [signal-gen-cjds66 (v0.1.7 Linux Debug Build)](https://gitlab.com/defcronyke/signal-gen-cjds66/builds/artifacts/v0.1.7/raw/target/debug/signal-gen-cjds66?job=debug-linux-x86_64)
+  
+* **Windows x86_64 Binary:**
+  - [signal-gen-cjds66.exe (v0.1.7 Windows Release Build)](https://gitlab.com/defcronyke/signal-gen-cjds66/builds/artifacts/v0.1.7/raw/target/x86_64-pc-windows-gnu/release/signal-gen-cjds66.exe?job=release-windows-x86_64)
+
+  - [signal-gen-cjds66.exe (v0.1.7 Windows Debug Build)](https://gitlab.com/defcronyke/signal-gen-cjds66/builds/artifacts/v0.1.7/raw/target/x86_64-pc-windows-gnu/debug/signal-gen-cjds66.exe?job=debug-windows-x86_64)
+  
+----------  
+  
+**Download the latest development version here:**  
+(Built from the newest master branch commit which passed all the automated tests. 
+See the **[Pipelines page](https://gitlab.com/defcronyke/signal-gen-cjds66/-/pipelines)** for build success/failure history.)  
+  
+* **Linux x86_64 Binary:**
+  - [signal-gen-cjds66 (Development Version Linux Release Build)](https://gitlab.com/defcronyke/signal-gen-cjds66/builds/artifacts/master/raw/target/release/signal-gen-cjds66?job=release-linux-x86_64)
+
+  - [signal-gen-cjds66 (Development Version Linux Debug Build)](https://gitlab.com/defcronyke/signal-gen-cjds66/builds/artifacts/master/raw/target/debug/signal-gen-cjds66?job=debug-linux-x86_64)
+  
+* **Windows x86_64 Binary:**
+  - [signal-gen-cjds66.exe (Development Version Windows Release Build)](https://gitlab.com/defcronyke/signal-gen-cjds66/builds/artifacts/master/raw/target/x86_64-pc-windows-gnu/release/signal-gen-cjds66.exe?job=release-windows-x86_64)
+
+  - [signal-gen-cjds66.exe (Development Version Windows Debug Build)](https://gitlab.com/defcronyke/signal-gen-cjds66/builds/artifacts/master/raw/target/x86_64-pc-windows-gnu/debug/signal-gen-cjds66.exe?job=debug-windows-x86_64)
   
 The development build passed all the automated tests, but it should 
 be considered somewhat experimental, since it's not a numbered release 
 version. Feel free to try it if you aren't concerned about potential 
-bugs and you just want to get going quickly with the newest version
-of the program.  
+bugs and you just want to get going quickly with the newest (possibly 
+broken) version of the program.  
+  
+----------  
+  
+**Access the latest auto-generated documentation here:**  
+  
+* **HTML / Javascript Cargo Doc Format:**
+  - [signal-gen-cjds66-lib crate docs (View Latest Release Version on docs.rs)](https://docs.rs/signal-gen-cjds66-lib)
+
+  - [signal-gen-cjds66 docs (Download Development Version)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/master/download?job=docs)
+  
+----------  
   
 Binary releases for other platforms may be available at some point, 
-but this is written in the Rust programming language, which makes 
-it easy enough to compile the project from source yourself, and it's 
-recommended you do that anyway for less chance of problems.  
+but this is developed using the Rust programming language, which makes 
+it easy enough to compile the project from source yourself if you prefer,
+or if you need to because your desired platform doesn't have an official
+binary release made for it.  
   
-Here's how to compile and run it from source yourself:  
+**Here's how to compile signal-gen-cjds66 and run it from source yourself:**  
   
 1. Install the Rust programming language toolchain from:  
 [https://rustup.rs](https://rustup.rs)  
@@ -101,7 +135,7 @@ like where you see the -h flag above. You can also optionally omit the
 cargo run --release -- <any switches or args go here>
 ```  
   
-5. (Optional) If you prefer to run the compiled program directly, instead
+5. If you prefer to run the compiled program directly, instead
 of with the Rust toolchain's "cargo" helper command, after running the 
 above cargo command for the first time, you can find the compiled binary 
 for this program in the `target/release` folder.  
@@ -115,10 +149,10 @@ cd target/release
 On Windows you can run it like this:  
 ```shell
 cd target\release
-signal-gen-cjds66.exe -h
+.\signal-gen-cjds66.exe -h
 ```  
   
-6. (Optional) You can add the -v switch to the end of any command
+6. You can add the -v switch to the end of any command
 to get a different and more verbose style of output. Useful for
 debugging and to better understand what's happening when you run
 a command. For example, to get the verbose output while requesting
@@ -127,7 +161,7 @@ the device's model number and serial number, run this command:
 cargo run --release -- --ms -v
 ```  
 
-7. (Optional) You can specify the device location if the default
+7. You can specify the device location if the default
 isn't correct for your computer or configuration. On Linux it 
 defaults to /dev/ttyUSB0, and on Windows it defaults to COM3. You
 can change it or even specify multiple devices to control with the
@@ -146,22 +180,28 @@ When you specify multiple devices, all commands will be executed
 on the first device first, and then on the next device immediately
 afterwards.  
   
-IMPORTANT: You can run this program with multiple command line 
+**IMPORTANT:** You can run this program with multiple command line 
 switches all in one invocation, and when you do that, the commands
 will be executed in a predefined order, NOT the order which you add
-the switches in the command invocation. An attempt has been made to
+the switches in the command invocation.  
+  
+An attempt has been made to
 define execution in a reasonable order which should work for most
 use-cases, but if you need things to run in a different order,
 you'll need to run the program multiple times instead. Maybe you can
 write a script and call this program from inside there multiple times 
 if you want it automated nicely, with things happening in a custom 
-order. If you'd like to see the exact order that things will run in, 
+order.  
+  
+If you'd like to see the exact order that things will run in, 
 you can take a look in the `src/main.rs` file. The commands will run 
 top-to-bottom in the order their corresponding functions appear in 
 that source file. If you aren't sure which command line switches 
 those functions correspond with, you can cross-reference the switch 
 names with the entries of the same name listed in the file named 
-`clap.yaml`. The execution order might change in newer versions of 
+`clap.yaml`.  
+  
+The execution order might change in newer versions of 
 this program, if a better order is determined after receiving 
 feedback from users and using it for longer, so please don't assume 
 this execution order will never change between versions.  
@@ -193,16 +233,19 @@ such as for example:
 ```shell
 v0.1.1
 v0.1.2
+...
+v0.1.6
+v0.1.7
 ```  
   
-In the example above, v0.1.2 is the highest-numbered version available, 
+In the example above, v0.1.7 is the highest-numbered version available, 
 so it should be preferred unless you have some personal reason not to 
 prefer it. To use that version of the project, run this command:  
 ```shell
-git checkout v0.1.2
+git checkout v0.1.7
 ```  
   
-IMPORTANT: If you're running a numbered version and you'd like to update
+**IMPORTANT:** If you're running a numbered version and you'd like to update
 the project with any newly-available code, switch back from the numbered
 version to the master branch, then update with the git pull command, and
 after that you can see any new available versions and switch to using them
@@ -211,7 +254,7 @@ as you like. For example:
 git checkout master
 git pull
 git tag
-git checkout v0.1.3
+git checkout v0.1.8
 ```  
   
   
@@ -220,13 +263,15 @@ Tutorial - Design a Custom Wave:
 1. Download Waveform Manager Plus (this has been tested with v4.13):  
 [https://www.aimtti.com/resources/waveform-manager-plus-v413](https://www.aimtti.com/resources/waveform-manager-plus-v413)  
   
-2. Unzip it and install it with wine (it's Windows-only but works well 
-in wine):  
+2. Unzip and install it as normal. It's Windows-only but works well 
+on Linux if you use [wine](https://www.winehq.org).  
+  
+Linux example, installing with wine:  
 ```shell
 wine start waveman.msi
 ```  
   
-3. Run the program with wine:  
+3. Run the program as normal, or if you're on Linux, with wine like this:  
 ```shell
 cd ~/".wine/drive_c/Program Files (x86)/Waveman"
 wine waveman.exe
@@ -235,15 +280,15 @@ wine waveman.exe
 4. Design a new waveform of amplitude 4096 and length 2048, and save 
 it as format: `"WaveCAD *.wav"`  
   
-5. Upload the wave to the device, saving it into slot 1:  
+5. Upload the wave to the device, saving it into slot 2:  
 ```shell
-cargo run --release -- --wwc 1,<the-filename-here.wav>
+cargo run --release -- --wwc 2,<the-filename-here.wav>
 ```  
   
-6. Set the device to use the custom wave you just uploaded, for channel
-1 output:  
+6. Set the device to use the custom wave you just uploaded, from slot 2, 
+for channel 1 output:  
 ```shell
-cargo run --release -- -a 1
+cargo run --release -- -a 2
 ```  
   
   
@@ -261,16 +306,73 @@ saving it in slot 1:
 cargo run --release -- --wwc 1,<the-filename-here.wav>
 ```  
   
-3. Set the device to use the custom wave you just uploaded, for channel
-1 output:  
+3. Set the device to use the custom wave you just uploaded, from slot 1, 
+for channel 2 output:  
 ```shell
-cargo run --release -- -a 1
+cargo run --release -- -b 1
 ```  
   
-IMPORTANT: The device can only store the first 2048 numbers contained 
-in the .wav file, which is a very short duration of audio data. It's 
-important that you provide a .wav file with at least 2048 numbers in 
-it. At a project rate of 8000 Hz, that should require a stereo audio 
-file with duration of at least 126.5 milliseconds. The extra data will 
-be omitted from the upload to the device.  
+**IMPORTANT:** The device can only store the first 2048 numbers contained 
+in the .wav file, which is a very short duration of audio data. The 
+.wav file should have at least 2048 numbers in it. At a project rate 
+of 8000 Hz, that should require a stereo audio file with duration of 
+at least 126.5 milliseconds. The extra data will be omitted from the 
+upload to the device.  
+  
+  
+Extra Info:  
+----------  
+**Rust Crate signal-gen-cjds66-lib on crates.io:**  
+  
+  * The library powering this command line program is available as a 
+  standalone Rust crate here:  
+  [https://crates.io/crates/signal-gen-cjds66-lib](https://crates.io/crates/signal-gen-cjds66-lib)
+
+  * You can use it to make your own Rust programs if you want, since 
+  nearly all the signal generator's features are exposed through
+  functions in this crate. Documentation and examples are available
+  at the above link.
+
+  * The easiest way to get started using the crate in your own project
+  is by putting these lines in your Rust project's `Cargo.toml` file 
+  (double-check the crates.io link above though and substitute the
+  latest available version of the crate into the text below):
+```toml
+[dependencies]
+signal-gen-cjds66-lib = { version = "0.1" }
+```
+
+  * **IMPORTANT:** Note that this crate uses three-part version numbers, 
+  such as `0.1.7`, but it's better to leave off the third part of the 
+  version number in your `Cargo.toml` file, because that way you can more 
+  easily and automatically update to the latest `0.1.x` versions, without 
+  having to update that third number by hand. It would be annoying 
+  otherwise, since that third number may need to change frequently.
+
+  * The source code for the crate lives in the `signal-gen-cjds66-lib/`
+  subfolder in this project. Take a look in there for more info and 
+  examples on how to use it.  
+  
+  
+**Helper scripts for common tasks:**  
+  
+  * Notice in the root folder of this project, and also in the 
+  `signal-gen-cjds66-lib/` subfolder, there are several convenience
+  helper scripts in both Linux Bash shell (*.sh) and Windows Batch 
+  file (*.bat) formats.
+
+  * You can take a look inside them to get an idea of what they do,
+  and you may enjoy using them sometimes, because it requires less
+  typing to do a desired task. They are mostly there for the 
+  convenience of the project's author, so they won't be thoroughly
+  explained, but most of them are very simple, so you can probably
+  guess what they do based on their filenames and their contents.
+
+  * There are a few more Linux Bash shell scripts in the `tools/`
+  subfolder, and one in particular called `audio-to-wavecad.sh`
+  may be interesting to you if you're on Linux. It isn't really
+  needed for anything important, but it does show how to do a few
+  things in Bash which the Rust program is doing in Rust, so maybe
+  you can learn a bit from it. It may be removed in the future,
+  once its features are fully added to the Rust program.  
   

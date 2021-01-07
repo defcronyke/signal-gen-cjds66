@@ -10,6 +10,6 @@ REM software.
 set pwd=%CD%
 cd signal-gen-cjds66-lib
 
-cargo doc %*
+cargo build --release --examples -- %*
 
 cd %pwd%

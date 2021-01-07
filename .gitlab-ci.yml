@@ -1,105 +1,108 @@
-# Official language image. Look for the different tagged releases at:
-# https://hub.docker.com/r/library/rust/tags/
+# Copyright © 2020-2021 Jeremy Carter <jeremy@jeremycarter.ca>
+#
+# By using this software, you agree to the LICENSE TERMS 
+# outlined in the file titled LICENSE.md contained in the 
+# top-level directory of this project. If you don't agree
+# to the LICENSE TERMS, you aren't allowed to use this
+# software.
+
+# The GitLab CI/CD pipeline configuration lives in this 
+# file.
+
 image: "rust:latest"
 
-# Optional: Pick zero or more services to be used on all builds.
-# Only needed when using a docker container to run your tests in.
-# Check out: http://docs.gitlab.com/ee/ci/docker/using_docker_images.html#what-is-a-service
-# services:
-#   - mysql:latest
-#   - redis:latest
-#   - postgres:latest
-
-# Optional: Install a C compiler, cmake and git into the container.
-# You will often need this when you (or any of your dependencies) depends on C code.
+# NOTE: Install some compilers and build tools if necessary. 
+# You may need this if your project depends on C code.
 # before_script:
-#   - apt-get update -yqq
-#   - apt-get install -yqq --no-install-recommends build-essential
+#   - apt-get update
+#   - apt-get install -y build-essential
 
+# These are the GitLab CI/CD pipeline stages we want to run.
 stages:
   - test
   - docs
   - debug-linux-x86_64
   - debug-windows-x86_64
-  - build-linux-x86_64
-  - build-windows-x86_64
+  - release-linux-x86_64
+  - release-windows-x86_64
 
-# Use cargo to test the project
+# Pipeline "test" stage - Use cargo to test the project, and kcov to generate a
+# test coverage report.
 test:
   stage: test
   script:
-    - "echo \"Package: *\nPin: release a=unstable\nPin-Priority: 490\n\" | tee -a /etc/apt/preferences"
+    - "echo \"Package: *\nPin: release a=unstable\nPin-Priority: 490\n\" | tee -a /etc/apt/preferences" # kcov is currently only in Debian Unstable, so add the repo and pin it.
     - "echo \"deb http://deb.debian.org/debian unstable main contrib non-free\ndeb-src http://deb.debian.org/debian unstable main contrib non-free\n\" | tee -a /etc/apt/sources.list"
-    - apt-get update && apt-get install -t unstable -y kcov
-    - rustc --version && cargo --version  # Print version info for debugging
-    - cargo test --workspace --verbose
-    - cargo build --verbose   # Needed for kcov
-    - kcov target/cov target/debug/signal-gen-cjds66 -h || true
+    - apt-get update && apt-get install -t unstable -y kcov # Install kcov from Debian Unstable.
+    - rustc --version && cargo --version  # Display rustc and cargo versions.
+    - cargo test --workspace --verbose  # Run the project's test suite with cargo. If any of these tests fail, we stop here.
+    - cargo build --verbose   # Needed for kcov test coverage reporting.
+    - kcov target/cov target/debug/signal-gen-cjds66 -h || true   # Generate the test coverage report with kcov.
     - "COVERAGE=$(grep -Po 'percent_covered\":\\s+\\\"\\d+.\\d+\\\"' target/cov/signal-gen-cjds66.*/coverage.json | grep -Po '\\d+.\\d+' | tail -n 1)"
-    - echo "Coverage:" $COVERAGE
+    - echo "Coverage:" $COVERAGE  # Output the amount of test coverage in percent. This exact output format is expected by a setting we set on the GitLab CI/CD website.
 
-# Use cargo to build the docs
+# Pipeline "docs" stage - Use cargo to auto-generate the docs for this project.
 docs:
   stage: docs
-  needs: ["test"]
+  needs: ["test"]   # Wait for the "test" stage to finish before running this stage.
   script:
-    - rustc --version && cargo --version  # Print version info for debugging
-    - cargo doc --workspace --verbose
+    - rustc --version && cargo --version  # Display rustc and cargo versions.
+    - cargo doc --workspace --verbose   # Generate the project's docs with the cargo doc command.
   artifacts:
-    expire_in: never
-    paths:
+    expire_in: never  # Keep this stage's output artifacts forever.
+    paths:  # The files found at these paths will be added to the artifacts archive for this pipeline stage.
       - target/doc
 
-# Use cargo to build the debug project for linux
+# Pipeline "debug-linux-x86_64" stage - Use cargo to build the Linux x86_64 debug binary for this project.
 debug-linux-x86_64:
   stage: debug-linux-x86_64
-  needs: ["test"]
+  needs: ["test"]   # Wait for the "test" stage to finish before running this stage.
   script:
-    - rustc --version && cargo --version  # Print version info for debugging
-    - cargo build --verbose
+    - rustc --version && cargo --version  # Display rustc and cargo versions.
+    - cargo build --verbose   # Build the project with the cargo build command.
   artifacts:
-    expire_in: never
-    paths:
+    expire_in: never  # Keep this stage's output artifacts forever.
+    paths:  # The files found at these paths will be added to the artifacts archive for this pipeline stage.
       - target/debug
 
-# Use cargo to build the debug project for windows
+# Pipeline "debug-windows-x86_64" - Use cargo to build the cross-compiled Windows x86_64 debug binary for this project.
 debug-windows-x86_64:
   stage: debug-windows-x86_64
-  needs: ["test"]
+  needs: ["test"]   # Wait for the "test" stage to finish before running this stage.
   script:
-    - apt-get update && apt-get install -y mingw-w64
-    - rustup target add x86_64-pc-windows-gnu
-    - rustup toolchain install stable-x86_64-pc-windows-gnu
-    - rustc --version && cargo --version  # Print version info for debugging
-    - cargo build --target x86_64-pc-windows-gnu --verbose
+    - apt-get update && apt-get install -y mingw-w64  # Install the mingw-w64 cross-compiler toolchain so we can build Windows binaries from Linux.
+    - rustup target add x86_64-pc-windows-gnu   # Add the mingw-w64 Rust target to cargo with the rustup command.
+    - rustup toolchain install stable-x86_64-pc-windows-gnu   # Install the Rust Windows cross-compiling tools for cargo with the rustup command.
+    - rustc --version && cargo --version  # Display rustc and cargo versions.
+    - cargo build --target x86_64-pc-windows-gnu --verbose  # Cross-compile the project for Windows, from Linux, with the cargo build command.
   artifacts:
-    expire_in: never
-    paths:
+    expire_in: never  # Keep this stage's output artifacts forever.
+    paths:  # The files found at these paths will be added to the artifacts archive for this pipeline stage.
       - target/x86_64-pc-windows-gnu/debug
 
-# Use cargo to build the release project for linux
-build-linux-x86_64:
-  stage: build-linux-x86_64
-  needs: ["test"]
+# Pipeline "release-linux-x86_64" stage - Use cargo to build the Linux x86_64 release binary for this project.
+release-linux-x86_64:
+  stage: release-linux-x86_64
+  needs: ["test"]   # Wait for the "test" stage to finish before running this stage.
   script:
-    - rustc --version && cargo --version  # Print version info for debugging
-    - cargo build --release --verbose
+    - rustc --version && cargo --version  # Display rustc and cargo versions.
+    - cargo build --release --verbose   # Build the project with the cargo build command.
   artifacts:
-    expire_in: never
-    paths:
+    expire_in: never  # Keep this stage's output artifacts forever.
+    paths:  # The files found at these paths will be added to the artifacts archive for this pipeline stage.
       - target/release
 
-# Use cargo to build the release project for windows
-build-windows-x86_64:
-  stage: build-windows-x86_64
-  needs: ["test"]
+# Pipeline "release-windows-x86_64" - Use cargo to build the cross-compiled Windows x86_64 release binary for this project.
+release-windows-x86_64:
+  stage: release-windows-x86_64
+  needs: ["test"]   # Wait for the "test" stage to finish before running this stage.
   script:
-    - apt-get update && apt-get install -y mingw-w64
-    - rustup target add x86_64-pc-windows-gnu
-    - rustup toolchain install stable-x86_64-pc-windows-gnu
-    - rustc --version && cargo --version  # Print version info for debugging
-    - cargo build --release --target x86_64-pc-windows-gnu --verbose
+    - apt-get update && apt-get install -y mingw-w64  # Install the mingw-w64 cross-compiler toolchain so we can build Windows binaries from Linux.
+    - rustup target add x86_64-pc-windows-gnu   # Add the mingw-w64 Rust target to cargo with the rustup command.
+    - rustup toolchain install stable-x86_64-pc-windows-gnu   # Install the Rust Windows cross-compiling tools for cargo with the rustup command.
+    - rustc --version && cargo --version  # Display rustc and cargo versions.
+    - cargo build --release --target x86_64-pc-windows-gnu --verbose  # Cross-compile the project for Windows, from Linux, with the cargo build command.
   artifacts:
-    expire_in: never
-    paths:
+    expire_in: never  # Keep this stage's output artifacts forever.
+    paths:  # The files found at these paths will be added to the artifacts archive for this pipeline stage.
       - target/x86_64-pc-windows-gnu/release

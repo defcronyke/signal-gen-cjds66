@@ -8,13 +8,21 @@
 
 [package]
 name = "signal-gen-cjds66"
-version = "0.1.6"
+version = "0.1.7"
 authors = ["Jeremy Carter <jeremy@jeremycarter.ca>"]
 edition = "2018"
+default-run = "signal-gen-cjds66"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [workspace]
+members = [
+  "signal-gen-cjds66-lib",
+]
+
+[[bin]]
+name = "signal-gen-cjds66"
+path = "src/main.rs"
 
 [dependencies]
 # The main library for this project.
