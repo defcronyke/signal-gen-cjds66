@@ -14,7 +14,11 @@ to the LICENSE TERMS, you aren't allowed to use this
 software.  
   
   
-Usage: `cargo run --release -- -h`  
+Usage (Linux): `./signal-gen-cjds66 -h`  
+  
+Usage (Windows): `signal-gen-cjds66.exe -h`  
+  
+Usage (when building from source): `cargo run --release -- -h`  
   
 [Full Usage Info (from the project Wiki)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/wikis/usage)  
   
@@ -47,11 +51,17 @@ ID 1a86:7523 QinHeng Electronics CH340 serial converter
   
 HOW TO INSTALL AND USE:  
 ----------------------  
-You can download the latest Linux x86_64 numbered release build here:  
-[signal-gen-cjds66 Linux x86_64 binary (latest release build)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/v0.1.5/download?job=build)  
+Download the latest Linux x86_64 binary release here:  
+[signal-gen-cjds66 Linux x86_64 binary (latest release build)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/v0.1.6/download?job=build-linux-x86_64)  
   
-You can download the latest Linux x86_64 development build here:  
-[signal-gen-cjds66 Linux x86_64 binary (latest development build)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/master/download?job=build)  
+Download the latest Windows x86_64 binary release here:  
+[signal-gen-cjds66 Windows x86_64 binary (latest release build)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/v0.1.6/download?job=build-windows-x86_64)  
+  
+Download the latest Linux x86_64 binary development build here:  
+[signal-gen-cjds66 Linux x86_64 binary (latest development build)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/master/download?job=build-linux-x86_64)  
+  
+Download the latest Windows x86_64 binary development build here:  
+[signal-gen-cjds66 Windows x86_64 binary (latest development build)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/master/download?job=build-windows-x86_64)  
   
 The development build passed all the automated tests, but it should 
 be considered somewhat experimental, since it's not a numbered release 
@@ -62,11 +72,9 @@ of the program.
 Binary releases for other platforms may be available at some point, 
 but this is written in the Rust programming language, which makes 
 it easy enough to compile the project from source yourself, and it's 
-recommended you do that anyway for less chance of problems. This
-program is tested and working on Windows also, you just have to
-compile it yourself for now.  
+recommended you do that anyway for less chance of problems.  
   
-Here's how to compile it yourself:  
+Here's how to compile and run it from source yourself:  
   
 1. Install the Rust programming language toolchain from:  
 [https://rustup.rs](https://rustup.rs)  

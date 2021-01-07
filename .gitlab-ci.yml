@@ -19,8 +19,10 @@ image: "rust:latest"
 stages:
   - test
   - docs
-  - debug
-  - build
+  - debug-linux-x86_64
+  - debug-windows-x86_64
+  - build-linux-x86_64
+  - build-windows-x86_64
 
 # Use cargo to test the project
 test:
@@ -48,9 +50,9 @@ docs:
     paths:
       - target/doc
 
-# Use cargo to build the debug project
-debug:
-  stage: debug
+# Use cargo to build the debug project for linux
+debug-linux-x86_64:
+  stage: debug-linux-x86_64
   needs: ["test"]
   script:
     - rustc --version && cargo --version  # Print version info for debugging
@@ -60,9 +62,24 @@ debug:
     paths:
       - target/debug
 
-# Use cargo to build the release project
-build:
-  stage: build
+# Use cargo to build the debug project for windows
+debug-windows-x86_64:
+  stage: debug-windows-x86_64
+  needs: ["test"]
+  script:
+    - apt-get update && apt-get install -y mingw-w64
+    - rustup target add x86_64-pc-windows-gnu
+    - rustup toolchain install stable-x86_64-pc-windows-gnu
+    - rustc --version && cargo --version  # Print version info for debugging
+    - cargo build --target x86_64-pc-windows-gnu --verbose
+  artifacts:
+    expire_in: never
+    paths:
+      - target/x86_64-pc-windows-gnu/debug
+
+# Use cargo to build the release project for linux
+build-linux-x86_64:
+  stage: build-linux-x86_64
   needs: ["test"]
   script:
     - rustc --version && cargo --version  # Print version info for debugging
@@ -71,3 +88,18 @@ build:
     expire_in: never
     paths:
       - target/release
+
+# Use cargo to build the release project for windows
+build-windows-x86_64:
+  stage: build-windows-x86_64
+  needs: ["test"]
+  script:
+    - apt-get update && apt-get install -y mingw-w64
+    - rustup target add x86_64-pc-windows-gnu
+    - rustup toolchain install stable-x86_64-pc-windows-gnu
+    - rustc --version && cargo --version  # Print version info for debugging
+    - cargo build --release --target x86_64-pc-windows-gnu --verbose
+  artifacts:
+    expire_in: never
+    paths:
+      - target/x86_64-pc-windows-gnu/release

@@ -10,7 +10,7 @@ name: signal-gen-cjds66
 
 author: Jeremy Carter <jeremy@jeremycarter.ca>
 
-version: "0.1.5"
+version: "0.1.6"
 
 about: |
   An unofficial program to control the CJDS66 60MHz DDS
@@ -380,56 +380,56 @@ args:
       long: freq-milli-ch1
       takes_value: true
       value_name: ch1_freq_mHz
-      help: "Set the waveform frequency for channel 1 in mHz (millihertz). The value must be a number 0.01-80000000.0. For example: -i 0.01"
+      help: "Set the waveform frequency for channel 1 in mHz (millihertz). The value must be a number 0.0-80000000.0. For example: -i 0.01"
 
   - set_frequency_millihz_channel2:
       short: j
       long: freq-milli-ch2
       takes_value: true
       value_name: ch2_freq_mHz
-      help: "Set the waveform frequency for channel 2 in mHz (millihertz). The value must be a number 0.01-80000000.0. For example: -j 0.01"
+      help: "Set the waveform frequency for channel 2 in mHz (millihertz). The value must be a number 0.0-80000000.0. For example: -j 0.01"
 
   - set_frequency_hz_channel1:
       short: e
       long: freq-hz-ch1
       takes_value: true
       value_name: ch1_freq_Hz
-      help: "Set the waveform frequency for channel 1 in Hz. The value must be a number 0.01-60000000.0. For example: -e 0.01"
+      help: "Set the waveform frequency for channel 1 in Hz. The value must be a number 0.0-60000000.0. For example: -e 0.01"
 
   - set_frequency_hz_channel2:
       short: f
       long: freq-hz-ch2
       takes_value: true
       value_name: ch2_freq_Hz
-      help: "Set the waveform frequency for channel 2 in Hz. The value must be a number 0.01-60000000.0. For example: -f 0.01"
+      help: "Set the waveform frequency for channel 2 in Hz. The value must be a number 0.0-60000000.0. For example: -f 0.01"
 
   - set_frequency_khz_channel1:
       short: k
       long: freq-khz-ch1
       takes_value: true
       value_name: ch1_freq_kHz
-      help: "Set the waveform frequency for channel 1 in kHz. The value must be a number 0.00001-60000.0. For example: -k 0.00001"
+      help: "Set the waveform frequency for channel 1 in kHz. The value must be a number 0.0-60000.0. For example: -k 0.00001"
 
   - set_frequency_khz_channel2:
       short: l
       long: freq-khz-ch2
       takes_value: true
       value_name: ch2_freq_kHz
-      help: "Set the waveform frequency for channel 2 in kHz. The value must be a number 0.00001-60000.0. For example: -l 0.00001"
+      help: "Set the waveform frequency for channel 2 in kHz. The value must be a number 0.0-60000.0. For example: -l 0.00001"
 
   - set_frequency_mega_channel1:
       short: "y"
       long: freq-mega-ch1
       takes_value: true
       value_name: ch1_freq_MHz
-      help: "Set the waveform frequency for channel 1 in MHz (megahertz). The value must be a number 0.00000001-60.0. For example: -y 0.00000001"
+      help: "Set the waveform frequency for channel 1 in MHz (megahertz). The value must be a number 0.0-60.0. For example: -y 0.00000001"
 
   - set_frequency_mega_channel2:
       short: z
       long: freq-mega-ch2
       takes_value: true
       value_name: ch2_freq_MHz
-      help: "Set the waveform frequency for channel 2 in MHz (megahertz). The value must be a number 0.00000001-60.0. For example: -z 0.00000001"
+      help: "Set the waveform frequency for channel 2 in MHz (megahertz). The value must be a number 0.0-60.0. For example: -z 0.00000001"
 
   - set_amplitude_volts_channel1:
       short: p
