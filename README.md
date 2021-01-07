@@ -358,8 +358,8 @@ signal-gen-cjds66-lib = { version = "0.1" }
   
   * Notice in the root folder of this project, and also in the 
   `signal-gen-cjds66-lib/` subfolder, there are several convenience
-  helper scripts in both Linux Bash shell (*.sh) and Windows Batch 
-  file (*.bat) formats.
+  helper scripts in both Linux Bash shell (\*.sh) and Windows Batch 
+  file (\*.bat) formats.
 
   * You can take a look inside them to get an idea of what they do,
   and you may enjoy using them sometimes, because it requires less
