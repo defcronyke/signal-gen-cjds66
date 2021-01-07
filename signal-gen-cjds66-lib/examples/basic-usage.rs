@@ -9,9 +9,9 @@ software.
 
 /*! A basic usage example for the library.  
   
-Control one signal generator device	on 
-Linux or Windows. Print the device's model
-number and serial number.
+Control one signal generator device on 
+Linux or Windows. Print the device's 
+model number and serial number.
 */
 
 extern crate signal_gen_cjds66_lib;
@@ -30,7 +30,7 @@ fn main() {
 	result, which will either be Ok(0) on success,
 	or some type of error.
 	*/
-    let res = real_main();
+	let res = real_main();
 
 	/* Exit the program, returning an appropriate
 	exit code to the parent shell or execution 
@@ -39,13 +39,13 @@ fn main() {
 	can check if anything went wrong while the 
 	program was running, and react accordingly.
 	*/
-    std::process::exit(
+	std::process::exit(
 		/* If there was an error, get the proper
 		exit code for it, to return on exit.
 		*/
 		error::handle_exit(res)
 			.map_or_else(
-				|e| e.code,		// Get the numeric error exit code (non-zero).
+				|e| e.code,	// Get the numeric error exit code (non-zero).
 				
 				|code| code,	// Or, get the success exit code (0).
 			)
@@ -60,35 +60,35 @@ fn real_main() -> Result<i32, error::Error> {
 	// An error variable, to specify if an error happened.
 	let mut err: Option<error::Error> = None;
 
-    /* Choose the serial device location depending 
+	/* Choose the serial device location depending 
 	on which operating system you're using.  
-	  
+
 	HINT: You can put more than one device location 
 	in each of these arrays if you'd like to control 
 	multiple devices in sequence.  
-	  
+
 	NOTE: The values listed below are the default values
 	used by the first connected serial device on my 
 	Linux and Windows systems. If you get a connection
 	error when you run this code, make sure your signal
 	generator is plugged into your computer and powered
 	on.  
-	  
+
 	If you still have a connection error, you'll probably 
 	need to find the correct path for your system and 
 	change the values below so they	are pointing at the 
 	correct device.
 	*/
-    let devices = 
-        if cfg!(unix) {	// If running on Linux (or UNIX).
+	let devices = 
+		if cfg!(unix) {	// If running on Linux (or UNIX).
 			vec!["/dev/ttyUSB0".to_string()]
 			
-        } else if cfg!(windows) {	// If running on Windows.
+		} else if cfg!(windows) {	// If running on Windows.
 			vec!["COM3".to_string()]
 			
-        } else {	// If unsure of the operating system.
-            vec!["/dev/ttyUSB0".to_string()]
-        };
+		} else {	// If unsure of the operating system.
+			vec!["/dev/ttyUSB0".to_string()]
+		};
 
 	/* Iterate over each device path you configured above,
 	and perform operations on each device sequentially.
