@@ -56,7 +56,7 @@ docs:
 # Pipeline "debug-linux-x86_64" stage - Use cargo to build the Linux x86_64 debug binary for this project.
 debug-linux-x86_64:
   stage: debug-linux-x86_64
-  needs: ["test"]   # Wait for the "test" stage to finish before running this stage.
+  needs: ["docs"]   # Wait for the "docs" stage to finish before running this stage.
   script:
     - rustc --version && cargo --version  # Display rustc and cargo versions.
     - cargo build --verbose   # Build the project with the cargo build command.
@@ -68,7 +68,7 @@ debug-linux-x86_64:
 # Pipeline "debug-windows-x86_64" - Use cargo to build the cross-compiled Windows x86_64 debug binary for this project.
 debug-windows-x86_64:
   stage: debug-windows-x86_64
-  needs: ["test"]   # Wait for the "test" stage to finish before running this stage.
+  needs: ["docs"]   # Wait for the "docs" stage to finish before running this stage.
   script:
     - apt-get update && apt-get install -y mingw-w64  # Install the mingw-w64 cross-compiler toolchain so we can build Windows binaries from Linux.
     - rustup target add x86_64-pc-windows-gnu   # Add the mingw-w64 Rust target to cargo with the rustup command.
@@ -83,7 +83,10 @@ debug-windows-x86_64:
 # Pipeline "release-linux-x86_64" stage - Use cargo to build the Linux x86_64 release binary for this project.
 release-linux-x86_64:
   stage: release-linux-x86_64
-  needs: ["test"]   # Wait for the "test" stage to finish before running this stage.
+  needs: [  # Wait for some other stages to finish before running this stage.
+    "debug-linux-x86_64",
+    "debug-windows-x86_64",
+  ]
   script:
     - rustc --version && cargo --version  # Display rustc and cargo versions.
     - cargo build --release --verbose   # Build the project with the cargo build command.
@@ -95,7 +98,10 @@ release-linux-x86_64:
 # Pipeline "release-windows-x86_64" - Use cargo to build the cross-compiled Windows x86_64 release binary for this project.
 release-windows-x86_64:
   stage: release-windows-x86_64
-  needs: ["test"]   # Wait for the "test" stage to finish before running this stage.
+  needs: [  # Wait for some other stages to finish before running this stage.
+    "debug-linux-x86_64",
+    "debug-windows-x86_64",
+  ]
   script:
     - apt-get update && apt-get install -y mingw-w64  # Install the mingw-w64 cross-compiler toolchain so we can build Windows binaries from Linux.
     - rustup target add x86_64-pc-windows-gnu   # Add the mingw-w64 Rust target to cargo with the rustup command.
