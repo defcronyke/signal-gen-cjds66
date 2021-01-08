@@ -30,6 +30,7 @@ stages:
 # test coverage report.
 test:
   stage: test
+  needs: []   # Start this stage immediately.
   script:
     - "echo \"Package: *\nPin: release a=unstable\nPin-Priority: 490\n\" | tee -a /etc/apt/preferences" # kcov is currently only in Debian Unstable, so add the repo and pin it.
     - "echo \"deb http://deb.debian.org/debian unstable main contrib non-free\ndeb-src http://deb.debian.org/debian unstable main contrib non-free\n\" | tee -a /etc/apt/sources.list"
@@ -44,6 +45,7 @@ test:
 # Pipeline "docs" stage - Use cargo to auto-generate the docs for this project.
 docs:
   stage: docs
+  needs: []   # Start this stage immediately.
   script:
     - rustc --version && cargo --version  # Display rustc and cargo versions.
     - cargo doc --workspace --verbose   # Generate the project's docs with the cargo doc command.
@@ -57,7 +59,6 @@ debug-linux-x86_64:
   stage: debug-linux-x86_64
   needs: [  # Wait for previous stages to finish before running this stage.
     "test",
-    "docs",
   ]
   script:
     - rustc --version && cargo --version  # Display rustc and cargo versions.
@@ -72,7 +73,6 @@ debug-windows-x86_64:
   stage: debug-windows-x86_64
   needs: [  # Wait for previous stages to finish before running this stage.
     "test",
-    "docs",
   ]
   script:
     - apt-get update && apt-get install -y mingw-w64  # Install the mingw-w64 cross-compiler toolchain so we can build Windows binaries from Linux.
@@ -90,7 +90,6 @@ release-linux-x86_64:
   stage: release-linux-x86_64
   needs: [  # Wait for previous stages to finish before running this stage.
     "test",
-    "docs",
   ]
   script:
     - rustc --version && cargo --version  # Display rustc and cargo versions.
@@ -105,7 +104,6 @@ release-windows-x86_64:
   stage: release-windows-x86_64
   needs: [  # Wait for previous stages to finish before running this stage.
     "test",
-    "docs",
   ]
   script:
     - apt-get update && apt-get install -y mingw-w64  # Install the mingw-w64 cross-compiler toolchain so we can build Windows binaries from Linux.
