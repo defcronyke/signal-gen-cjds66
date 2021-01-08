@@ -30,7 +30,6 @@ stages:
 # test coverage report.
 test:
   stage: test
-  needs: []   # Start this stage immediately.
   script:
     - "echo \"Package: *\nPin: release a=unstable\nPin-Priority: 490\n\" | tee -a /etc/apt/preferences" # kcov is currently only in Debian Unstable, so add the repo and pin it.
     - "echo \"deb http://deb.debian.org/debian unstable main contrib non-free\ndeb-src http://deb.debian.org/debian unstable main contrib non-free\n\" | tee -a /etc/apt/sources.list"
@@ -45,7 +44,9 @@ test:
 # Pipeline "docs" stage - Use cargo to auto-generate the docs for this project.
 docs:
   stage: docs
-  needs: []   # Start this stage immediately.
+  needs: [  # Wait for a previous stage to finish before running this stage.
+    "test",
+  ]
   script:
     - rustc --version && cargo --version  # Display rustc and cargo versions.
     - cargo doc --workspace --verbose   # Generate the project's docs with the cargo doc command.
@@ -57,7 +58,7 @@ docs:
 # Pipeline "debug-linux-x86_64" stage - Use cargo to build the Linux x86_64 debug binary for this project.
 debug-linux-x86_64:
   stage: debug-linux-x86_64
-  needs: [  # Wait for previous stages to finish before running this stage.
+  needs: [  # Wait for a previous stage to finish before running this stage.
     "test",
   ]
   script:
@@ -71,7 +72,7 @@ debug-linux-x86_64:
 # Pipeline "debug-windows-x86_64" - Use cargo to build the cross-compiled Windows x86_64 debug binary for this project.
 debug-windows-x86_64:
   stage: debug-windows-x86_64
-  needs: [  # Wait for previous stages to finish before running this stage.
+  needs: [  # Wait for a previous stage to finish before running this stage.
     "test",
   ]
   script:
@@ -88,7 +89,7 @@ debug-windows-x86_64:
 # Pipeline "release-linux-x86_64" stage - Use cargo to build the Linux x86_64 release binary for this project.
 release-linux-x86_64:
   stage: release-linux-x86_64
-  needs: [  # Wait for previous stages to finish before running this stage.
+  needs: [  # Wait for a previous stage to finish before running this stage.
     "test",
   ]
   script:
@@ -102,7 +103,7 @@ release-linux-x86_64:
 # Pipeline "release-windows-x86_64" - Use cargo to build the cross-compiled Windows x86_64 release binary for this project.
 release-windows-x86_64:
   stage: release-windows-x86_64
-  needs: [  # Wait for previous stages to finish before running this stage.
+  needs: [  # Wait for a previous stage to finish before running this stage.
     "test",
   ]
   script:
