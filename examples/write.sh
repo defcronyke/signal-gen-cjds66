@@ -6,16 +6,20 @@
 # top-level directory of this project. If you don't agree
 # to the LICENSE TERMS, you aren't allowed to use this
 # software.
-#
-#
-# Read from a serial device.
 
-if [ $# -lt 1 ]; then
+# Write to a serial device.
+
+if [ $# -eq 1 ]; then
 	DEVICE="/dev/ttyUSB0"
-else
+	COMMAND="$1"
+elif [ $# -eq 2 ]; then
 	DEVICE="$1"
+	COMMAND="$2"
+else
+	echo "Usage: $0 [device] \"command\""
+	exit 1
 fi
 
 stty -F "$DEVICE" 115200 raw
 
-cat -v < "$DEVICE"
+printf "$COMMAND" > "$DEVICE"

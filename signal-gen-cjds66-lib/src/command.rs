@@ -31,6 +31,7 @@ use std::fs;
 use std::io::prelude::*;
 use std::io::{self, BufRead};
 use std::str;
+use std::{thread, time};
 
 use byteorder::{ByteOrder, LittleEndian};
 use clap::{Error, ErrorKind};
@@ -40,6 +41,9 @@ pub fn get_model(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	if verbose > 0 {
 		println!("\nRequesting machine model number:\n{}", GET_MODEL);
 	}
@@ -96,6 +100,9 @@ pub fn get_serial(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	if verbose > 0 {
 		println!(
 			"\nRequesting machine serial number:\n{}",
@@ -155,6 +162,9 @@ pub fn get_model_and_serial(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	if verbose > 0 {
 		println!("\nRequesting machine model and serial number:\n{}", GET_MODEL_AND_NUMBER);
 	}
@@ -245,6 +255,9 @@ pub fn set_channel_output(
 	sco: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let res: Result<String, clap::Error>;
 
 	match sco {
@@ -343,6 +356,9 @@ pub fn get_channel_output(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command = GET_CHANNEL_OUTPUT;
 
 	if verbose > 0 {
@@ -432,6 +448,9 @@ pub fn set_waveform_preset(
 	preset: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let res: Result<String, clap::Error>;
 
 	match preset.parse::<u64>() {
@@ -621,6 +640,9 @@ pub fn get_waveform_preset(
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: String;
 	let chan_out: &str;
 
@@ -718,6 +740,9 @@ pub fn set_waveform_preset_arbitrary(
 	preset: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let res: Result<String, clap::Error>;
 
 	match preset.parse::<u64>() {
@@ -815,6 +840,9 @@ pub fn set_frequency_microhertz(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 && amount_parts[1].len() > SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MAX_DECIMAL_PLACES {
@@ -920,6 +948,9 @@ pub fn set_frequency_millihertz(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 && amount_parts[1].len() > SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MAX_DECIMAL_PLACES {
@@ -1025,6 +1056,9 @@ pub fn set_frequency_hertz(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 && amount_parts[1].len() > SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MAX_DECIMAL_PLACES {
@@ -1130,6 +1164,9 @@ pub fn set_frequency_kilohertz(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 && amount_parts[1].len() > SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MAX_DECIMAL_PLACES {
@@ -1237,6 +1274,9 @@ pub fn set_frequency_megahertz(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 && amount_parts[1].len() > SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MAX_DECIMAL_PLACES {
@@ -1366,6 +1406,9 @@ pub fn get_frequency(
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: String;
 	let chan_out: &str;
 
@@ -1494,6 +1537,9 @@ pub fn get_frequency_hertz(
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	
 	let command: String;
 	let chan_out: &str;
 
@@ -1616,6 +1662,9 @@ pub fn set_amplitude(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 && amount_parts[1].len() > 3 {
@@ -1716,6 +1765,9 @@ pub fn get_amplitude(
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: String;
 	let chan_out: &str;
 
@@ -1803,6 +1855,9 @@ pub fn set_duty_cycle(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 && amount_parts[1].len() > 1 {
@@ -1903,6 +1958,9 @@ pub fn get_duty_cycle(
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: String;
 	let chan_out: &str;
 
@@ -1990,6 +2048,9 @@ pub fn set_voltage_offset(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
@@ -2090,6 +2151,9 @@ pub fn get_voltage_offset(
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: String;
 	let chan_out: &str;
 
@@ -2180,6 +2244,9 @@ pub fn set_phase(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 && amount_parts[1].len() > 1 {
@@ -2259,6 +2326,9 @@ Return Value (Ok Result):
 ```
 */
 pub fn get_phase(port: &mut SerialPortType, verbose: u64) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: String;
 
 	command = format!(
@@ -2367,6 +2437,9 @@ pub fn set_tracking(
 	track: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let max_len = 5;
 
 	let track_stripped = track.replace(',', "");
@@ -2518,6 +2591,9 @@ pub fn switch_function_panel_main(
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str;
 
 	if chan < 1 || chan > 2 {
@@ -2563,6 +2639,9 @@ pub fn switch_function_panel_sys(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = SWITCH_FUNCTION_PANEL_SYS;
 
 	if verbose > 0 {
@@ -2596,6 +2675,9 @@ pub fn switch_function_panel_measurement(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = SWITCH_FUNCTION_PANEL_MEASUREMENT;
 
 	if verbose > 0 {
@@ -2640,6 +2722,9 @@ pub fn start_measuring(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = START_MEASURING;
 
 	if verbose > 0 {
@@ -2673,6 +2758,9 @@ pub fn switch_function_panel_counting(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = SWITCH_FUNCTION_PANEL_COUNTING;
 
 	if verbose > 0 {
@@ -2702,6 +2790,9 @@ pub fn start_counting(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = START_COUNTING;
 
 	if verbose > 0 {
@@ -2744,6 +2835,9 @@ pub fn switch_function_panel_sweep(
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str;
 
 	if chan < 1 || chan > 2 {
@@ -2799,6 +2893,8 @@ pub fn start_sweeping(
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// COMMAND_DELAY_MS not needed here because it's used
+	// in the command below.
 	switch_function_panel_sweep(port, chan, verbose)?;
 
 	let command: &'static str = START_SWEEPING;
@@ -2831,6 +2927,9 @@ pub fn switch_function_panel_pulse(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = SWITCH_FUNCTION_PANEL_PULSE;
 
 	if verbose > 0 {
@@ -2860,6 +2959,9 @@ pub fn start_pulsing(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = START_PULSING;
 
 	if verbose > 0 {
@@ -2890,6 +2992,9 @@ pub fn switch_function_panel_bursting(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = SWITCH_FUNCTION_PANEL_BURST;
 
 	if verbose > 0 {
@@ -2919,6 +3024,9 @@ pub fn start_bursting(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = START_BURSTING;
 
 	if verbose > 0 {
@@ -2950,6 +3058,9 @@ pub fn set_measurement_coupling_ac(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = SET_MEASUREMENT_COUPLING_AC;
 
 	if verbose > 0 {
@@ -2981,6 +3092,9 @@ pub fn set_measurement_coupling_dc(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = SET_MEASUREMENT_COUPLING_DC;
 
 	if verbose > 0 {
@@ -3018,6 +3132,9 @@ pub fn set_measurement_gate_time(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
@@ -3099,6 +3216,9 @@ pub fn set_measurement_mode_count_frequency(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = SET_MEASUREMENT_MODE_COUNT_FREQUENCY;
 
 	if verbose > 0 {
@@ -3132,6 +3252,9 @@ pub fn set_measurement_mode_counting_period(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = SET_MEASUREMENT_MODE_COUNTING_PERIOD;
 
 	if verbose > 0 {
@@ -3164,6 +3287,9 @@ pub fn set_measurement_count_clear(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = SET_MEASUREMENT_COUNT_CLEAR;
 
 	if verbose > 0 {
@@ -3193,6 +3319,9 @@ pub fn get_measurement_count(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = GET_MEASUREMENT_COUNT;
 
 	if verbose > 0 {
@@ -3256,6 +3385,9 @@ pub fn get_measurement_frequency(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = GET_MEASUREMENT_FREQUENCY;
 
 	if verbose > 0 {
@@ -3319,6 +3451,9 @@ pub fn get_measurement_frequency_period(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = GET_MEASUREMENT_FREQUENCY_PERIOD;
 
 	if verbose > 0 {
@@ -3384,6 +3519,9 @@ pub fn get_measurement_pulse_width_positive(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = GET_MEASUREMENT_PULSE_WIDTH_POSITIVE;
 
 	if verbose > 0 {
@@ -3449,6 +3587,9 @@ pub fn get_measurement_pulse_width_negative(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = GET_MEASUREMENT_PULSE_WIDTH_NEGATIVE;
 
 	if verbose > 0 {
@@ -3514,6 +3655,9 @@ pub fn get_measurement_period(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = GET_MEASUREMENT_PERIOD;
 
 	if verbose > 0 {
@@ -3579,6 +3723,9 @@ pub fn get_measurement_duty_cycle(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: &'static str = GET_MEASUREMENT_DUTY_CYCLE;
 
 	if verbose > 0 {
@@ -3652,6 +3799,9 @@ pub fn set_burst_pulse_number(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 && amount_parts[1] != "0" {
@@ -3730,6 +3880,9 @@ pub fn start_burst_pulse_once(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command = START_BURST_PULSE_ONCE;
 
 	if verbose > 0 {
@@ -3761,6 +3914,9 @@ pub fn set_burst_mode_manual_trigger(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command = SET_BURST_MODE_MANUAL_TRIGGER;
 
 	if verbose > 0 {
@@ -3792,6 +3948,9 @@ pub fn set_burst_mode_ch2_burst(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command = SET_BURST_MODE_CH2_BURST;
 
 	if verbose > 0 {
@@ -3823,6 +3982,9 @@ pub fn set_burst_mode_external_burst_ac(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command = SET_BURST_MODE_EXTERNAL_BURST_AC;
 
 	if verbose > 0 {
@@ -3854,6 +4016,9 @@ pub fn set_burst_mode_external_burst_dc(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command = SET_BURST_MODE_EXTERNAL_BURST_DC;
 
 	if verbose > 0 {
@@ -3892,6 +4057,9 @@ pub fn set_sweep_starting_frequency(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
@@ -3984,6 +4152,9 @@ pub fn set_sweep_end_frequency(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
@@ -4076,6 +4247,9 @@ pub fn set_sweep_time(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 && amount_parts[1].len() > 1 {
@@ -4158,6 +4332,9 @@ pub fn set_sweep_direction_rise(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command = SET_SWEEP_DIRECTION_RISE;
 
 	if verbose > 0 {
@@ -4189,6 +4366,9 @@ pub fn set_sweep_direction_fall(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command = SET_SWEEP_DIRECTION_FALL;
 
 	if verbose > 0 {
@@ -4220,6 +4400,9 @@ pub fn set_sweep_direction_rise_fall(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command = SET_SWEEP_DIRECTION_RISE_FALL;
 
 	if verbose > 0 {
@@ -4249,6 +4432,9 @@ pub fn set_sweep_mode_linear(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command = SET_SWEEP_MODE_LINEAR;
 
 	if verbose > 0 {
@@ -4278,6 +4464,9 @@ pub fn set_sweep_mode_logarithm(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command = SET_SWEEP_MODE_LOGARITHM;
 
 	if verbose > 0 {
@@ -4334,6 +4523,9 @@ pub fn set_pulse_width(
 	microseconds: bool,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 	let units: &'static str;
 	let arg_min: f64;
@@ -4487,6 +4679,9 @@ pub fn set_pulse_period(
 	microseconds: bool,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 	let units: &'static str;
 	let arg_min: f64;
@@ -4621,6 +4816,9 @@ pub fn set_pulse_offset(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 {
@@ -4712,6 +4910,9 @@ pub fn set_pulse_amplitude(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
@@ -4807,6 +5008,9 @@ pub fn save_preset(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 {
@@ -4906,6 +5110,9 @@ pub fn load_preset(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 {
@@ -5300,6 +5507,9 @@ pub fn set_arbitrary_wave(
 	data: &[String],
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+
 	let command: String;
 
 	if amount < SET_ARBITRARY_WAVE_ARG_NUM_MIN || amount > SET_ARBITRARY_WAVE_ARG_NUM_MAX {
@@ -5543,6 +5753,9 @@ pub fn get_arbitrary_wave(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
+	// Wait a bit to allow the device some time to settle.
+	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 {

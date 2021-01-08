@@ -6,8 +6,7 @@
 # top-level directory of this project. If you don't agree
 # to the LICENSE TERMS, you aren't allowed to use this
 # software.
-#
-#
+
 # An example of how to convert part of a 16-bit .wav audio file
 # to a compatible WaveCAD file. This clamps all values to the
 # supported range of 0 - 4095, and saves a chunk of 2048 values
@@ -64,7 +63,7 @@ audio_to_wavecad() {
 
 	# Default input file. Pass a different one as the
 	# first argument to the script if you want.
-	IN_FILE="../examples/defcronyke-sunlink-16bit-8000hz.wav"
+	IN_FILE="defcronyke-sunlink-16bit-8000hz.wav"
 	if [ $# -eq 2 ]; then
 		IN_FILE="$1"
 	fi
@@ -86,12 +85,11 @@ audio_to_wavecad() {
 
 	# Default output file. Pass a different one as the
 	# second argument to the script if you want.
-	OUT_FILE="../examples/defcronyke-sunlink-16bit-8000hz-wavecad.wav"
+	OUT_FILE="defcronyke-sunlink-16bit-8000hz-wavecad.wav"
 	if [ $# -eq 2 ]; then
 		OUT_FILE="$2"
 	fi
 
-	OUT_FILE_TXT_DIR="`dirname \"$OUT_FILE\"`/"
 	OUT_FILE_TXT_BASE=`basename "$OUT_FILE"`
 	OUT_FILE_TXT_NO_EXT=`echo "${OUT_FILE_TXT_BASE%.*}"`
 	OUT_FILE_WAV_EXT=`echo ".${OUT_FILE_TXT_BASE#*.}"`
@@ -102,7 +100,7 @@ audio_to_wavecad() {
 		return 4
 	fi
 
-	OUT_FILE_TXT="$OUT_FILE_TXT_DIR$OUT_FILE_TXT_NO_EXT$OUT_FILE_TXT_EXT"
+	OUT_FILE_TXT="$OUT_FILE_TXT_NO_EXT$OUT_FILE_TXT_EXT"
 
 	# Create a text file from the audio file, containing the first
 	# 2048 numbers, one on each line, adjusting the offset to make

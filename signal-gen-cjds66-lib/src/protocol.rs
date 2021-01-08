@@ -21,7 +21,7 @@ use std::str;
 // -----
 macro_rules! SERIAL_TIMEOUT_MS {
 	() => {
-		3000
+		6000
 	};
 }
 pub const SERIAL_TIMEOUT_MS: u64 = SERIAL_TIMEOUT_MS!();

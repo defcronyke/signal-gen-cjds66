@@ -1,6 +1,7 @@
-signal-gen-cjds66  
-=================  
-**Control the GH-CJDS66 60MHz Signal Generator**  
+signal-gen-cjds66-lib  
+=====================  
+Control the GH-CJDS66 60MHz Signal Generator  
+--------------------------------------------  
   
 [![docs](https://docs.rs/signal-gen-cjds66-lib/badge.svg)](https://docs.rs/signal-gen-cjds66-lib) [![crate](https://img.shields.io/crates/v/signal_gen_cjds66_lib)](https://crates.io/crates/signal-gen-cjds66-lib) [![pipeline status](https://gitlab.com/defcronyke/signal-gen-cjds66/badges/master/pipeline.svg)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/commits/master) [![coverage report](https://gitlab.com/defcronyke/signal-gen-cjds66/badges/master/coverage.svg)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/commits/master) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/blob/master/signal-gen-cjds66-lib/LICENSE.md)  
   
@@ -49,7 +50,7 @@ Basic Usage Code Example:
   * You can also download the latest development version docs here if you
   want the docs for the master branch (development version) of the crate.
   This version also includes the docs for the associated command line program:  
-  [signal-gen-cjds66 docs (Download Development Version)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/master/download?job=docs)
+  [signal-gen-cjds66 docs (Development Version)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/master/download?job=docs)
 
   * To use this crate, put the following lines in your Rust project's
   `Cargo.toml` file (but substitute the newest version number 
@@ -277,10 +278,10 @@ fn real_main() -> Result<i32, error::Error> {
 }
 ```  
   
-
-**NOTE:** The above example can be found in the file `examples/basic-usage.rs`,
-and you can try running it by issuing the following command from within this 
-`signal-gen-cjds66-lib` directory:  
+  
+**NOTE:** The above example can be found in the file [signal-gen-cjds66-lib/examples/basic-usage.rs](https://gitlab.com/defcronyke/signal-gen-cjds66/-/blob/master/signal-gen-cjds66-lib/examples/basic-usage.rs),
+and you can try running it if you want, by issuing the following command from within this 
+[signal-gen-cjds66-lib/](https://gitlab.com/defcronyke/signal-gen-cjds66/-/tree/master/signal-gen-cjds66-lib) directory:  
 ```shell
 cargo run --release --example basic-usage
 ```  
