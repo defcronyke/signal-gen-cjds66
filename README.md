@@ -387,7 +387,7 @@ Extra Info:
     convenience of this project's author, so they won't be thoroughly
     explained, but most of them are very simple, so you can probably
     guess what they do based on their filenames and their contents.  
-  
+      
   * There are a few more `Linux bash shell` scripts in the 
   [examples/](https://gitlab.com/defcronyke/signal-gen-cjds66/-/tree/master/examples)
   subfolder, and one in particular called 
