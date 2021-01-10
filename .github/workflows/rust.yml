@@ -1,0 +1,82 @@
+name: Rust
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: test
+        run: |
+          "echo \"Package: *\nPin: release a=unstable\nPin-Priority: 490\n\" | tee -a /etc/apt/preferences" # kcov is currently only in Debian Unstable, so add the repo and pin it.
+          "echo \"deb http://deb.debian.org/debian unstable main contrib non-free\ndeb-src http://deb.debian.org/debian unstable main contrib non-free\n\" | tee -a /etc/apt/sources.list"
+          apt-get update && apt-get install -t unstable -y kcov # Install kcov from Debian Unstable.
+          rustc --version && cargo --version  # Display rustc and cargo versions.
+          cargo test --workspace --verbose  # Run the project's test suite with cargo. If any of these tests fail, we stop here.
+          cargo build --verbose   # Needed for kcov test coverage reporting.
+          kcov target/cov target/debug/signal-gen-cjds66 -h || true   # Generate the test coverage report with kcov.
+          "COVERAGE=$(grep -Po 'percent_covered\":\\s+\\\"\\d+.\\d+\\\"' target/cov/signal-gen-cjds66.*/coverage.json | grep -Po '\\d+.\\d+' | tail -n 1)"
+          echo "Coverage:" $COVERAGE  # Output the amount of test coverage in percent. This exact output format is expected by a setting we set on the GitLab CI/CD website.
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:      
+      - uses: actions/checkout@v2
+      - name: docs
+        run: |
+          rustc --version && cargo --version  # Display rustc and cargo versions.
+          cargo doc --workspace --verbose   # Generate the project's docs with the cargo doc command.
+
+  debug-linux-x86_64:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: debug-linux-x86_64
+      run: |
+        rustc --version && cargo --version  # Display rustc and cargo versions.
+        RUSTFLAGS="--emit asm -C llvm-args=-x86-asm-syntax=intel --emit obj" cargo build --verbose   # Build the project with the cargo build command.
+
+  debug-windows-x86_64:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: debug-windows-x86_64
+      run: |
+        apt-get update && apt-get install -y mingw-w64  # Install the mingw-w64 cross-compiler toolchain so we can build Windows binaries from Linux.
+        rustup target add x86_64-pc-windows-gnu   # Add the mingw-w64 Rust target to cargo with the rustup command.
+        rustup toolchain install stable-x86_64-pc-windows-gnu   # Install the Rust Windows cross-compiling tools for cargo with the rustup command.
+        rustc --version && cargo --version  # Display rustc and cargo versions.
+        RUSTFLAGS="--emit asm -C llvm-args=-x86-asm-syntax=intel --emit obj" cargo build --target x86_64-pc-windows-gnu --verbose  # Cross-compile the project for Windows, from Linux, with the cargo build command.
+
+  release-linux-x86_64:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: release-linux-x86_64
+      run: |
+        rustc --version && cargo --version  # Display rustc and cargo versions.
+        RUSTFLAGS="--emit asm -C llvm-args=-x86-asm-syntax=intel --emit obj" cargo build --release --verbose   # Build the project with the cargo build command.
+        strip -s target/release/signal-gen-cjds66
+
+  release-windows-x86_64:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: release-windows-x86_64
+      run: |
+        apt-get update && apt-get install -y mingw-w64  # Install the mingw-w64 cross-compiler toolchain so we can build Windows binaries from Linux.
+        rustup target add x86_64-pc-windows-gnu   # Add the mingw-w64 Rust target to cargo with the rustup command.
+        rustup toolchain install stable-x86_64-pc-windows-gnu   # Install the Rust Windows cross-compiling tools for cargo with the rustup command.
+        rustc --version && cargo --version  # Display rustc and cargo versions.
+        RUSTFLAGS="--emit asm -C llvm-args=-x86-asm-syntax=intel --emit obj" cargo build --release --target x86_64-pc-windows-gnu --verbose  # Cross-compile the project for Windows, from Linux, with the cargo build command.
+        strip -s target/x86_64-pc-windows-gnu/release/signal-gen-cjds66.exe
