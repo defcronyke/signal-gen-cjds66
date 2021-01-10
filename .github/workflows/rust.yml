@@ -37,7 +37,7 @@ jobs:
           cargo build --verbose   # Needed for kcov test coverage reporting.
           kcov target/cov target/debug/signal-gen-cjds66 -h || true   # Generate the test coverage report with kcov.
           COVERAGE=$(grep -P 'percent_covered\"' target/cov/signal-gen-cjds66.*/coverage.json | grep -Po '[0-9]+.[0-9]+' | tail -n 1 | tr -d '\n')
-          COLOUR=$(if [ $COVERAGE -lt 50 ]; then echo "red"; elif [ $COVERAGE -lt 75 ]; then echo "yellow"; else echo "green"; fi)
+          COLOUR=$(if (( `echo "$COVERAGE < 50" | bc -l` )); then echo "red"; elif (( `echo "$COVERAGE < 75" | bc -l` )); then echo "yellow"; else echo "green"; fi)
           echo "COLOUR=\"$COLOUR\""
           curl "https://img.shields.io/badge/github_coverage-$COVERAGE%25-$COLOUR" > github-coverage.svg
           gsutil -h "Cache-Control:public, max-age=60" cp github-coverage.svg gs://$GCS_BUCKET
