@@ -15,8 +15,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+      
       - name: test
-        uses: actions/checkout@v2
         run: |
           lsb_release -a
           sudo apt-get update && sudo apt-get install -y bash binutils-dev libcurl4-openssl-dev zlib1g-dev libdw-dev libiberty-dev
@@ -44,6 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:      
       - uses: actions/checkout@v2
+      
       - name: docs
         run: |
           rustc --version && cargo --version  # Display rustc and cargo versions.
@@ -54,6 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    
     - name: debug-linux-x86_64
       run: |
         rustc --version && cargo --version  # Display rustc and cargo versions.
@@ -64,6 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    
     - name: debug-windows-x86_64
       run: |
         sudo apt-get update && sudo apt-get install -y mingw-w64  # Install the mingw-w64 cross-compiler toolchain so we can build Windows binaries from Linux.
@@ -77,6 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    
     - name: release-linux-x86_64
       run: |
         rustc --version && cargo --version  # Display rustc and cargo versions.
@@ -88,6 +93,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    
     - name: release-windows-x86_64
       run: |
         sudo apt-get update && sudo apt-get install -y mingw-w64  # Install the mingw-w64 cross-compiler toolchain so we can build Windows binaries from Linux.
