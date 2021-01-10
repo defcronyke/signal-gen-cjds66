@@ -26,10 +26,11 @@ jobs:
           cargo test --workspace --verbose  # Run the project's test suite with cargo. If any of these tests fail, we stop here.
           cargo build --verbose   # Needed for kcov test coverage reporting.
           kcov target/cov target/debug/signal-gen-cjds66 -h || true   # Generate the test coverage report with kcov.
-          "COVERAGE=$(grep -Po 'percent_covered\":\\s+\\\"\\d+.\\d+\\\"' target/cov/signal-gen-cjds66.*/coverage.json | grep -Po '\\d+.\\d+' | tail -n 1)"
+          COVERAGE=$(grep -Po 'percent_covered\":\\s+\\\"\\d+.\\d+\\\"' target/cov/signal-gen-cjds66.*/coverage.json | grep -Po '\\d+.\\d+' | tail -n 1)
           echo "Coverage:" $COVERAGE  # Output the amount of test coverage in percent. This exact output format is expected by a setting we set on the GitLab CI/CD website.
 
   docs:
+    needs: test
     runs-on: ubuntu-latest
     steps:      
       - uses: actions/checkout@v2
@@ -39,6 +40,7 @@ jobs:
           cargo doc --workspace --verbose   # Generate the project's docs with the cargo doc command.
 
   debug-linux-x86_64:
+    needs: test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -48,6 +50,7 @@ jobs:
         RUSTFLAGS="--emit asm -C llvm-args=-x86-asm-syntax=intel --emit obj" cargo build --verbose   # Build the project with the cargo build command.
 
   debug-windows-x86_64:
+    needs: test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -60,6 +63,7 @@ jobs:
         RUSTFLAGS="--emit asm -C llvm-args=-x86-asm-syntax=intel --emit obj" cargo build --target x86_64-pc-windows-gnu --verbose  # Cross-compile the project for Windows, from Linux, with the cargo build command.
 
   release-linux-x86_64:
+    needs: test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -70,6 +74,7 @@ jobs:
         strip -s target/release/signal-gen-cjds66
 
   release-windows-x86_64:
+    needs: test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
