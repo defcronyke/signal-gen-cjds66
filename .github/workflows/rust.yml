@@ -18,9 +18,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: test
         run: |
-          "echo \"Package: *\nPin: release a=unstable\nPin-Priority: 490\n\" | tee -a /etc/apt/preferences" # kcov is currently only in Debian Unstable, so add the repo and pin it.
-          "echo \"deb http://deb.debian.org/debian unstable main contrib non-free\ndeb-src http://deb.debian.org/debian unstable main contrib non-free\n\" | tee -a /etc/apt/sources.list"
-          apt-get update && apt-get install -t unstable -y kcov # Install kcov from Debian Unstable.
+          sudo apt-get update && sudo apt-get install -y kcov # Install kcov
           rustc --version && cargo --version  # Display rustc and cargo versions.
           cargo test --workspace --verbose  # Run the project's test suite with cargo. If any of these tests fail, we stop here.
           cargo build --verbose   # Needed for kcov test coverage reporting.
@@ -52,7 +50,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: debug-windows-x86_64
       run: |
-        apt-get update && apt-get install -y mingw-w64  # Install the mingw-w64 cross-compiler toolchain so we can build Windows binaries from Linux.
+        sudo apt-get update && sudo apt-get install -y mingw-w64  # Install the mingw-w64 cross-compiler toolchain so we can build Windows binaries from Linux.
         rustup target add x86_64-pc-windows-gnu   # Add the mingw-w64 Rust target to cargo with the rustup command.
         rustup toolchain install stable-x86_64-pc-windows-gnu   # Install the Rust Windows cross-compiling tools for cargo with the rustup command.
         rustc --version && cargo --version  # Display rustc and cargo versions.
@@ -74,7 +72,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: release-windows-x86_64
       run: |
-        apt-get update && apt-get install -y mingw-w64  # Install the mingw-w64 cross-compiler toolchain so we can build Windows binaries from Linux.
+        sudo apt-get update && sudo apt-get install -y mingw-w64  # Install the mingw-w64 cross-compiler toolchain so we can build Windows binaries from Linux.
         rustup target add x86_64-pc-windows-gnu   # Add the mingw-w64 Rust target to cargo with the rustup command.
         rustup toolchain install stable-x86_64-pc-windows-gnu   # Install the Rust Windows cross-compiling tools for cargo with the rustup command.
         rustc --version && cargo --version  # Display rustc and cargo versions.
