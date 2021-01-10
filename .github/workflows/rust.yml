@@ -14,8 +14,17 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
     steps:
       - uses: actions/checkout@v2
+
+      - name: gsutil-setup
+        uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GCS_SA_KEY }}
+          project_id: ${{ secrets.GCS_PROJECT }}
+          export_default_credentials: true
       
       - name: test
         run: |
@@ -29,7 +38,8 @@ jobs:
           kcov target/cov target/debug/signal-gen-cjds66 -h || true   # Generate the test coverage report with kcov.
           COVERAGE=$(grep -P 'percent_covered\"' target/cov/signal-gen-cjds66.*/coverage.json | grep -Po '[0-9]+.[0-9]+' | tail -n 1)
           if [ $COVERAGE -lt 50 ]; then COLOUR="RED"; elif [ $COVERAGE -lt 75 ]; then COLOUR="YELLOW"; else COLOUR="GREEN"; fi
-          curl "https://img.shields.io/badge/coavrege-$COVERAGE%25-$COLOUR" > github-coverage.svg
+          curl "https://img.shields.io/badge/github_coverage-$COVERAGE%25-$COLOUR" > github-coverage.svg
+          gsutil -m rsync -R github-coverage.svg gs://$GCS_BUCKET
           echo "Coverage: $COVERAGE"  # Output the amount of test coverage in percent. This exact output format is expected by a setting we set on the GitLab CI/CD website.
       
       - name: test-artifacts
