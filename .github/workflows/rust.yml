@@ -1,4 +1,4 @@
-name: github pipeline
+name: github-pipeline
 
 on:
   push:
