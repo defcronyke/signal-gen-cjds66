@@ -1,21 +1,21 @@
 /* Copyright © 2020-2021 Jeremy Carter <jeremy@jeremycarter.ca>
 
-By using this software, you agree to the LICENSE TERMS 
-outlined in the file titled LICENSE.md contained in the 
+By using this software, you agree to the LICENSE TERMS
+outlined in the file titled LICENSE.md contained in the
 top-level directory of this project. If you don't agree
 to the LICENSE TERMS, you aren't allowed to use this
 software.
 */
 
-/*! Functions which communicate with the device over its USB-serial 
-interface, and expose nearly all of its remotely-accessible features. 
-This contains the support code and logic for almost everything the 
-device can do.  
-  
+/*! Functions which communicate with the device over its USB-serial
+interface, and expose nearly all of its remotely-accessible features.
+This contains the support code and logic for almost everything the
+device can do.
+
 Each function accepts a "verbose" integer parameter, which can be
-set to a number above 0 to enable a different and more verbose style 
-of output which is useful for debugging, or to help understand what 
-is happening behind-the-scenes when a function is run. Currently 
+set to a number above 0 to enable a different and more verbose style
+of output which is useful for debugging, or to help understand what
+is happening behind-the-scenes when a function is run. Currently
 any number above 0 produces the exact same verbose output, so you
 can just use 1 for "verbose" output, and 0 for "not verbose" output.
 */
@@ -41,8 +41,10 @@ pub fn get_model(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	if verbose > 0 {
 		println!("\nRequesting machine model number:\n{}", GET_MODEL);
@@ -54,7 +56,7 @@ pub fn get_model(
 	if !port.mock {
 		port.port.as_mut().unwrap().write(&inbuf[..])?;
 		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
-	
+
 	} else {	// Mock data for testing.
 		outbuf = Vec::from(":r00=60.\r\n");
 	}
@@ -100,8 +102,10 @@ pub fn get_serial(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	if verbose > 0 {
 		println!(
@@ -116,7 +120,7 @@ pub fn get_serial(
 	if !port.mock {
 		port.port.as_mut().unwrap().write(&inbuf[..])?;
 		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
-	
+
 	} else {	// Mock data for testing.
 		outbuf = Vec::from(":r01=9876500000.\r\n");
 	}
@@ -162,8 +166,10 @@ pub fn get_model_and_serial(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	if verbose > 0 {
 		println!("\nRequesting machine model and serial number:\n{}", GET_MODEL_AND_NUMBER);
@@ -175,7 +181,7 @@ pub fn get_model_and_serial(
 	if !port.mock {
 		port.port.as_mut().unwrap().write(&inbuf[..])?;
 		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
-	
+
 	} else {	// Mock data for testing.
 		outbuf = Vec::from(":r00=60.\r\n:r01=9876500000.\r\n");
 	}
@@ -233,21 +239,21 @@ pub fn get_model_and_serial(
 	Ok(res.to_string())
 }
 
-/** Set the device's output state (on or off) for channels 1 and 2.  
-  
-"sco" parameter:  
+/** Set the device's output state (on or off) for channels 1 and 2.
+
+"sco" parameter:
 ```ignore
-	channel 1 on, channel 2 on:  
-		"1,1" | "11" | "on,on" | "1" | "on"  
-  
-	channel 1 off, channel 2 off:  
-		"0,0" | "00" | "off,off" | "0" | "off"  
-  
-	channel 1 on, channel 2 off:  
-		"1,0" | "10" | "on,off"  
-  
-	channel 1 off, channel 2 on:  
-		"0,1" | "01" | "off,on"  
+	channel 1 on, channel 2 on:
+		"1,1" | "11" | "on,on" | "1" | "on"
+
+	channel 1 off, channel 2 off:
+		"0,0" | "00" | "off,off" | "0" | "off"
+
+	channel 1 on, channel 2 off:
+		"1,0" | "10" | "on,off"
+
+	channel 1 off, channel 2 on:
+		"0,1" | "01" | "off,on"
 ```
 */
 pub fn set_channel_output(
@@ -255,8 +261,10 @@ pub fn set_channel_output(
 	sco: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let res: Result<String, clap::Error>;
 
@@ -341,9 +349,9 @@ fn set_channel_output_inner(
 	Ok(res.to_string())
 }
 
-/** Get the device's channel output state (on or off) for channel 1 and channel 2.  
-  
-Return Value (Ok Result):  
+/** Get the device's channel output state (on or off) for channel 1 and channel 2.
+
+Return Value (Ok Result):
 ```ignore
 channel 1 off, channel 2 on:
 "0,1"
@@ -356,8 +364,10 @@ pub fn get_channel_output(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command = GET_CHANNEL_OUTPUT;
 
@@ -371,7 +381,7 @@ pub fn get_channel_output(
 	if !port.mock {
 		port.port.as_mut().unwrap().write(&inbuf[..])?;
 		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
-	
+
 	} else {	// Mock data for tests.
 		outbuf = Vec::from(":r20=0.\r\n");
 	}
@@ -416,10 +426,10 @@ pub fn get_channel_output(
 	Ok(res3.to_string())
 }
 
-/** Set the device to use a certain named or numbered waveform preset 
-for a specific channel's output. You can choose one of these presets 
-either by name or by the number listed next to the name below.  
-  
+/** Set the device to use a certain named or numbered waveform preset
+for a specific channel's output. You can choose one of these presets
+either by name or by the number listed next to the name below.
+
 "preset" parameter:
 ```ignore
 Waveform names that are accepted, along with their corresponding numbers:
@@ -448,8 +458,10 @@ pub fn set_waveform_preset(
 	preset: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let res: Result<String, clap::Error>;
 
@@ -607,10 +619,10 @@ fn set_waveform_preset_inner(
 	Ok(res.to_string())
 }
 
-/** Get the current output waveform preset for a 
-specific channel.  
-  
-Return Value (Ok Result):  
+/** Get the current output waveform preset for a
+specific channel.
+
+Return Value (Ok Result):
 ```ignore
 Waveform preset number to name mappings:
 "0":  sine
@@ -640,8 +652,10 @@ pub fn get_waveform_preset(
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: String;
 	let chan_out: &str;
@@ -677,7 +691,7 @@ pub fn get_waveform_preset(
 	if !port.mock {
 		port.port.as_mut().unwrap().write(&inbuf[..])?;
 		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
-	
+
 	} else {	// Mock data for testing.
 		outbuf = Vec::from(&format!(":r2{}=0.\r\n", chan) as &str);
 	}
@@ -722,9 +736,9 @@ pub fn get_waveform_preset(
 	Ok(res3.to_string())
 }
 
-/** Set the device to use a user-defined arbitrary waveform 
-preset by number, for a specific channel's output.  
-  
+/** Set the device to use a user-defined arbitrary waveform
+preset by number, for a specific channel's output.
+
 "preset" parameter:
 ```ignore
 Arbitrary waveform preset 1 (a.k.a. preset 101):
@@ -740,8 +754,10 @@ pub fn set_waveform_preset_arbitrary(
 	preset: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let res: Result<String, clap::Error>;
 
@@ -827,8 +843,8 @@ fn set_waveform_preset_arbitrary_inner(
 }
 
 /** Set the device's output frequency for a particular channel,
-in microhertz (µHz).  
-  
+in microhertz (µHz).
+
 "amount" parameter:
 ```ignore
 "0.00" - "80000000.0"
@@ -840,8 +856,10 @@ pub fn set_frequency_microhertz(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
@@ -935,8 +953,8 @@ fn set_frequency_microhertz_inner(
 }
 
 /** Set the device's output frequency for a particular channel,
-in millihertz (mHz).  
-  
+in millihertz (mHz).
+
 "amount" parameter:
 ```ignore
 "0.00" - "80000000.0"
@@ -948,8 +966,10 @@ pub fn set_frequency_millihertz(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
@@ -1043,8 +1063,8 @@ fn set_frequency_millihertz_inner(
 }
 
 /** Set the device's output frequency for a particular channel,
-in hertz (Hz).  
-  
+in hertz (Hz).
+
 "amount" parameter:
 ```ignore
 "0.00" - "60000000.0"
@@ -1056,8 +1076,10 @@ pub fn set_frequency_hertz(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
@@ -1151,8 +1173,8 @@ fn set_frequency_hertz_inner(
 }
 
 /** Set the device's output frequency for a particular channel,
-in kilohertz (kHz).  
-  
+in kilohertz (kHz).
+
 "amount" parameter:
 ```ignore
 "0.00000" - "60000.0"
@@ -1164,8 +1186,10 @@ pub fn set_frequency_kilohertz(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
@@ -1261,8 +1285,8 @@ fn set_frequency_kilohertz_inner(
 }
 
 /** Set the device's output frequency for a particular channel,
-in megahertz (MHz).  
-  
+in megahertz (MHz).
+
 "amount" parameter:
 ```ignore
 "0.00000000" - "60.0"
@@ -1274,8 +1298,10 @@ pub fn set_frequency_megahertz(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
@@ -1372,18 +1398,18 @@ fn set_frequency_megahertz_inner(
 }
 
 /** Get the device's output frequency for a particular channel,
-in whichever unit the channel is currently set on.  
-  
-Supported units are:  
+in whichever unit the channel is currently set on.
+
+Supported units are:
 ```ignore
 uHz (microhertz)
 mHz (millihertz)
 Hz (hertz)
 kHz (kilohertz)
 MHz (megahertz)
-```  
-  
-Return Value (Ok Result):  
+```
+
+Return Value (Ok Result):
 ```ignore
 10,000 uHz:
 "10000 uHz"
@@ -1406,8 +1432,10 @@ pub fn get_frequency(
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: String;
 	let chan_out: &str;
@@ -1438,7 +1466,7 @@ pub fn get_frequency(
 	if !port.mock {
 		port.port.as_mut().unwrap().write(&inbuf[..])?;
 		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
-	
+
 	} else {	// Mock data for testing.
 		outbuf = Vec::from(&format!(":r2{}=1000,0.\r\n", chan + 2) as &str);
 	}
@@ -1495,19 +1523,19 @@ pub fn get_frequency(
 	if unit_num == SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ {
 		res4 /= SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MULTIPLIER;
 		res4_str += &(res4.to_string() + " uHz");
-	
+
 	} else if unit_num == SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ {
 		res4 /= SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MULTIPLIER;
 		res4_str += &(res4.to_string() + " mHz");
-	
+
 	} else if unit_num == SET_FREQUENCY_COMMAND_UNIT_HERTZ {
 		res4 /= SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MULTIPLIER;
 		res4_str += &(res4.to_string() + " Hz");
-	
+
 	} else if unit_num == SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ {
 		res4 /= SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MULTIPLIER;
 		res4_str += &(res4.to_string() + " kHz");
-	
+
 	} else if unit_num == SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ {
 		res4 /= SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MULTIPLIER;
 		res4_str += &(res4.to_string() + " MHz");
@@ -1524,9 +1552,9 @@ pub fn get_frequency(
 }
 
 /** Get the device's output frequency for a particular channel,
-in hertz (Hz).  
-  
-Return Value (Ok Result):  
+in hertz (Hz).
+
+Return Value (Ok Result):
 ```ignore
 10,000 Hz:
 "10000"
@@ -1537,9 +1565,11 @@ pub fn get_frequency_hertz(
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
-	
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
+
 	let command: String;
 	let chan_out: &str;
 
@@ -1569,7 +1599,7 @@ pub fn get_frequency_hertz(
 	if !port.mock {
 		port.port.as_mut().unwrap().write(&inbuf[..])?;
 		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
-	
+
 	} else {	// Mock data for testing.
 		outbuf = Vec::from(&format!(":r2{}=1000,0.\r\n", chan + 2) as &str);
 	}
@@ -1624,16 +1654,16 @@ pub fn get_frequency_hertz(
 
 	if unit_num == SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ {
 		res4 /= SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MULTIPLIER * (10.0 as f64).powf(6.0);
-	
+
 	} else if unit_num == SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ {
 		res4 /= SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MULTIPLIER * (10.0 as f64).powf(3.0);
-	
+
 	} else if unit_num == SET_FREQUENCY_COMMAND_UNIT_HERTZ {
 		res4 /= SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MULTIPLIER;
-	
+
 	} else if unit_num == SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ {
 		res4 = (((res4 / SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MULTIPLIER) * (10.0 as f64).powf(3.0)) * 1000000.0).round() / 1000000.0;
-	
+
 	} else if unit_num == SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ {
 		res4 = (((res4 / SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MULTIPLIER) * (10.0 as f64).powf(6.0)) * 1000.0).round() / 1000.0;
 	}
@@ -1648,9 +1678,9 @@ pub fn get_frequency_hertz(
 	Ok(res4.to_string())
 }
 
-/** Set the device's output signal amplitude in volts, for a 
-particular channel.  
-  
+/** Set the device's output signal amplitude in volts, for a
+particular channel.
+
 "amount" parameter:
 ```ignore
 "0.000" - "20.0"
@@ -1662,32 +1692,34 @@ pub fn set_amplitude(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 && amount_parts[1].len() > 3 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"set amplitude volts\" argument (must be 0.000-20.0): {}: too many decimal places (3 max)", amount), ErrorKind::InvalidValue));
+		return Err(Error::with_description(&format!("unsupported value passed to \"set amplitude volts\" argument (must be {}-{}): {}: too many decimal places ({} max)", SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MIN, SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MAX, amount, SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MAX_DECIMAL_PLACES), ErrorKind::InvalidValue));
 	}
 
 	let res: Result<String, clap::Error>;
 
 	match amount.parse::<f64>() {
 		Ok(amount) => match amount {
-			_y if amount >= 0.0 && amount <= 20.0 => {
-				let amount_rounded = ((amount * 1000.0 * 1000.0).round() / 1000.0).round();
+			_y if amount >= SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MIN && amount <= SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MAX => {
+				let amount_rounded = ((amount * SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MULTIPLIER * SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MULTIPLIER).round() / SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MULTIPLIER).round();
 
 				res = set_amplitude_inner(&mut port, chan, amount_rounded, verbose);
 			}
 
 			_ => {
-				res = Err(Error::with_description(&format!("unsupported value passed to \"set amplitude volts\" argument (must be 0.000-20.0): {}", amount), ErrorKind::InvalidValue));
+				res = Err(Error::with_description(&format!("unsupported value passed to \"set amplitude volts\" argument (must be {}-{}): {}", SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MIN, SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MAX, amount), ErrorKind::InvalidValue));
 			}
 		},
 
 		Err(e) => {
-			res = Err(Error::with_description(&format!("unsupported value passed to \"set amplitude volts\" argument (must be 0.000-20.0): {}: {}", amount, e), ErrorKind::InvalidValue));
+			res = Err(Error::with_description(&format!("unsupported value passed to \"set amplitude volts\" argument (must be {}-{}): {}: {}", SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MIN, SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MAX, amount, e), ErrorKind::InvalidValue));
 		}
 	}
 
@@ -1714,9 +1746,9 @@ fn set_amplitude_inner(
 		));
 	}
 
-	if amount < 0.0 || amount > 20000.0 {
+	if amount < SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MIN || amount > (SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MAX * SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MULTIPLIER) {
 		return Err(Error::with_description(
-			"Unsupported amount of volts. Must be 0.000-20.0.",
+			&format!("Unsupported amount of volts. Must be {}-{}.", SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MIN, SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MAX),
 			ErrorKind::InvalidValue,
 		));
 	}
@@ -1751,9 +1783,9 @@ fn set_amplitude_inner(
 	Ok(res.to_string())
 }
 
-/** Get the device's output signal amplitude in volts for 
-a particular channel.  
-  
+/** Get the device's output signal amplitude in volts for
+a particular channel.
+
 Return Value (Ok Result):
 ```ignore
 5 volts:
@@ -1765,8 +1797,10 @@ pub fn get_amplitude(
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: String;
 	let chan_out: &str;
@@ -1841,9 +1875,9 @@ pub fn get_amplitude(
 	Ok(res3.to_string())
 }
 
-/** Set the device's duty cycle in percent, for a 
-particular channel.  
-  
+/** Set the device's duty cycle in percent, for a
+particular channel.
+
 "amount" parameter:
 ```ignore
 "0.0" - "99.9"
@@ -1855,8 +1889,10 @@ pub fn set_duty_cycle(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
@@ -1944,9 +1980,9 @@ fn set_duty_cycle_inner(
 	Ok(res.to_string())
 }
 
-/** Get the device's duty cycle in percent, for a 
-particular channel.  
-  
+/** Get the device's duty cycle in percent, for a
+particular channel.
+
 Return Value (Ok Result):
 ```ignore
 1%:
@@ -1958,8 +1994,10 @@ pub fn get_duty_cycle(
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: String;
 	let chan_out: &str;
@@ -2034,9 +2072,9 @@ pub fn get_duty_cycle(
 	Ok(res.to_string())
 }
 
-/** Set the device's voltage offset in volts, for a 
-particular channel.  
-  
+/** Set the device's voltage offset in volts, for a
+particular channel.
+
 "amount" parameter:
 ```ignore
 "-9.99" - "9.99"
@@ -2048,8 +2086,10 @@ pub fn set_voltage_offset(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
@@ -2137,9 +2177,9 @@ fn set_voltage_offset_inner(
 	Ok(res.to_string())
 }
 
-/** Get the device's voltage offset in volts, for a 
-particular channel.  
-  
+/** Get the device's voltage offset in volts, for a
+particular channel.
+
 Return Value (Ok Result):
 ```ignore
 5 volts:
@@ -2151,8 +2191,10 @@ pub fn get_voltage_offset(
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: String;
 	let chan_out: &str;
@@ -2232,8 +2274,8 @@ pub fn get_voltage_offset(
 	Ok(res.to_string())
 }
 
-/** Set the device's phase in degrees (°).  
-  
+/** Set the device's phase in degrees (°).
+
 "amount" parameter:
 ```ignore
 "0.0" - "360.0"
@@ -2244,8 +2286,10 @@ pub fn set_phase(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
@@ -2317,17 +2361,22 @@ fn set_phase_inner(
 	Ok(res.to_string())
 }
 
-/** Get the device's phase in degrees (°).  
-  
+/** Get the device's phase in degrees (°).
+
 Return Value (Ok Result):
 ```ignore
 180 degrees:
 "180"
 ```
 */
-pub fn get_phase(port: &mut SerialPortType, verbose: u64) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+pub fn get_phase(
+	port: &mut SerialPortType, 
+	verbose: u64
+) -> Result<String, clap::Error> {
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: String;
 
@@ -2395,14 +2444,14 @@ pub fn get_phase(port: &mut SerialPortType, verbose: u64) -> Result<String, clap
 	Ok(res.to_string())
 }
 
-/** Set the device's tracking mode.  
-  
+/** Set the device's tracking mode.
+
 "track" parameter:
 ```ignore
-The value must be either a set of comma-separated setting names 
-(see below), or a set of zeros and ones in the range of "0" - "11111", 
-each bit corresponding to a feature you want to toggle tracking on/off 
-for ("1" being on and "0" being off). For example: track frequency and 
+The value must be either a set of comma-separated setting names
+(see below), or a set of zeros and ones in the range of "0" - "11111",
+each bit corresponding to a feature you want to toggle tracking on/off
+for ("1" being on and "0" being off). For example: track frequency and
 amplitude: "101"
 
 The bit position meanings are as follows:
@@ -2425,8 +2474,8 @@ frequency and amplitude sync: "fa"
 
 Turn tracking off like this: "n"
 
-Note that a value of zero (or no value) in the bit position will turn off 
-tracking for the corresponding feature, so to turn tracking off for all 
+Note that a value of zero (or no value) in the bit position will turn off
+tracking for the corresponding feature, so to turn tracking off for all
 features, you can do: "0"
 
 You can also separate the values with commas if you prefer: "1,0,1"
@@ -2437,8 +2486,10 @@ pub fn set_tracking(
 	track: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let max_len = 5;
 
@@ -2591,8 +2642,10 @@ pub fn switch_function_panel_main(
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str;
 
@@ -2639,8 +2692,10 @@ pub fn switch_function_panel_sys(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = SWITCH_FUNCTION_PANEL_SYS;
 
@@ -2669,14 +2724,16 @@ pub fn switch_function_panel_sys(
 	Ok(res.to_string())
 }
 
-/** Switch the device's display panel to the measure 
+/** Switch the device's display panel to the measure
 subsection on the measure mode (MEAS) screen. */
 pub fn switch_function_panel_measurement(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = SWITCH_FUNCTION_PANEL_MEASUREMENT;
 
@@ -2705,11 +2762,11 @@ pub fn switch_function_panel_measurement(
 	Ok(res.to_string())
 }
 
-/** Start taking a measurement from the device's input (Ext. IN) 
-channel.  
-  
-Also, stop the following functions if any are currently in 
-progress:  
+/** Start taking a measurement from the device's input (Ext. IN)
+channel.
+
+Also, stop the following functions if any are currently in
+progress:
 ```ignore
 counting
 sweep
@@ -2722,8 +2779,10 @@ pub fn start_measuring(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = START_MEASURING;
 
@@ -2758,8 +2817,10 @@ pub fn switch_function_panel_counting(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = SWITCH_FUNCTION_PANEL_COUNTING;
 
@@ -2790,8 +2851,10 @@ pub fn start_counting(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = START_COUNTING;
 
@@ -2818,9 +2881,9 @@ pub fn start_counting(
 }
 
 /** Switch the device's display panel to the sweep frequency
-(channel 1 or channel 2) subsection of the modulation mode 
-screen.  
-  
+(channel 1 or channel 2) subsection of the modulation mode
+screen.
+
 "chan" parameter:
 ```ignore
 Sweep Frequency (CH1):
@@ -2835,8 +2898,10 @@ pub fn switch_function_panel_sweep(
 	chan: u64,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str;
 
@@ -2877,8 +2942,8 @@ pub fn switch_function_panel_sweep(
 	Ok(res.to_string())
 }
 
-/** Start frequency sweeping on a given output channel.  
-  
+/** Start frequency sweeping on a given output channel.
+
 "chan" parameter:
 ```ignore
 Sweep Frequency (CH1):
@@ -2927,8 +2992,10 @@ pub fn switch_function_panel_pulse(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = SWITCH_FUNCTION_PANEL_PULSE;
 
@@ -2959,8 +3026,10 @@ pub fn start_pulsing(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = START_PULSING;
 
@@ -2992,8 +3061,10 @@ pub fn switch_function_panel_bursting(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = SWITCH_FUNCTION_PANEL_BURST;
 
@@ -3024,8 +3095,10 @@ pub fn start_bursting(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = START_BURSTING;
 
@@ -3051,15 +3124,17 @@ pub fn start_bursting(
 	Ok(res.to_string())
 }
 
-/** Set the device's measurement mode measure coupling to 
+/** Set the device's measurement mode measure coupling to
 AC (Ext. IN).
 */
 pub fn set_measurement_coupling_ac(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = SET_MEASUREMENT_COUPLING_AC;
 
@@ -3085,15 +3160,17 @@ pub fn set_measurement_coupling_ac(
 	Ok(res.to_string())
 }
 
-/** Set the device's measurement mode measure coupling to 
+/** Set the device's measurement mode measure coupling to
 DC (Ext. IN).
 */
 pub fn set_measurement_coupling_dc(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = SET_MEASUREMENT_COUPLING_DC;
 
@@ -3119,9 +3196,9 @@ pub fn set_measurement_coupling_dc(
 	Ok(res.to_string())
 }
 
-/** Set the device's measurement mode measure gate time 
-in seconds.  
-  
+/** Set the device's measurement mode measure gate time
+in seconds.
+
 "amount" parameter:
 ```ignore
 "0.01" - "10.0"
@@ -3132,9 +3209,11 @@ pub fn set_measurement_gate_time(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
-	
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 && amount_parts[1].len() > 2 {
@@ -3210,14 +3289,16 @@ fn set_measurement_gate_time_inner(
 	Ok(res.to_string())
 }
 
-/** Set the device's measurement mode to measure count 
+/** Set the device's measurement mode to measure count
 frequency in hertz (Hz). */
 pub fn set_measurement_mode_count_frequency(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = SET_MEASUREMENT_MODE_COUNT_FREQUENCY;
 
@@ -3246,14 +3327,16 @@ pub fn set_measurement_mode_count_frequency(
 	Ok(res.to_string())
 }
 
-/** Set the device's measurement mode to measure counting 
+/** Set the device's measurement mode to measure counting
 period in hertz (Hz). */
 pub fn set_measurement_mode_counting_period(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = SET_MEASUREMENT_MODE_COUNTING_PERIOD;
 
@@ -3287,8 +3370,10 @@ pub fn set_measurement_count_clear(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = SET_MEASUREMENT_COUNT_CLEAR;
 
@@ -3319,8 +3404,10 @@ pub fn get_measurement_count(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = GET_MEASUREMENT_COUNT;
 
@@ -3379,14 +3466,16 @@ pub fn get_measurement_count(
 	Ok(res.to_string())
 }
 
-/** Get the measure mode's measure frequency in frequency mode 
+/** Get the measure mode's measure frequency in frequency mode
 (hertz). */
 pub fn get_measurement_frequency(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = GET_MEASUREMENT_FREQUENCY;
 
@@ -3445,14 +3534,16 @@ pub fn get_measurement_frequency(
 	Ok(res.to_string())
 }
 
-/** Get the measure mode's measure frequency in period mode 
+/** Get the measure mode's measure frequency in period mode
 (hertz). */
 pub fn get_measurement_frequency_period(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = GET_MEASUREMENT_FREQUENCY_PERIOD;
 
@@ -3500,10 +3591,10 @@ pub fn get_measurement_frequency_period(
 	}
 
 	let res3_str = res3_parts[0];
-	
+
 	// POSSIBLE BUG: Not sure if this is the correct denominator.
 	let res3 = res3_str.parse::<f64>().unwrap() / 1000.0;
-	
+
 	if verbose > 0 {
 		println!("Response:");
 		println!("{}", res);
@@ -3519,8 +3610,10 @@ pub fn get_measurement_pulse_width_positive(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = GET_MEASUREMENT_PULSE_WIDTH_POSITIVE;
 
@@ -3568,10 +3661,10 @@ pub fn get_measurement_pulse_width_positive(
 	}
 
 	let res3_str = res3_parts[0];
-	
+
 	// NOTE: Should we convert the response unit?
 	let res3 = res3_str.parse::<f64>().unwrap();
-	
+
 	if verbose > 0 {
 		println!("Response:");
 		println!("{}", res);
@@ -3587,8 +3680,10 @@ pub fn get_measurement_pulse_width_negative(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = GET_MEASUREMENT_PULSE_WIDTH_NEGATIVE;
 
@@ -3636,10 +3731,10 @@ pub fn get_measurement_pulse_width_negative(
 	}
 
 	let res3_str = res3_parts[0];
-	
+
 	// NOTE: Should we convert the response unit?
 	let res3 = res3_str.parse::<f64>().unwrap();
-	
+
 	if verbose > 0 {
 		println!("Response:");
 		println!("{}", res);
@@ -3655,8 +3750,10 @@ pub fn get_measurement_period(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = GET_MEASUREMENT_PERIOD;
 
@@ -3704,10 +3801,10 @@ pub fn get_measurement_period(
 	}
 
 	let res3_str = res3_parts[0];
-	
+
 	// NOTE: Should we convert the response unit?
 	let res3 = res3_str.parse::<f64>().unwrap();
-	
+
 	if verbose > 0 {
 		println!("Response:");
 		println!("{}", res);
@@ -3723,8 +3820,10 @@ pub fn get_measurement_duty_cycle(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: &'static str = GET_MEASUREMENT_DUTY_CYCLE;
 
@@ -3772,10 +3871,10 @@ pub fn get_measurement_duty_cycle(
 	}
 
 	let res3_str = res3_parts[0];
-	
+
 	// NOTE: Should we convert the response unit?
 	let res3 = res3_str.parse::<f64>().unwrap();
-	
+
 	if verbose > 0 {
 		println!("Response:");
 		println!("{}", res);
@@ -3786,8 +3885,8 @@ pub fn get_measurement_duty_cycle(
 	Ok(res.to_string())
 }
 
-/** Set the number of burst pulses to perform when bursting.  
-  
+/** Set the number of burst pulses to perform when bursting.
+
 "amount" parameter:
 ```ignore
 5 burst pulses:
@@ -3799,8 +3898,10 @@ pub fn set_burst_pulse_number(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
@@ -3880,8 +3981,10 @@ pub fn start_burst_pulse_once(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command = START_BURST_PULSE_ONCE;
 
@@ -3914,8 +4017,10 @@ pub fn set_burst_mode_manual_trigger(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command = SET_BURST_MODE_MANUAL_TRIGGER;
 
@@ -3948,8 +4053,10 @@ pub fn set_burst_mode_ch2_burst(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command = SET_BURST_MODE_CH2_BURST;
 
@@ -3975,15 +4082,17 @@ pub fn set_burst_mode_ch2_burst(
 	Ok(res.to_string())
 }
 
-/** Set the modulation mode's Burst (CH1) mode to external 
+/** Set the modulation mode's Burst (CH1) mode to external
 trigger AC (Ext. Trig (AC)).
 */
 pub fn set_burst_mode_external_burst_ac(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command = SET_BURST_MODE_EXTERNAL_BURST_AC;
 
@@ -4009,15 +4118,17 @@ pub fn set_burst_mode_external_burst_ac(
 	Ok(res.to_string())
 }
 
-/** Set the modulation mode's Burst (CH1) mode to external 
+/** Set the modulation mode's Burst (CH1) mode to external
 trigger DC (Ext. Trig (DC)).
 */
 pub fn set_burst_mode_external_burst_dc(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command = SET_BURST_MODE_EXTERNAL_BURST_DC;
 
@@ -4044,8 +4155,8 @@ pub fn set_burst_mode_external_burst_dc(
 }
 
 /** Set the modulation mode sweep frequency's starting
-frequency in hertz (Hz).  
-  
+frequency in hertz (Hz).
+
 "amount" parameter:
 ```ignore
 1,000 hertz:
@@ -4057,8 +4168,10 @@ pub fn set_sweep_starting_frequency(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
@@ -4139,8 +4252,8 @@ fn set_sweep_starting_frequency_inner(
 }
 
 /** Set the modulation mode sweep frequency's end
-frequency in hertz (Hz).  
-  
+frequency in hertz (Hz).
+
 "amount" parameter:
 ```ignore
 2,000 hertz:
@@ -4152,8 +4265,10 @@ pub fn set_sweep_end_frequency(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
@@ -4234,8 +4349,8 @@ fn set_sweep_end_frequency_inner(
 }
 
 /** Set the modulation mode sweep frequency's sweep time
-in seconds.  
-  
+in seconds.
+
 "amount" parameter:
 ```ignore
 10 seconds:
@@ -4247,8 +4362,10 @@ pub fn set_sweep_time(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
@@ -4332,8 +4449,10 @@ pub fn set_sweep_direction_rise(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command = SET_SWEEP_DIRECTION_RISE;
 
@@ -4366,8 +4485,10 @@ pub fn set_sweep_direction_fall(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command = SET_SWEEP_DIRECTION_FALL;
 
@@ -4400,8 +4521,10 @@ pub fn set_sweep_direction_rise_fall(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command = SET_SWEEP_DIRECTION_RISE_FALL;
 
@@ -4432,8 +4555,10 @@ pub fn set_sweep_mode_linear(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command = SET_SWEEP_MODE_LINEAR;
 
@@ -4464,8 +4589,10 @@ pub fn set_sweep_mode_logarithm(
 	port: &mut SerialPortType,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command = SET_SWEEP_MODE_LOGARITHM;
 
@@ -4491,10 +4618,10 @@ pub fn set_sweep_mode_logarithm(
 	Ok(res.to_string())
 }
 
-/** Set the modulation mode pulse generator's pulse width.  
-  
-It is in nanosecond units unless, the microseconds parameter is true.  
-  
+/** Set the modulation mode pulse generator's pulse width.
+
+It is in nanosecond units unless, the microseconds parameter is true.
+
 IMPORTANT NOTE: There seems to be no option on the device's physical
 controls to switch between nanosecond and microsecond units, but if
 you specify a value in microseconds, the device will switch to
@@ -4503,14 +4630,14 @@ the physical device interface will be interpreted as microsecond units
 until you turn off the device, or set a nanosecond value using this
 serial-interface-only command. If you save the device state while in
 microseconds mode, this could be a problem, because then you need to
-use this serial program to get back to the default nanoseconds mode.  
-  
+use this serial program to get back to the default nanoseconds mode.
+
 "amount" parameter when "microseconds" parameter is false:
 ```ignore
 1,000 nanoseconds:
 "1000"
 ```
-  
+
 "amount" parameter when "microseconds" parameter is true:
 ```ignore
 2,000 microseconds:
@@ -4523,8 +4650,10 @@ pub fn set_pulse_width(
 	microseconds: bool,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 	let units: &'static str;
@@ -4647,10 +4776,10 @@ fn set_pulse_width_inner(
 	Ok(res.to_string())
 }
 
-/** Set the modulation mode pulse generator's pulse period.  
-  
-It is in nanosecond units unless the microseconds parameter is true.  
-  
+/** Set the modulation mode pulse generator's pulse period.
+
+It is in nanosecond units unless the microseconds parameter is true.
+
 IMPORTANT NOTE: There seems to be no option on the device's physical
 controls to switch between nanosecond and microsecond units, but if
 you specify a value in microseconds, the device will switch to
@@ -4659,14 +4788,14 @@ the physical device interface will be interpreted as microsecond units
 until you turn off the device, or set a nanosecond value using this
 serial-interface-only command. If you save the device state while in
 microseconds mode, this could be a problem, because then you need to
-use this serial program to get back to the default nanoseconds mode.  
-  
+use this serial program to get back to the default nanoseconds mode.
+
 "amount" parameter when "microseconds" parameter is false:
 ```ignore
 1,000 nanoseconds:
 "1000"
 ```
-  
+
 "amount" parameter when "microseconds" parameter is true:
 ```ignore
 2,000 microseconds:
@@ -4679,8 +4808,10 @@ pub fn set_pulse_period(
 	microseconds: bool,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 	let units: &'static str;
@@ -4803,8 +4934,8 @@ fn set_pulse_period_inner(
 	Ok(res.to_string())
 }
 
-/** Set the modulation mode pulse generator's pulse offset in percent (%).  
-  
+/** Set the modulation mode pulse generator's pulse offset in percent (%).
+
 "amount" parameter:
 ```ignore
 50 percent:
@@ -4816,8 +4947,10 @@ pub fn set_pulse_offset(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
@@ -4897,8 +5030,8 @@ fn set_pulse_offset_inner(
 	Ok(res.to_string())
 }
 
-/** Set the modulation mode pulse generator's pulse amplitude in volts (V).  
-  
+/** Set the modulation mode pulse generator's pulse amplitude in volts (V).
+
 "amount" parameter:
 ```ignore
 5 volts:
@@ -4910,8 +5043,10 @@ pub fn set_pulse_amplitude(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
@@ -4995,8 +5130,8 @@ fn set_pulse_amplitude_inner(
 	Ok(res.to_string())
 }
 
-/** Save all current values on the device as a numbered preset.  
-  
+/** Save all current values on the device as a numbered preset.
+
 "amount" parameter:
 ```ignore
 save as preset 0:
@@ -5008,8 +5143,10 @@ pub fn save_preset(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
@@ -5097,8 +5234,8 @@ fn save_preset_inner(
 	Ok(res.to_string())
 }
 
-/** Load all values for the device from a numbered preset.  
-  
+/** Load all values for the device from a numbered preset.
+
 "amount" parameter:
 ```ignore
 save as preset 0:
@@ -5110,8 +5247,10 @@ pub fn load_preset(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
@@ -5195,8 +5334,8 @@ fn load_preset_inner(
 }
 
 /** Convert a WaveCAD (.wav) file to the device's arbitrary
-waveform text (.txt) file format.  
-  
+waveform text (.txt) file format.
+
 "path" parameter:
 ```ignore
 some-wav-file-to-convert.wav:
@@ -5342,11 +5481,11 @@ pub fn wav_to_txt(path: &str, verbose: u64) -> Result<String, clap::Error> {
 }
 
 /** Convert the device's arbitrary waveform text (.txt) file format
-to a WaveCAD (.wav) file.  
-  
-Outputs the resulting binary file to stdout if the "output_binary" 
-parameter is set to true.  
-  
+to a WaveCAD (.wav) file.
+
+Outputs the resulting binary file to stdout if the "output_binary"
+parameter is set to true.
+
 "path" parameter:
 ```ignore
 some-txt-file-to-convert.txt:
@@ -5476,18 +5615,18 @@ pub fn txt_to_wav(path: &str, output_binary: bool, verbose: u64) -> Result<Strin
 	res
 }
 
-/** Write a user-defined arbitrary waveform to the device.  
-  
-Use the helper function 
-[set_arbitrary_wave_stdin](fn.set_arbitrary_wave_stdin.html) 
-instead to accept the text input for the "data" parameter 
-from stdin.  
-  
+/** Write a user-defined arbitrary waveform to the device.
+
+Use the helper function
+[set_arbitrary_wave_stdin](fn.set_arbitrary_wave_stdin.html)
+instead to accept the text input for the "data" parameter
+from stdin.
+
 Specify which arbitrary wave preset to save it in, as the
-"amount" parameter.  
-  
-"data" parameter, some user-defined wave. Must be 2048 
-lines of ASCII whole numbers, each in the range of 0 - 4095, 
+"amount" parameter.
+
+"data" parameter, some user-defined wave. Must be 2048
+lines of ASCII whole numbers, each in the range of 0 - 4095,
 followed by one extra blank line. For example:
 ```ignore
 "2456"
@@ -5498,7 +5637,7 @@ followed by one extra blank line. For example:
 "3244"
 "2010"
 "1012"
-  
+
 ```
 */
 pub fn set_arbitrary_wave(
@@ -5507,8 +5646,10 @@ pub fn set_arbitrary_wave(
 	data: &[String],
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
 
 	let command: String;
 
@@ -5600,9 +5741,9 @@ pub fn set_arbitrary_wave(
 	Ok(res.to_string())
 }
 
-/** Write a user-defined arbitrary waveform to the device from a WaveCAD (.wav) 
-file, saving it into one of the device's arbitrary wave preset slots.  
-  
+/** Write a user-defined arbitrary waveform to the device from a WaveCAD (.wav)
+file, saving it into one of the device's arbitrary wave preset slots.
+
 "arg" parameter:
 ```ignore
 Save the wav file into preset 1:
@@ -5665,13 +5806,13 @@ pub fn set_arbitrary_wavecad(
 	res
 }
 
-/** Write a user-defined arbitrary waveform to the device from stdin.  
-  
+/** Write a user-defined arbitrary waveform to the device from stdin.
+
 Specify which arbitrary wave preset to save it in, as the
-"amount" parameter.  
-  
-The stdin values define some user-defined wave. Must be 2048 
-lines of ASCII whole numbers, each in the range of 0 - 4095, 
+"amount" parameter.
+
+The stdin values define some user-defined wave. Must be 2048
+lines of ASCII whole numbers, each in the range of 0 - 4095,
 followed by one extra blank line. For example:
 ```ignore
 "2456"
@@ -5682,7 +5823,7 @@ followed by one extra blank line. For example:
 "3244"
 "2010"
 "1012"
-  
+
 ```
 */
 pub fn set_arbitrary_wave_stdin(
@@ -5739,9 +5880,9 @@ fn set_arbitrary_wave_stdin_inner(
 	return set_arbitrary_wave(port, amount, &data[0..2048], verbose);
 }
 
-/** Read a user-defined arbitrary waveform from one of the device's 
-numbered arbitrary wave preset slots.  
-  
+/** Read a user-defined arbitrary waveform from one of the device's
+numbered arbitrary wave preset slots.
+
 "amount" parameter:
 ```ignore
 Get the waveform data which is stored in preset 1:
@@ -5753,9 +5894,11 @@ pub fn get_arbitrary_wave(
 	amount: &str,
 	verbose: u64,
 ) -> Result<String, clap::Error> {
-	// Wait a bit to allow the device some time to settle.
-	thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
-	
+	if !port.mock {
+		// Wait a bit to allow the device some time to settle.
+		thread::sleep(time::Duration::from_millis(COMMAND_DELAY_MS));
+	}
+
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
 	if amount_parts.len() > 1 {

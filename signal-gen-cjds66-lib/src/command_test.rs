@@ -707,3 +707,68 @@ pub fn get_frequency_hertz_err() {
 		get_frequency_hertz(&mut port, chans + 1, verbose).unwrap_err();
 	}
 }
+
+
+#[test]
+pub fn set_amplitude_ok() {
+	let mut port = SerialPortType::new("", true).unwrap();
+	let verbose_max = 1;
+	let chans = 2;
+
+	// Test arg min.
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			set_amplitude(&mut port, chan, &SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MIN.to_string(), verbose).unwrap();
+		}
+	}
+
+	// Test arg max.
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			set_amplitude(&mut port, chan, &SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MAX.to_string(), verbose).unwrap();
+		}
+	}
+
+	// Test arg middle.
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			set_amplitude(&mut port, chan, &(SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MAX / 2.0).to_string(), verbose).unwrap();
+		}
+	}
+
+	// Test decimal places.
+	for verbose in 0..(verbose_max + 1) {
+		for chan in 1..(chans + 1) {
+			for decimal in 1..SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MAX_DECIMAL_PLACES {
+				set_amplitude(&mut port, chan, &(SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MIN + (1.0 / ((10.0 as f64).powf(decimal as f64)))).to_string(), verbose).unwrap();
+			}
+		}
+	}
+}
+
+#[test]
+pub fn set_amplitude_err() {
+	let mut port = SerialPortType::new("", true).unwrap();
+	let verbose_max = 1;
+	let chans = 2;
+
+	// Test greater than arg max.
+	for verbose in 0..(verbose_max + 1) {
+		set_amplitude(&mut port, chans, &(SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MAX + 1.0).to_string(), verbose).unwrap_err();
+	}
+
+	// Test less than arg min.
+	for verbose in 0..(verbose_max + 1) {
+		set_amplitude(&mut port, chans, &(SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MIN - 1.0).to_string(), verbose).unwrap_err();
+	}
+
+	// Test too many decimal places.
+	for verbose in 0..(verbose_max + 1) {
+		set_amplitude(&mut port, chans, &(SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MIN + (1.0 / ((10.0 as f64).powf((SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MAX_DECIMAL_PLACES + 1) as f64)))).to_string(), verbose).unwrap_err();
+	}
+
+	// Test invalid channel.
+	for verbose in 0..(verbose_max + 1) {
+		set_amplitude(&mut port, chans + 1, &(SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MIN).to_string(), verbose).unwrap_err();
+	}
+}
