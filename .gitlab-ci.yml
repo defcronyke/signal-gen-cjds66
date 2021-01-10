@@ -63,7 +63,7 @@ debug-linux-x86_64:
   ]
   script:
     - rustc --version && cargo --version  # Display rustc and cargo versions.
-    - cargo build --verbose   # Build the project with the cargo build command.
+    - RUSTFLAGS="--emit asm -C llvm-args=-x86-asm-syntax=intel --emit obj" cargo build --verbose   # Build the project with the cargo build command.
   artifacts:
     expire_in: never  # Keep this stage's output artifacts forever.
     paths:  # The files found at these paths will be added to the artifacts archive for this pipeline stage.
@@ -80,7 +80,7 @@ debug-windows-x86_64:
     - rustup target add x86_64-pc-windows-gnu   # Add the mingw-w64 Rust target to cargo with the rustup command.
     - rustup toolchain install stable-x86_64-pc-windows-gnu   # Install the Rust Windows cross-compiling tools for cargo with the rustup command.
     - rustc --version && cargo --version  # Display rustc and cargo versions.
-    - cargo build --target x86_64-pc-windows-gnu --verbose  # Cross-compile the project for Windows, from Linux, with the cargo build command.
+    - RUSTFLAGS="--emit asm -C llvm-args=-x86-asm-syntax=intel --emit obj" cargo build --target x86_64-pc-windows-gnu --verbose  # Cross-compile the project for Windows, from Linux, with the cargo build command.
   artifacts:
     expire_in: never  # Keep this stage's output artifacts forever.
     paths:  # The files found at these paths will be added to the artifacts archive for this pipeline stage.
@@ -94,7 +94,7 @@ release-linux-x86_64:
   ]
   script:
     - rustc --version && cargo --version  # Display rustc and cargo versions.
-    - cargo build --release --verbose   # Build the project with the cargo build command.
+    - RUSTFLAGS="--emit asm -C llvm-args=-x86-asm-syntax=intel --emit obj" cargo build --release --verbose   # Build the project with the cargo build command.
   artifacts:
     expire_in: never  # Keep this stage's output artifacts forever.
     paths:  # The files found at these paths will be added to the artifacts archive for this pipeline stage.
@@ -111,7 +111,7 @@ release-windows-x86_64:
     - rustup target add x86_64-pc-windows-gnu   # Add the mingw-w64 Rust target to cargo with the rustup command.
     - rustup toolchain install stable-x86_64-pc-windows-gnu   # Install the Rust Windows cross-compiling tools for cargo with the rustup command.
     - rustc --version && cargo --version  # Display rustc and cargo versions.
-    - cargo build --release --target x86_64-pc-windows-gnu --verbose  # Cross-compile the project for Windows, from Linux, with the cargo build command.
+    - RUSTFLAGS="--emit asm -C llvm-args=-x86-asm-syntax=intel --emit obj" cargo build --release --target x86_64-pc-windows-gnu --verbose  # Cross-compile the project for Windows, from Linux, with the cargo build command.
   artifacts:
     expire_in: never  # Keep this stage's output artifacts forever.
     paths:  # The files found at these paths will be added to the artifacts archive for this pipeline stage.
