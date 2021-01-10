@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: gsutil-setup
-        uses: GoogleCloudPlatform/google-github-actions/setup-gcloud@master
+        uses: google-github-actions/setup-gcloud@master
         with:
           service_account_key: ${{ secrets.GCS_SA_KEY }}
           project_id: ${{ secrets.GCS_PROJECT }}
