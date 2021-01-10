@@ -15,8 +15,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
       - name: test
+        uses: actions/checkout@v2
         run: |
           lsb_release -a
           sudo apt-get update && sudo apt-get install -y bash binutils-dev libcurl4-openssl-dev zlib1g-dev libdw-dev libiberty-dev
@@ -26,7 +26,18 @@ jobs:
           cargo test --workspace --verbose  # Run the project's test suite with cargo. If any of these tests fail, we stop here.
           cargo build --verbose   # Needed for kcov test coverage reporting.
           kcov target/cov target/debug/signal-gen-cjds66 -h || true   # Generate the test coverage report with kcov.
-          echo "Coverage:" $(grep -P 'percent_covered\"' target/cov/signal-gen-cjds66.*/coverage.json | grep -Po '[0-9]+.[0-9]+' | tail -n 1)  # Output the amount of test coverage in percent. This exact output format is expected by a setting we set on the GitLab CI/CD website.
+          COVERAGE=$(grep -P 'percent_covered\"' target/cov/signal-gen-cjds66.*/coverage.json | grep -Po '[0-9]+.[0-9]+' | tail -n 1)
+          if [ $COVERAGE -lt 50 ]; then COLOUR="RED"; elif [ $COVERAGE -lt 75 ]; then COLOUR="YELLOW"; else COLOUR="GREEN"; fi
+          curl "https://img.shields.io/badge/coavrege-$COVERAGE%25-$COLOUR" > github-coverage.svg
+          echo "Coverage: $COVERAGE"  # Output the amount of test coverage in percent. This exact output format is expected by a setting we set on the GitLab CI/CD website.
+      
+      - name: test-artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage
+          path: |
+            github-coverage.svg
+
 
   docs:
     needs: test
