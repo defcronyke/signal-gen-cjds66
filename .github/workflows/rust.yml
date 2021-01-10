@@ -18,6 +18,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: test
         run: |
+          sudo apt-get update -y && sudo apt-get install -y kcov
           rustc --version && cargo --version  # Display rustc and cargo versions.
           cargo test --workspace --verbose  # Run the project's test suite with cargo. If any of these tests fail, we stop here.
           cargo build --verbose   # Needed for kcov test coverage reporting.
