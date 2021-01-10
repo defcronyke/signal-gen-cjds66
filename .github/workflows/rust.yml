@@ -26,7 +26,7 @@ jobs:
           cargo test --workspace --verbose  # Run the project's test suite with cargo. If any of these tests fail, we stop here.
           cargo build --verbose   # Needed for kcov test coverage reporting.
           kcov target/cov target/debug/signal-gen-cjds66 -h || true   # Generate the test coverage report with kcov.
-          echo "Coverage:" $(grep -Po 'percent_covered\":\s\+\"[0-9]\+.[0-9]\+\",' target/cov/signal-gen-cjds66.*/coverage.json | grep -Po '[0-9]\+.[0-9]\+' | tail -n 1)  # Output the amount of test coverage in percent. This exact output format is expected by a setting we set on the GitLab CI/CD website.
+          echo "Coverage:" $(grep -Po 'percent_covered\"' target/cov/signal-gen-cjds66.*/coverage.json | grep -Po '[0-9]\+.[0-9]\+' | tail -n 1)  # Output the amount of test coverage in percent. This exact output format is expected by a setting we set on the GitLab CI/CD website.
 
   docs:
     needs: test
