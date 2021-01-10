@@ -36,11 +36,10 @@ jobs:
           cargo test --workspace --verbose  # Run the project's test suite with cargo. If any of these tests fail, we stop here.
           cargo build --verbose   # Needed for kcov test coverage reporting.
           kcov target/cov target/debug/signal-gen-cjds66 -h || true   # Generate the test coverage report with kcov.
-          COVERAGE=$(grep -P 'percent_covered\"' target/cov/signal-gen-cjds66.*/coverage.json | grep -Po '[0-9]+.[0-9]+' | tail -n 1)
+          COVERAGE=`expr 0 + $(grep -P 'percent_covered\"' target/cov/signal-gen-cjds66.*/coverage.json | grep -Po '[0-9]+.[0-9]+' | tail -n 1)`
           if [ $COVERAGE -lt 50 ]; then COLOUR="red"; elif [ $COVERAGE -lt 75 ]; then COLOUR="yellow"; else COLOUR="green"; fi
-          mkdir -p github-coverage
-          curl "https://img.shields.io/badge/github_coverage-$COVERAGE%25-$COLOUR" > github-coverage/github-coverage.svg
-          gsutil -m rsync -R github-coverage gs://$GCS_BUCKET
+          curl "https://img.shields.io/badge/github_coverage-$COVERAGE%25-$COLOUR" > github-coverage.svg
+          gsutil cp github-coverage.svg gs://$GCS_BUCKET
           echo "Coverage: $COVERAGE"  # Output the amount of test coverage in percent. This exact output format is expected by a setting we set on the GitLab CI/CD website.
       
       - name: test-artifacts
