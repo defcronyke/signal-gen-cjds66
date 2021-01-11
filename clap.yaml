@@ -436,14 +436,14 @@ args:
       long: ampli-ch1
       takes_value: true
       value_name: ch1_ampli_v
-      help: "Set the signal amplitude for channel 1 in volts. The value must be a number 0.000-20.0. For example: -p 0.001"
+      help: "Set the signal amplitude for channel 1 in volts. The value must be a number 0.000-20.0, and is further limited by any voltage offset which may be currently set. For example: -p 0.001"
 
   - set_amplitude_volts_channel2:
       short: q
       long: ampli-ch2
       takes_value: true
       value_name: ch2_ampli_v
-      help: "Set the signal amplitude for channel 2 in volts. The value must be a number 0.000-20.0. For example: -q 0.001"
+      help: "Set the signal amplitude for channel 2 in volts. The value must be a number 0.000-20.0, and is further limited by any voltage offset which may be currently set. For example: -q 0.001"
 
   - set_duty_cycle_channel1:
       short: t
