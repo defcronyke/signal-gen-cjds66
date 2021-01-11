@@ -43,13 +43,19 @@ jobs:
           gsutil -h "Cache-Control:public, max-age=60" cp github-coverage.svg gs://$GCS_BUCKET
           echo "Coverage: $COVERAGE"  # Output the amount of test coverage in percent. This exact output format is expected by a setting we set on the GitLab CI/CD website.
       
-      - name: test-artifacts
+      - name: artifacts-badge
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-badge
+          path: |
+            github-coverage.svg
+
+      - name: artifacts-coverage
         uses: actions/upload-artifact@v2
         with:
           name: coverage
           path: |
-            github-coverage.svg
-
+            target/cov
 
   docs:
     needs: test

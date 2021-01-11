@@ -376,8 +376,10 @@ Extra Info:
   
 **Helper scripts for common tasks:**  
   
-  * Notice in the root folder of this project, and also in the 
-  [signal-gen-cjds66-lib/](https://gitlab.com/defcronyke/signal-gen-cjds66/-/tree/master/signal-gen-cjds66-lib)
+  * Notice in the 
+  [scripts/](https://gitlab.com/defcronyke/signal-gen-cjds66/-/tree/master/scripts) 
+  folder of this project, and also in the 
+  [signal-gen-cjds66-lib/scripts/](https://gitlab.com/defcronyke/signal-gen-cjds66/-/tree/master/signal-gen-cjds66-lib/scripts)
   subfolder, there are several convenience helper scripts in both 
   `Linux bash shell` (\*.sh) and `Windows batch file` (\*.bat) formats.
 
