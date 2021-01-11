@@ -1699,7 +1699,7 @@ pub fn set_amplitude(
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
-	if amount_parts.len() > 1 && amount_parts[1].len() > 3 {
+	if amount_parts.len() > 1 && amount_parts[1].len() > SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MAX_DECIMAL_PLACES {
 		return Err(Error::with_description(&format!("unsupported value passed to \"set amplitude volts\" argument (must be {}-{}): {}: too many decimal places ({} max)", SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MIN, SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MAX, amount, SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MAX_DECIMAL_PLACES), ErrorKind::InvalidValue));
 	}
 
@@ -1831,6 +1831,9 @@ pub fn get_amplitude(
 	if !port.mock {
 		port.port.as_mut().unwrap().write(&inbuf[..])?;
 		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
+	
+	} else {
+		outbuf = Vec::from(&format!(":r2{}=5000.\r\n", 5 + (chan - 1)) as &str);
 	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
@@ -1896,27 +1899,27 @@ pub fn set_duty_cycle(
 
 	let amount_parts: Vec<&str> = amount.split(".").collect();
 
-	if amount_parts.len() > 1 && amount_parts[1].len() > 1 {
-		return Err(Error::with_description(&format!("unsupported value passed to \"set duty cycle\" argument (must be 0.0-99.9): {}: too many decimal places (1 max)", amount), ErrorKind::InvalidValue));
+	if amount_parts.len() > 1 && amount_parts[1].len() > SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MAX_DECIMAL_PLACES {
+		return Err(Error::with_description(&format!("unsupported value passed to \"set duty cycle\" argument (must be {}-{}): {}: too many decimal places ({} max)", SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MIN, SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MAX, amount, SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MAX_DECIMAL_PLACES), ErrorKind::InvalidValue));
 	}
 
 	let res: Result<String, clap::Error>;
 
 	match amount.parse::<f64>() {
 		Ok(amount) => match amount {
-			_y if amount >= 0.0 && amount <= 99.9 => {
-				let amount_rounded = ((amount * 10.0 * 10.0).round() / 10.0).round();
+			_y if amount >= SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MIN && amount <= SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MAX => {
+				let amount_rounded = ((amount * SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MULTIPLIER * SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MULTIPLIER).round() / SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MULTIPLIER).round();
 
 				res = set_duty_cycle_inner(&mut port, chan, amount_rounded, verbose);
 			}
 
 			_ => {
-				res = Err(Error::with_description(&format!("unsupported value passed to \"set duty cycle\" argument (must be 0.0-99.9): {}", amount), ErrorKind::InvalidValue));
+				res = Err(Error::with_description(&format!("unsupported value passed to \"set duty cycle\" argument (must be {}-{}): {}", SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MIN, SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MAX, amount), ErrorKind::InvalidValue));
 			}
 		},
 
 		Err(e) => {
-			res = Err(Error::with_description(&format!("unsupported value passed to \"set duty cycle\" argument (must be 0.0-99.9): {}: {}", amount, e), ErrorKind::InvalidValue));
+			res = Err(Error::with_description(&format!("unsupported value passed to \"set duty cycle\" argument (must be {}-{}): {}: {}", SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MIN, SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MAX, amount, e), ErrorKind::InvalidValue));
 		}
 	}
 
@@ -1943,9 +1946,9 @@ fn set_duty_cycle_inner(
 		));
 	}
 
-	if amount < 0.0 || amount > 999.0 {
+	if amount < (SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MIN * SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MULTIPLIER) || amount > (SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MAX * SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MULTIPLIER) {
 		return Err(Error::with_description(
-			"Unsupported duty cycle. Must be 0.0-99.9.",
+			&format!("Unsupported duty cycle. Must be {}-{}: {}", SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MIN, SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MAX, amount / SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MULTIPLIER),
 			ErrorKind::InvalidValue,
 		));
 	}
