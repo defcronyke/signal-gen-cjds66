@@ -8,7 +8,7 @@
 
 [package]
 name = "signal-gen-cjds66-lib"
-version = "0.1.8"
+version = "0.1.9"
 authors = ["Jeremy Carter <jeremy@jeremycarter.ca>"]
 edition = "2018"
 description = "An unofficial support library which can fully remote control the inexpensive Koolertron DDS Signal Generator known as GH-CJDS66."

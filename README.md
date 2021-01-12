@@ -67,14 +67,14 @@ chmod 755 signal-gen-cjds66
 **Download the latest release version here:**  
   
 * **Linux x86_64 Binary:**
-  - [signal-gen-cjds66 (v0.1.8 Linux Release Build)](https://gitlab.com/defcronyke/signal-gen-cjds66/builds/artifacts/v0.1.8/raw/target/release/signal-gen-cjds66?job=release-linux-x86_64)
+  - [signal-gen-cjds66 (v0.1.9 Linux Release Build)](https://gitlab.com/defcronyke/signal-gen-cjds66/builds/artifacts/v0.1.9/raw/target/release/signal-gen-cjds66?job=release-linux-x86_64)
 
-  - [signal-gen-cjds66 (v0.1.8 Linux Debug Build)](https://gitlab.com/defcronyke/signal-gen-cjds66/builds/artifacts/v0.1.8/raw/target/debug/signal-gen-cjds66?job=debug-linux-x86_64)
+  - [signal-gen-cjds66 (v0.1.9 Linux Debug Build)](https://gitlab.com/defcronyke/signal-gen-cjds66/builds/artifacts/v0.1.9/raw/target/debug/signal-gen-cjds66?job=debug-linux-x86_64)
   
 * **Windows x86_64 Binary:**
-  - [signal-gen-cjds66.exe (v0.1.8 Windows Release Build)](https://gitlab.com/defcronyke/signal-gen-cjds66/builds/artifacts/v0.1.8/raw/target/x86_64-pc-windows-gnu/release/signal-gen-cjds66.exe?job=release-windows-x86_64)
+  - [signal-gen-cjds66.exe (v0.1.9 Windows Release Build)](https://gitlab.com/defcronyke/signal-gen-cjds66/builds/artifacts/v0.1.9/raw/target/x86_64-pc-windows-gnu/release/signal-gen-cjds66.exe?job=release-windows-x86_64)
 
-  - [signal-gen-cjds66.exe (v0.1.8 Windows Debug Build)](https://gitlab.com/defcronyke/signal-gen-cjds66/builds/artifacts/v0.1.8/raw/target/x86_64-pc-windows-gnu/debug/signal-gen-cjds66.exe?job=debug-windows-x86_64)
+  - [signal-gen-cjds66.exe (v0.1.9 Windows Debug Build)](https://gitlab.com/defcronyke/signal-gen-cjds66/builds/artifacts/v0.1.9/raw/target/x86_64-pc-windows-gnu/debug/signal-gen-cjds66.exe?job=debug-windows-x86_64)
   
 ----------  
   
@@ -107,7 +107,7 @@ newest (possibly broken) version of the program.
   
   - [signal-gen-cjds66-lib docs (View Release Version)](https://docs.rs/signal-gen-cjds66-lib)
 
-  - [signal-gen-cjds66 docs (Download Release Version)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/v0.1.8/download?job=docs)
+  - [signal-gen-cjds66 docs (Download Release Version)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/v0.1.9/download?job=docs)
 
   - [signal-gen-cjds66 docs (Download Development Version)](https://gitlab.com/defcronyke/signal-gen-cjds66/-/jobs/artifacts/master/download?job=docs)
   

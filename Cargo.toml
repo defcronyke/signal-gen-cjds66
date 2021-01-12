@@ -8,7 +8,7 @@
 
 [package]
 name = "signal-gen-cjds66"
-version = "0.1.8"
+version = "0.1.9"
 authors = ["Jeremy Carter <jeremy@jeremycarter.ca>"]
 edition = "2018"
 default-run = "signal-gen-cjds66"
