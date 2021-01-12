@@ -38,6 +38,7 @@ test:
     - cargo test --workspace --verbose  # Run the project's test suite with cargo. If any of these tests fail, we stop here.
     - for i in `ls -rt target/debug/deps/signal_gen_cjds66-* | sed '/\./d' | tail -n 1`; do kcov target/cov $i; done   # Generate the test coverage report with kcov for binary.
     - for i in `ls -rt target/debug/deps/signal_gen_cjds66_lib-* | sed '/\./d' | tail -n 1`; do kcov target/cov $i; done   # Generate the test coverage report with kcov for library.
+    - for i in `find target/cov -maxdepth 1 -type l`; do unlink $i; done  # Remove bad symlinks which are made by kcov for some reason.
     - "COVERAGE=$(grep -Po 'percent_covered\":\\s+\\\"\\d+.\\d+\\\"' target/cov/kcov-merged/coverage.json | grep -Po '\\d+.\\d+' | tail -n 1)"
     - echo "Coverage:" $COVERAGE  # Output the amount of test coverage in percent. This exact output format is expected by a setting we set on the GitLab CI/CD website.
   artifacts:
