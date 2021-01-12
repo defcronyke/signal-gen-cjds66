@@ -31,13 +31,15 @@ stages:
 test:
   stage: test
   script:
-    - "echo \"Package: *\nPin: release a=unstable\nPin-Priority: 490\n\" | tee -a /etc/apt/preferences" # kcov is currently only in Debian Unstable, so add the repo and pin it.
-    - "echo \"deb http://deb.debian.org/debian unstable main contrib non-free\ndeb-src http://deb.debian.org/debian unstable main contrib non-free\n\" | tee -a /etc/apt/sources.list"
-    - apt-get update && apt-get install -t unstable -y kcov # Install kcov from Debian Unstable.
+    - lsb_release -a
+    - sudo apt-get update && sudo apt-get install -y bash binutils-dev libcurl4-openssl-dev zlib1g-dev libdw-dev libiberty-dev
+    - git clone https://github.com/SimonKagstrom/kcov.git
+    - cd kcov && mkdir build && cd build && cmake .. && make -j4 && sudo make install && cd ../..
     - rustc --version && cargo --version  # Display rustc and cargo versions.
     - cargo test --workspace --verbose  # Run the project's test suite with cargo. If any of these tests fail, we stop here.
-    - for i in `ls -rt target/debug/deps/signal_gen_cjds66-* | sed '/\./d' | tail -n 1`; do kcov target/cov $i; done   # Generate the test coverage report with kcov for binary.
-    - for i in `ls -rt target/debug/deps/signal_gen_cjds66_lib-* | sed '/\./d' | tail -n 1`; do kcov target/cov $i; done   # Generate the test coverage report with kcov for library.
+    - for i in `ls -rt target/debug/deps/signal_gen_cjds66-* | sed '/\./d' | tail -n 1`; do kcov --exclude-pattern=/usr/share target/cov-bin $i; done   # Generate the test coverage report with kcov for binary.
+    - for i in `ls -rt target/debug/deps/signal_gen_cjds66_lib-* | sed '/\./d' | tail -n 1`; do kcov --exclude-pattern=/usr/share target/cov-lib $i; done   # Generate the test coverage report with kcov for library.
+    - kcov --exclude-pattern=/usr/share --merge target/cov target/cov-bin target/cov-lib
     - for i in `find target/cov -maxdepth 1 -type l`; do unlink $i; done  # Remove bad symlinks which are made by kcov for some reason.
     - "COVERAGE=$(grep -Po 'percent_covered\":\\s+\\\"\\d+.\\d+\\\"' target/cov/kcov-merged/coverage.json | grep -Po '\\d+.\\d+' | tail -n 1)"
     - echo "Coverage:" $COVERAGE  # Output the amount of test coverage in percent. This exact output format is expected by a setting we set on the GitLab CI/CD website.
