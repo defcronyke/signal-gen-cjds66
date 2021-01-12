@@ -33,7 +33,7 @@ jobs:
           git clone https://github.com/SimonKagstrom/kcov.git
           cd kcov && mkdir build && cd build && cmake .. && make -j4 && sudo make install && cd ../..
           rustc --version && cargo --version  # Display rustc and cargo versions.
-          cargo test --workspace --verbose  # Run the project's test suite with cargo. If any of these tests fail, we stop here.
+          RUSTFLAGS='-C link-dead-code' cargo test --workspace --verbose  # Run the project's test suite with cargo. If any of these tests fail, we stop here.
           for i in `ls -rt target/debug/deps/signal_gen_cjds66-* | sed '/\./d' | tail -n 1`; do kcov --exclude-pattern=/usr/share target/cov-bin $i; done   # Generate the test coverage report with kcov for binary.
           for i in `ls -rt target/debug/deps/signal_gen_cjds66_lib-* | sed '/\./d' | tail -n 1`; do kcov --exclude-pattern=/usr/share target/cov-lib $i; done   # Generate the test coverage report with kcov for library.
           kcov --exclude-pattern=/usr/share --merge target/cov target/cov-bin target/cov-lib
