@@ -362,7 +362,7 @@ pub fn set_frequency_microhertz_ok() {
 	// Test decimal places.
 	for verbose in 0..(verbose_max + 1) {
 		for chan in 1..(chans + 1) {
-			for decimal in 1..SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MAX_DECIMAL_PLACES {
+			for decimal in 1..(SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MAX_DECIMAL_PLACES + 1) {
 				set_frequency_microhertz(&mut port, chan, &(SET_FREQUENCY_COMMAND_UNIT_MICROHERTZ_ARG_MIN + (1.0 / ((10.0 as f64).powf(decimal as f64)))).to_string(), verbose).unwrap();
 			}
 		}
@@ -427,7 +427,7 @@ pub fn set_frequency_millihertz_ok() {
 	// Test decimal places.
 	for verbose in 0..(verbose_max + 1) {
 		for chan in 1..(chans + 1) {
-			for decimal in 1..SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MAX_DECIMAL_PLACES {
+			for decimal in 1..(SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MAX_DECIMAL_PLACES + 1) {
 				set_frequency_millihertz(&mut port, chan, &(SET_FREQUENCY_COMMAND_UNIT_MILLIHERTZ_ARG_MIN + (1.0 / ((10.0 as f64).powf(decimal as f64)))).to_string(), verbose).unwrap();
 			}
 		}
@@ -492,7 +492,7 @@ pub fn set_frequency_hertz_ok() {
 	// Test decimal places.
 	for verbose in 0..(verbose_max + 1) {
 		for chan in 1..(chans + 1) {
-			for decimal in 1..SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MAX_DECIMAL_PLACES {
+			for decimal in 1..(SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MAX_DECIMAL_PLACES + 1) {
 				set_frequency_hertz(&mut port, chan, &(SET_FREQUENCY_COMMAND_UNIT_HERTZ_ARG_MIN + (1.0 / ((10.0 as f64).powf(decimal as f64)))).to_string(), verbose).unwrap();
 			}
 		}
@@ -557,7 +557,7 @@ pub fn set_frequency_kilohertz_ok() {
 	// Test decimal places.
 	for verbose in 0..(verbose_max + 1) {
 		for chan in 1..(chans + 1) {
-			for decimal in 1..SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MAX_DECIMAL_PLACES {
+			for decimal in 1..(SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MAX_DECIMAL_PLACES + 1) {
 				set_frequency_kilohertz(&mut port, chan, &(SET_FREQUENCY_COMMAND_UNIT_KILOHERTZ_ARG_MIN + (1.0 / ((10.0 as f64).powf(decimal as f64)))).to_string(), verbose).unwrap();
 			}
 		}
@@ -622,7 +622,7 @@ pub fn set_frequency_megahertz_ok() {
 	// Test decimal places.
 	for verbose in 0..(verbose_max + 1) {
 		for chan in 1..(chans + 1) {
-			for decimal in 1..SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MAX_DECIMAL_PLACES {
+			for decimal in 1..(SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MAX_DECIMAL_PLACES + 1) {
 				set_frequency_megahertz(&mut port, chan, &(SET_FREQUENCY_COMMAND_UNIT_MEGAHERTZ_ARG_MIN + (1.0 / ((10.0 as f64).powf(decimal as f64)))).to_string(), verbose).unwrap();
 			}
 		}
@@ -739,7 +739,7 @@ pub fn set_amplitude_ok() {
 	// Test decimal places.
 	for verbose in 0..(verbose_max + 1) {
 		for chan in 1..(chans + 1) {
-			for decimal in 1..SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MAX_DECIMAL_PLACES {
+			for decimal in 1..(SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MAX_DECIMAL_PLACES + 1) {
 				set_amplitude(&mut port, chan, &(SET_AMPLITUDE_COMMAND_UNIT_VOLTS_ARG_MIN + (1.0 / ((10.0 as f64).powf(decimal as f64)))).to_string(), verbose).unwrap();
 			}
 		}
@@ -830,7 +830,7 @@ pub fn set_duty_cycle_ok() {
 	// Test decimal places.
 	for verbose in 0..(verbose_max + 1) {
 		for chan in 1..(chans + 1) {
-			for decimal in 1..SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MAX_DECIMAL_PLACES {
+			for decimal in 1..(SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MAX_DECIMAL_PLACES + 1) {
 				set_duty_cycle(&mut port, chan, &(SET_DUTY_CYCLE_COMMAND_UNIT_PERCENT_ARG_MIN + (1.0 / ((10.0 as f64).powf(decimal as f64)))).to_string(), verbose).unwrap();
 			}
 		}
