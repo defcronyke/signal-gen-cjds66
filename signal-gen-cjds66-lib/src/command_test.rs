@@ -12,26 +12,25 @@ software.
 use super::serial::*;
 use super::command::*;
 use super::protocol::*;
-	
+
 #[test]
-pub fn get_model_ok() {
+pub fn get_model_test() {
 	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
-
-	for verbose in 0..(verbose_max + 1) {
-		get_model(&mut port, verbose).unwrap();
-	}
-}
-
-#[test]
-pub fn get_model_err() {
-	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let mock_nums = 4;
 
-	for mock_num in 1..(mock_nums + 1) {
+	for mock_num in 0..(mock_nums + 1) {
 		port.mock_num = mock_num;
 
-		get_model(&mut port, 0).unwrap_err();
+		for verbose in 0..(verbose_max + 1) {
+			let res = get_model(&mut port, verbose);
+
+			if mock_num == 0 {
+				res.unwrap();
+			} else {
+				res.unwrap_err();
+			}
+		}
 	}
 }
 
