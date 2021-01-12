@@ -15,7 +15,7 @@ use super::protocol::*;
 	
 #[test]
 pub fn get_model_ok() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 
 	for verbose in 0..(verbose_max + 1) {
@@ -23,10 +23,22 @@ pub fn get_model_ok() {
 	}
 }
 
+#[test]
+pub fn get_model_err() {
+	let mut port = SerialPortType::new("", true, 0).unwrap();
+	let mock_nums = 2;
+
+	for mock_num in 1..(mock_nums + 1) {
+		port.mock_num = mock_num;
+
+		get_model(&mut port, 0).unwrap_err();
+	}
+}
+
 
 #[test]
 pub fn get_serial_ok() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 
 	for verbose in 0..(verbose_max + 1) {
@@ -37,7 +49,7 @@ pub fn get_serial_ok() {
 
 #[test]
 pub fn get_model_and_serial_ok() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 
 	for verbose in 0..(verbose_max + 1) {
@@ -48,7 +60,7 @@ pub fn get_model_and_serial_ok() {
 
 #[test]
 pub fn set_channel_output_ok() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 
 	let args = [
@@ -83,7 +95,7 @@ pub fn set_channel_output_ok() {
 
 #[test]
 pub fn set_channel_output_err() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 
 	let args = [
@@ -110,7 +122,7 @@ pub fn set_channel_output_err() {
 
 #[test]
 pub fn get_channel_output_ok() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 
 	for verbose in 0..(verbose_max + 1) {
@@ -121,7 +133,7 @@ pub fn get_channel_output_ok() {
 
 #[test]
 pub fn set_waveform_preset_ok() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 	let presets = 16;
@@ -242,7 +254,7 @@ pub fn set_waveform_preset_ok() {
 
 #[test]
 pub fn set_waveform_preset_err() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 	let presets = 16;
@@ -273,7 +285,7 @@ pub fn set_waveform_preset_err() {
 
 #[test]
 pub fn get_waveform_preset_ok() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -286,7 +298,7 @@ pub fn get_waveform_preset_ok() {
 
 #[test]
 pub fn get_waveform_preset_err() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -299,7 +311,7 @@ pub fn get_waveform_preset_err() {
 
 #[test]
 pub fn set_waveform_preset_arbitrary_ok() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 	let presets = 60;
@@ -315,7 +327,7 @@ pub fn set_waveform_preset_arbitrary_ok() {
 
 #[test]
 pub fn set_waveform_preset_arbitrary_err() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 	let presets = 60;
@@ -334,7 +346,7 @@ pub fn set_waveform_preset_arbitrary_err() {
 
 #[test]
 pub fn set_frequency_microhertz_ok() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -371,7 +383,7 @@ pub fn set_frequency_microhertz_ok() {
 
 #[test]
 pub fn set_frequency_microhertz_err() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -399,7 +411,7 @@ pub fn set_frequency_microhertz_err() {
 
 #[test]
 pub fn set_frequency_millihertz_ok() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -436,7 +448,7 @@ pub fn set_frequency_millihertz_ok() {
 
 #[test]
 pub fn set_frequency_millihertz_err() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -464,7 +476,7 @@ pub fn set_frequency_millihertz_err() {
 
 #[test]
 pub fn set_frequency_hertz_ok() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -501,7 +513,7 @@ pub fn set_frequency_hertz_ok() {
 
 #[test]
 pub fn set_frequency_hertz_err() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -529,7 +541,7 @@ pub fn set_frequency_hertz_err() {
 
 #[test]
 pub fn set_frequency_kilohertz_ok() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -566,7 +578,7 @@ pub fn set_frequency_kilohertz_ok() {
 
 #[test]
 pub fn set_frequency_kilohertz_err() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -594,7 +606,7 @@ pub fn set_frequency_kilohertz_err() {
 
 #[test]
 pub fn set_frequency_megahertz_ok() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -631,7 +643,7 @@ pub fn set_frequency_megahertz_ok() {
 
 #[test]
 pub fn set_frequency_megahertz_err() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -659,7 +671,7 @@ pub fn set_frequency_megahertz_err() {
 
 #[test]
 pub fn get_frequency_ok() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -672,7 +684,7 @@ pub fn get_frequency_ok() {
 
 #[test]
 pub fn get_frequency_err() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -685,7 +697,7 @@ pub fn get_frequency_err() {
 
 #[test]
 pub fn get_frequency_hertz_ok() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -698,7 +710,7 @@ pub fn get_frequency_hertz_ok() {
 
 #[test]
 pub fn get_frequency_hertz_err() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -711,7 +723,7 @@ pub fn get_frequency_hertz_err() {
 
 #[test]
 pub fn set_amplitude_ok() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -748,7 +760,7 @@ pub fn set_amplitude_ok() {
 
 #[test]
 pub fn set_amplitude_err() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -776,7 +788,7 @@ pub fn set_amplitude_err() {
 
 #[test]
 pub fn get_amplitude_ok() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -789,7 +801,7 @@ pub fn get_amplitude_ok() {
 
 #[test]
 pub fn get_amplitude_err() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -802,7 +814,7 @@ pub fn get_amplitude_err() {
 
 #[test]
 pub fn set_duty_cycle_ok() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 
@@ -839,7 +851,7 @@ pub fn set_duty_cycle_ok() {
 
 #[test]
 pub fn set_duty_cycle_err() {
-	let mut port = SerialPortType::new("", true).unwrap();
+	let mut port = SerialPortType::new("", true, 0).unwrap();
 	let verbose_max = 1;
 	let chans = 2;
 

@@ -35,6 +35,10 @@ pub struct SerialPortType {
 	use it.
 	*/
 	pub mock: bool,
+
+	/** Mock a specific numbered condition.
+	*/
+	pub mock_num: u64,
 }
 
 impl SerialPortType {
@@ -44,14 +48,16 @@ impl SerialPortType {
 	  
 	If you want to instantiate without connecting to a serial device,
 	maybe for test mocking convenience for example, pass an empty
-	string for `arg` and set `mock` to true.
+	string for `arg` and set `mock` to true, and pass a `mock_num`
+	to choose which numbered condition to mock.
 	 */
-	pub fn new(arg: &str, mock: bool) -> io::Result<SerialPortType> {
+	pub fn new(arg: &str, mock: bool, mock_num: u64) -> io::Result<SerialPortType> {
 		if mock {
 			Ok(
 				Self{
 					port: None,
 					mock,
+					mock_num,
 				}
 			)
 
@@ -62,6 +68,7 @@ impl SerialPortType {
 				Self{
 					port: Some(port),
 					mock,
+					mock_num,
 				}
 			)
 		}

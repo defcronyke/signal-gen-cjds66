@@ -111,7 +111,7 @@ fn real_main() -> Result<i32, error::Error> {
 		*/
 		println!("\nOpening communication link with device: {}\n", device);
 
-		let opened = SerialPortType::new(device, false).map_or_else(
+		let opened = SerialPortType::new(device, false, 0).map_or_else(
 			// If opening the device failed, return an error.
 			|e| {
 				Err(error::Error::with_description(&format!("(device: {}): {}: make sure the device is connected and turned on, or try specifying a different device path with -d /path/to/device", device, e), clap::ErrorKind::Io))

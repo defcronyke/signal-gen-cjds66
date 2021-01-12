@@ -58,7 +58,17 @@ pub fn get_model(
 		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
 
 	} else {	// Mock data for testing.
-		outbuf = Vec::from(":r00=60.\r\n");
+		match port.mock_num {
+			1 => {
+				outbuf = Vec::from(":r0060.\r\n");
+			},
+			2 => {
+				outbuf = Vec::from(":r00=60\r\n");
+			},
+			_ => {	// Success.
+				outbuf = Vec::from(":r00=60.\r\n");
+			},
+		}
 	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
@@ -79,7 +89,7 @@ pub fn get_model(
 			));
 		}
 
-		if res2[1].len() < 4 {
+		if res2[1].len() < 5 {
 			return Err(Error::with_description(
 				&format!(
 					"unexpected response from device: missing terminator ({}): {}",
