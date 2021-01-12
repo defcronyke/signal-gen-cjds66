@@ -43,6 +43,7 @@ jobs:
           echo "COLOUR=\"$COLOUR\""
           curl "https://img.shields.io/badge/github_coverage-$COVERAGE%25-$COLOUR" > github-coverage.svg
           gsutil -h "Cache-Control:public, max-age=60" cp github-coverage.svg gs://$GCS_BUCKET
+          gsutil -h "Cache-Control:public, max-age=60" cp -r target/cov gs://$GCS_BUCKET
           echo "Coverage: $COVERAGE"  # Output the amount of test coverage in percent. This exact output format is expected by a setting we set on the GitLab CI/CD website.
       
       - name: artifacts-badge
