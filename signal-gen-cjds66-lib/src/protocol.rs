@@ -113,18 +113,27 @@ macro_rules! GET_MODEL_ARG1 {
 }
 pub const GET_MODEL_ARG1: &'static str = GET_MODEL_ARG1!();
 
+macro_rules! GET_MODEL_COMMAND_START {
+	() => {
+		concat!(
+			COMMAND_BEGIN!(),
+			COMMAND_GET!(), 
+			GET_MODEL_COMMAND!(),
+		)
+	};
+}
+pub const GET_MODEL_COMMAND_START: &'static str = GET_MODEL_COMMAND_START!();
+
 // command example:
 // ":r00=0.\r\n"
 macro_rules! GET_MODEL {
 	() => {
 		concat!(
-			COMMAND_BEGIN!(),
-			COMMAND_GET!(),
-			GET_MODEL_COMMAND!(),
+			GET_MODEL_COMMAND_START!(),
 			COMMAND_SEPARATOR!(),
 			GET_MODEL_ARG1!(),
 			COMMAND_END!(),
-			)
+		)
 	};
 }
 pub const GET_MODEL: &'static str = GET_MODEL!();
@@ -153,12 +162,16 @@ macro_rules! GET_SERIAL_ARG1 {
 }
 pub const GET_SERIAL_ARG1: &'static str = GET_SERIAL_ARG1!();
 
-macro_rules! GET_SERIAL_RES_LEN {
+macro_rules! GET_SERIAL_COMMAND_START {
 	() => {
-			18
+		concat!(
+			COMMAND_BEGIN!(),
+			COMMAND_GET!(), 
+			GET_SERIAL_COMMAND!(),
+		)
 	};
 }
-pub const GET_SERIAL_RES_LEN: u8 = GET_SERIAL_RES_LEN!();
+pub const GET_SERIAL_COMMAND_START: &'static str = GET_SERIAL_COMMAND_START!();
 
 // command example:
 // ":r01=0.\r\n"
@@ -175,6 +188,13 @@ macro_rules! GET_SERIAL {
 	};
 }
 pub const GET_SERIAL: &'static str = GET_SERIAL!();
+
+macro_rules! GET_SERIAL_RES_LEN {
+	() => {
+			18
+	};
+}
+pub const GET_SERIAL_RES_LEN: u8 = GET_SERIAL_RES_LEN!();
 // -----
 
 // -----

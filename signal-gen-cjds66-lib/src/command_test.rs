@@ -26,7 +26,7 @@ pub fn get_model_ok() {
 #[test]
 pub fn get_model_err() {
 	let mut port = SerialPortType::new("", true, 0).unwrap();
-	let mock_nums = 2;
+	let mock_nums = 4;
 
 	for mock_num in 1..(mock_nums + 1) {
 		port.mock_num = mock_num;
@@ -43,6 +43,18 @@ pub fn get_serial_ok() {
 
 	for verbose in 0..(verbose_max + 1) {
 		get_serial(&mut port, verbose).unwrap();
+	}
+}
+
+#[test]
+pub fn get_serial_err() {
+	let mut port = SerialPortType::new("", true, 0).unwrap();
+	let mock_nums = 4;
+
+	for mock_num in 1..(mock_nums + 1) {
+		port.mock_num = mock_num;
+
+		get_serial(&mut port, 0).unwrap_err();
 	}
 }
 

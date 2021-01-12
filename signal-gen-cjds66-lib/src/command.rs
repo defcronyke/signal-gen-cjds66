@@ -59,13 +59,19 @@ pub fn get_model(
 
 	} else {	// Mock data for testing.
 		match port.mock_num {
-			1 => {
+			1 => {	// Missing begin.
+				outbuf = Vec::from("r00=60.\r\n");
+			},
+			2 => {	// Missing separator.
 				outbuf = Vec::from(":r0060.\r\n");
 			},
-			2 => {
+			3 => {	// Unexpected command.
+				outbuf = Vec::from(":r01=60\r\n");
+			},
+			4 => {	// Missing terminator.
 				outbuf = Vec::from(":r00=60\r\n");
 			},
-			_ => {	// Success.
+			_ => {	// Ok.
 				outbuf = Vec::from(":r00=60.\r\n");
 			},
 		}
@@ -76,33 +82,62 @@ pub fn get_model(
 	if verbose > 0 {
 		println!("Response:");
 		println!("{}", res);
-	} else {
-		let res2: Vec<&str> = res.split("=").collect();
-
-		if res2.len() < 2 {
-			return Err(Error::with_description(
-				&format!(
-					"unexpected response from device: missing separator ({}): {}",
-					COMMAND_SEPARATOR, res
-				),
-				ErrorKind::ValueValidation,
-			));
-		}
-
-		if res2[1].len() < 5 {
-			return Err(Error::with_description(
-				&format!(
-					"unexpected response from device: missing terminator ({}): {}",
-					COMMAND_END, res
-				),
-				ErrorKind::ValueValidation,
-			));
-		}
-
-		let res3: &str = &res2[1][0..res2[1].len() - 3];
-
-		println!("model:\t{}", res3);
 	}
+
+	if res.chars().nth(0).unwrap() != ':' {
+		return Err(Error::with_description(
+			&format!(
+				"unexpected response from device: missing begin ({}): {}",
+				COMMAND_BEGIN, res
+			),
+			ErrorKind::ValueValidation,
+		));
+	}
+
+	let res2: Vec<&str> = res.split("=").collect();
+
+	if res2.len() < 2 {
+		return Err(Error::with_description(
+			&format!(
+				"unexpected response from device: missing separator ({}): {}",
+				COMMAND_SEPARATOR, res
+			),
+			ErrorKind::ValueValidation,
+		));
+	}
+
+	if res2[0] != GET_MODEL_COMMAND_START {
+		return Err(Error::with_description(
+			&format!(
+				"unexpected response from device: unexpected command ({}): {}",
+				res2[0], res
+			),
+			ErrorKind::ValueValidation,
+		));
+	}
+
+	let end: String = res2[1].chars()
+		.skip(res2[1].chars()
+			.position(
+				|c| c == COMMAND_STOP.chars().nth(0).unwrap()
+			).unwrap_or(0)
+		)
+		.take(COMMAND_END.len())
+		.collect();
+
+	if end != COMMAND_END {
+		return Err(Error::with_description(
+			&format!(
+				"unexpected response from device: missing terminator ({}): {}",
+				COMMAND_END, res
+			),
+			ErrorKind::ValueValidation,
+		));
+	}
+
+	let res3: &str = &res2[1][0..res2[1].len() - 3];
+
+	println!("model:\t{}", res3);
 
 	Ok(res.to_string())
 }
@@ -132,7 +167,23 @@ pub fn get_serial(
 		port.port.as_mut().unwrap().read(&mut outbuf[..])?;
 
 	} else {	// Mock data for testing.
-		outbuf = Vec::from(":r01=9876500000.\r\n");
+		match port.mock_num {
+			1 => {	// Missing begin.
+				outbuf = Vec::from("r01=9876500000.\r\n");
+			},
+			2 => {	// Missing separator.
+				outbuf = Vec::from(":r019876500000.\r\n");
+			},
+			3 => {	// Unexpected command.
+				outbuf = Vec::from(":r02=9876500000.\r\n");
+			},
+			4 => {	// Missing terminator.
+				outbuf = Vec::from(":r01=9876500000\r\n");
+			},
+			_ => {	// Ok.
+				outbuf = Vec::from(":r01=9876500000.\r\n");
+			},
+		}
 	}
 
 	let res = str::from_utf8(&outbuf).unwrap();
@@ -140,33 +191,62 @@ pub fn get_serial(
 	if verbose > 0 {
 		println!("Response:");
 		println!("{}", res);
-	} else {
-		let res2: Vec<&str> = res.split("=").collect();
-
-		if res2.len() < 2 {
-			return Err(Error::with_description(
-				&format!(
-					"unexpected response from device: missing separator ({}): {}",
-					COMMAND_SEPARATOR, res
-				),
-				ErrorKind::ValueValidation,
-			));
-		}
-
-		if res2[1].len() < 4 {
-			return Err(Error::with_description(
-				&format!(
-					"unexpected response from device: missing terminator ({}): {}",
-					COMMAND_END, res
-				),
-				ErrorKind::ValueValidation,
-			));
-		}
-
-		let res3: &str = &res2[1][0..res2[1].len() - 3];
-
-		println!("serial:\t{}", res3);
 	}
+
+	if res.chars().nth(0).unwrap() != ':' {
+		return Err(Error::with_description(
+			&format!(
+				"unexpected response from device: missing begin ({}): {}",
+				COMMAND_BEGIN, res
+			),
+			ErrorKind::ValueValidation,
+		));
+	}
+
+	let res2: Vec<&str> = res.split("=").collect();
+
+	if res2.len() < 2 {
+		return Err(Error::with_description(
+			&format!(
+				"unexpected response from device: missing separator ({}): {}",
+				COMMAND_SEPARATOR, res
+			),
+			ErrorKind::ValueValidation,
+		));
+	}
+
+	if res2[0] != GET_SERIAL_COMMAND_START {
+		return Err(Error::with_description(
+			&format!(
+				"unexpected response from device: unexpected command ({}): {}",
+				res2[0], res
+			),
+			ErrorKind::ValueValidation,
+		));
+	}
+
+	let end: String = res2[1].chars()
+		.skip(res2[1].chars()
+			.position(
+				|c| c == COMMAND_STOP.chars().nth(0).unwrap()
+			).unwrap_or(0)
+		)
+		.take(COMMAND_END.len())
+		.collect();
+
+	if end != COMMAND_END {
+		return Err(Error::with_description(
+			&format!(
+				"unexpected response from device: missing terminator ({}): {}",
+				COMMAND_END, res
+			),
+			ErrorKind::ValueValidation,
+		));
+	}
+
+	let res3: &str = &res2[1][0..res2[1].len() - 3];
+
+	println!("serial:\t{}", res3);
 
 	Ok(res.to_string())
 }
