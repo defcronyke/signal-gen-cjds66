@@ -36,8 +36,8 @@ test:
     - apt-get update && apt-get install -t unstable -y kcov # Install kcov from Debian Unstable.
     - rustc --version && cargo --version  # Display rustc and cargo versions.
     - cargo test --workspace --verbose  # Run the project's test suite with cargo. If any of these tests fail, we stop here.
-    - cargo build --verbose   # Needed for kcov test coverage reporting.
-    - for i in `ls -rt target/debug/deps/signal_gen_cjds66* | sed -e 's/.[a-z]$//' | uniq | tail -n 2`; do kcov target/cov $i; done   # Generate the test coverage report with kcov.
+    - for i in `ls -rt target/debug/deps/signal_gen_cjds66-* | sed '/\./d' | tail -n 1`; do kcov target/cov $i; done   # Generate the test coverage report with kcov for binary.
+    - for i in `ls -rt target/debug/deps/signal_gen_cjds66_lib-* | sed '/\./d' | tail -n 1`; do kcov target/cov $i; done   # Generate the test coverage report with kcov for library.
     - "COVERAGE=$(grep -Po 'percent_covered\":\\s+\\\"\\d+.\\d+\\\"' target/cov/signal-gen-cjds66.*/coverage.json | grep -Po '\\d+.\\d+' | tail -n 1)"
     - echo "Coverage:" $COVERAGE  # Output the amount of test coverage in percent. This exact output format is expected by a setting we set on the GitLab CI/CD website.
   artifacts:
